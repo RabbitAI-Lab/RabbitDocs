@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  serverExternalPackages: ["@anthropic-ai/claude-agent-sdk", "better-sqlite3"],
 };
 
 export default nextConfig;

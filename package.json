@@ -3,23 +3,42 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "bash scripts/dev.sh",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "@ant-design/icons": "^6.2.5",
+    "@ant-design/x": "^2.7.0",
+    "@anthropic-ai/claude-agent-sdk": "^0.3.158",
+    "@cfworker/json-schema": "^4.1.1",
+    "@modelcontextprotocol/express": "^2.0.0-alpha.2",
+    "@modelcontextprotocol/node": "^2.0.0-alpha.2",
+    "@modelcontextprotocol/server": "^2.0.0-alpha.2",
+    "antd": "^6.4.3",
+    "better-sqlite3": "^12.10.0",
+    "cherry-markdown": "^0.11.2",
+    "clsx": "^2.1.1",
+    "drizzle-orm": "^0.45.2",
+    "express": "^5.2.1",
     "next": "16.2.6",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/express": "^5.0.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "playwright-core": "^1.60.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
