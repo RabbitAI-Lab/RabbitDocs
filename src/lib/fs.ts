@@ -468,7 +468,7 @@ export function linkProjectToWorkspace(type: "personal" | "enterprise", accountI
   // workspace/{workspaceId}/{projectId} -> ../../projects/{projectId}/
   const targetPath = path.join("..", "..", "projects", projectId);
 
-  if (fs.existsSync(linkPath) || fs.lstatSync(linkPath).isSymbolicLink?.()) {
+  if (fs.existsSync(linkPath)) {
     fs.unlinkSync(linkPath); // Remove existing link
   }
   fs.symlinkSync(targetPath, linkPath, "dir");
@@ -481,7 +481,7 @@ export function unlinkProjectFromWorkspace(type: "personal" | "enterprise", acco
   const accountSegs = getAccountSegments(type, accountId, orgId);
   const linkPath = path.join(getDataRoot(), ...accountSegs, "workspace", workspaceId, projectId);
 
-  if (fs.existsSync(linkPath) || fs.lstatSync(linkPath).isSymbolicLink?.()) {
+  if (fs.existsSync(linkPath)) {
     fs.unlinkSync(linkPath);
   }
 }
