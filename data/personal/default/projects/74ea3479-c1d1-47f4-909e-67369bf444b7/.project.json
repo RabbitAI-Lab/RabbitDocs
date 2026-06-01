@@ -5,5 +5,23 @@
   "accountId": "default",
   "accountType": "personal",
   "id": "74ea3479-c1d1-47f4-909e-67369bf444b7",
-  "sortOrder": 2
+  "sortOrder": 2,
+  "sandbox": {
+    "enabled": false,
+    "releasedAt": "2026-06-01T06:16:57.891Z"
+  },
+  "members": [
+    {
+      "id": "1bb5c395-170e-4bd3-ba00-3c486902b42a",
+      "accountName": "dd",
+      "addedAt": "2026-06-01T06:53:14.131Z"
+    }
+  ],
+  "skills": {
+    "ecc": {
+      "enabled": true,
+      "installedAt": "2026-06-01T07:41:34.696Z",
+      "version": "1.10.0"
+    }
+  }
 }

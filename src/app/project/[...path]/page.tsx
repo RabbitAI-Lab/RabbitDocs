@@ -1,7 +1,7 @@
 import { listTree, readDocument, readProjectMeta, stripTreePrefix, TreeNode } from "@/lib/fs";
 import { db } from "@/db";
 import { chats, accounts } from "@/db/schema";
-import { gte, desc, eq } from "drizzle-orm";
+import { gte, desc, eq, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import ProjectWorkspace from "@/components/project/ProjectWorkspace";
 
@@ -21,13 +21,14 @@ export default async function ProjectPage({
 
   const projectId = path[3];
   const projectDirSegments = path; // personal/default/projects/{projectId}
-  const projectPrefix = projectDirSegments.join("/"); // "personal/default/projects/{projectId}"
+  const docsDirSegments = [...projectDirSegments, "docs"];
+  const docsPrefix = docsDirSegments.join("/"); // "personal/default/projects/{projectId}/docs"
 
-  // Get file tree (paths are like "personal/default/projects/{projectId}/subdir/file.md")
-  const rawTree = listTree(projectDirSegments);
+  // Get file tree (paths are like "personal/default/projects/{projectId}/docs/subdir/file.md")
+  const rawTree = listTree(docsDirSegments);
 
-  // Strip project prefix and .md extension from tree paths
-  const tree = stripTreePrefix(rawTree, projectPrefix);
+  // Strip docs prefix and .md extension from tree paths
+  const tree = stripTreePrefix(rawTree, docsPrefix);
 
   // Get selected file content (only when explicitly requested via ?file=)
   let selectedFile: string | null = null;
@@ -35,7 +36,7 @@ export default async function ProjectPage({
 
   if (rawFile) {
     selectedFile = decodeURIComponent(rawFile);
-    const fileSegments = [...projectDirSegments, ...selectedFile.split("/")];
+    const fileSegments = [...projectDirSegments, "docs", ...selectedFile.split("/")];
     fileContent = readDocument(...fileSegments);
   }
 
@@ -60,19 +61,20 @@ export default async function ProjectPage({
     enterpriseName: undefined as string | undefined,
   };
 
-  // Fetch recent chats (last 20 days)
+  // Fetch recent chats for this project (last 20 days)
   const twentyDaysAgo = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString();
   const recentChats = db
     .select({ id: chats.id, title: chats.title, updatedAt: chats.updatedAt })
     .from(chats)
-    .where(gte(chats.updatedAt, twentyDaysAgo))
+    .where(and(gte(chats.updatedAt, twentyDaysAgo), eq(chats.projectId, projectId)))
     .orderBy(desc(chats.updatedAt))
     .all();
 
   return (
     <ProjectWorkspace
       projectName={projectName}
-      projectPath={projectPrefix}
+      projectPath={projectDirSegments.join("/")}
+      docsPath={docsPrefix}
       tree={tree}
       selectedFile={selectedFile}
       initialContent={fileContent || ""}

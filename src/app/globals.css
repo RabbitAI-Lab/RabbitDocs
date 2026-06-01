@@ -12,3 +12,13 @@ body {
 }
 
 /* CherryMarkdown 布局修复由 CherryEditor 组件通过内联样式处理 */
+
+/* 项目选择提示动画 */
+@keyframes slide-left {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-10px); }
+}
+
+.animate-slide-left {
+  animation: slide-left 1.5s ease-in-out infinite;
+}

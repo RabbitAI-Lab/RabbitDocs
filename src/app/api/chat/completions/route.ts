@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
         const generator = streamModelResponse(modelId, messages, {
           systemPrompt: effectiveSystemPrompt,
           cwd,
+          projectId,
         });
 
         for await (const event of generator) {

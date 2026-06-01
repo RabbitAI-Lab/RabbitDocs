@@ -1,19 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { chats } from "@/db/schema";
-import { desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, sql } from "drizzle-orm";
 
-// GET /api/chats?page=1&pageSize=20&projectId=xxx
+// GET /api/chats?page=1&pageSize=20&projectId=xxx&since=ISO_DATE
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const page = Math.max(1, Number(url.searchParams.get("page") ?? "1"));
   const pageSize = Math.max(1, Math.min(100, Number(url.searchParams.get("pageSize") ?? "20")));
   const projectId = url.searchParams.get("projectId");
+  const since = url.searchParams.get("since");
   const offset = (page - 1) * pageSize;
 
-  const whereCondition = projectId
-    ? (projectId === "__none__" ? isNull(chats.projectId) : eq(chats.projectId, projectId))
-    : undefined;
+  const conditions: ReturnType<typeof eq | typeof isNull | typeof gte>[] = [];
+  if (projectId) {
+    conditions.push(projectId === "__none__" ? isNull(chats.projectId) : eq(chats.projectId, projectId));
+  }
+  if (since) {
+    conditions.push(gte(chats.updatedAt, since));
+  }
+  const whereCondition = conditions.length > 0 ? and(...conditions) : undefined;
 
   const totalResult = db
     .select({ count: sql<number>`count(*)` })

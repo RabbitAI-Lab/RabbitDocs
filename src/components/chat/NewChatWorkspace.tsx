@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import ChatWorkspace from "@/components/chat/ChatWorkspace";
 import FileTree from "@/components/ui/FileTree";
+import ProjectInfoTab from "@/components/project/ProjectInfoTab";
+import type { ProjectMeta } from "@/lib/fs";
 import { TreeNode, stripTreePrefix } from "@/lib/tree";
 
 const CherryEditor = dynamic(() => import("@/components/editor/CherryEditor"), {
@@ -23,10 +25,13 @@ interface FileTab {
   loaded: boolean;
 }
 
-interface ProjectMeta {
-  id: string;
-  name: string;
+interface RecentChat {
+  id: number;
+  title: string;
+  updatedAt: string;
 }
+
+const PROJECT_INFO_TAB = "__project_info__" as const;
 
 /** Compute the default directory name, handling conflicts */
 function computeDefaultDirName(existingChildren: TreeNode[]): string {
@@ -70,13 +75,24 @@ export default function NewChatWorkspace() {
   const dirInputRef = useRef<HTMLInputElement>(null);
   const [mentionFile, setMentionFile] = useState<string | null>(null);
 
+  // Project info state
+  const [projectMeta, setProjectMeta] = useState<ProjectMeta | null>(null);
+  const [recentChats, setRecentChats] = useState<RecentChat[]>([]);
+
+  // Chat switching state
+  const [activeChatId, setActiveChatId] = useState<number | null>(null);
+  const [activeChatTitle, setActiveChatTitle] = useState("新对话");
+  const [activeChatMessages, setActiveChatMessages] = useState<Array<{ id: number; role: "user" | "assistant"; content: string }>>([]);
+  const [activeChatModelId, setActiveChatModelId] = useState<number | undefined>();
+  const [activeChatTemplateId, setActiveChatTemplateId] = useState<number | undefined>();
+
   // Tab system state
   const [tabs, setTabs] = useState<FileTab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string>("__chat__");
   const contentCache = useRef<Record<string, string>>({});
 
   const projectPath = selectedProjectId
-    ? `personal/default/projects/${selectedProjectId}`
+    ? `personal/default/projects/${selectedProjectId}/docs`
     : "";
 
   const autoSelectedRef = useRef(false);
@@ -101,7 +117,7 @@ export default function NewChatWorkspace() {
   const refreshTree = async () => {
     if (!selectedProjectId) return;
     setTreeLoading(true);
-    const prefix = `personal/default/projects/${selectedProjectId}`;
+    const prefix = `personal/default/projects/${selectedProjectId}/docs`;
     try {
       const res = await fetch(`/api/fs/tree?path=${prefix}`);
       const data = await res.json();
@@ -115,8 +131,9 @@ export default function NewChatWorkspace() {
   const handleSelectProject = async (project: ProjectMeta) => {
     setSelectedProjectId(project.id);
     setSelectedProjectName(project.name);
+    setProjectMeta(project);
     setTreeLoading(true);
-    const prefix = `personal/default/projects/${project.id}`;
+    const prefix = `personal/default/projects/${project.id}/docs`;
     try {
       const res = await fetch(`/api/fs/tree?path=${prefix}`);
       const data = await res.json();
@@ -126,16 +143,26 @@ export default function NewChatWorkspace() {
     }
     setTreeLoading(false);
     setChatKey((k) => k + 1);
-    // Reset tab system
+    // Reset tab system — default to chat tab since this is the "New Chat" entry
     setTabs([]);
     setActiveTabId("__chat__");
     contentCache.current = {};
+    // Reset chat switching state
+    setActiveChatId(null);
+    setActiveChatTitle("新对话");
+    setActiveChatMessages([]);
+    setActiveChatModelId(undefined);
+    setActiveChatTemplateId(undefined);
+    // Fetch recent chats
+    refreshRecentChats(project.id);
     window.history.replaceState(null, "", `/chat/new?project=${project.id}`);
   };
 
   const handleBack = () => {
     setSelectedProjectId(null);
     setSelectedProjectName("");
+    setProjectMeta(null);
+    setRecentChats([]);
     setTree([]);
     setShowNewDir(false);
     setNewDirName("");
@@ -144,6 +171,12 @@ export default function NewChatWorkspace() {
     setTabs([]);
     setActiveTabId("__chat__");
     contentCache.current = {};
+    // Reset chat switching state
+    setActiveChatId(null);
+    setActiveChatTitle("新对话");
+    setActiveChatMessages([]);
+    setActiveChatModelId(undefined);
+    setActiveChatTemplateId(undefined);
     window.history.replaceState(null, "", "/chat/new");
   };
 
@@ -242,7 +275,7 @@ export default function NewChatWorkspace() {
 
       // Fetch content if not cached
       if (!cachedContent) {
-        const apiPath = `personal/default/projects/${selectedProjectId}/${filePath}`;
+        const apiPath = `personal/default/projects/${selectedProjectId}/docs/${filePath}`;
         fetch(`/api/fs/document?path=${apiPath}`)
           .then((r) => r.json())
           .then((data) => {
@@ -274,7 +307,7 @@ export default function NewChatWorkspace() {
       const newTabs = prev.filter((t) => t.filePath !== tabId);
       if (activeTabId === tabId) {
         if (newTabs.length === 0) {
-          setActiveTabId("__chat__");
+          setActiveTabId(PROJECT_INFO_TAB);
         } else if (idx < newTabs.length) {
           setActiveTabId(newTabs[idx].filePath);
         } else {
@@ -298,6 +331,58 @@ export default function NewChatWorkspace() {
     contentCache.current[filePath] = markdown;
   }, []);
 
+  // --- Chat navigation from ProjectInfoTab ---
+
+  const handleSwitchToChat = useCallback(async (chatId: number) => {
+    try {
+      const [chatRes, msgRes] = await Promise.all([
+        fetch(`/api/chats/${chatId}`),
+        fetch(`/api/chats/${chatId}/messages`),
+      ]);
+      const chatData = await chatRes.json();
+      const msgData = await msgRes.json();
+
+      setActiveChatId(chatId);
+      setActiveChatTitle(chatData.title || "新对话");
+      setActiveChatMessages(
+        (msgData.messages || []).map((m: { id: number; role: "user" | "assistant"; content: string }) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+        }))
+      );
+      setActiveChatModelId(chatData.modelId);
+      setActiveChatTemplateId(chatData.templateId);
+      setChatKey((k) => k + 1);
+      setActiveTabId("__chat__");
+    } catch {
+      setActiveTabId("__chat__");
+    }
+  }, []);
+
+  const handleNewChat = useCallback(() => {
+    setActiveChatId(null);
+    setActiveChatTitle("新对话");
+    setActiveChatMessages([]);
+    setActiveChatModelId(undefined);
+    setActiveChatTemplateId(undefined);
+    setChatKey((k) => k + 1);
+    setActiveTabId("__chat__");
+  }, []);
+
+  // --- Refresh recent chats ---
+
+  const refreshRecentChats = useCallback(async (projectId: string) => {
+    const twentyDaysAgo = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString();
+    try {
+      const res = await fetch(`/api/chats?projectId=${projectId}&since=${twentyDaysAgo}&pageSize=20`);
+      const data = await res.json();
+      setRecentChats(data.chats || []);
+    } catch {
+      setRecentChats([]);
+    }
+  }, []);
+
   return (
     <div className="flex h-full">
       {/* Left Panel */}
@@ -315,7 +400,7 @@ export default function NewChatWorkspace() {
                   <polyline points="15 18 9 12 15 6" />
                 </svg>
               </button>
-              <h3 className="text-sm font-semibold text-gray-800 truncate">{selectedProjectName}</h3>
+              <h3 className="text-sm font-semibold text-gray-800 truncate">{selectedProjectName} 文档</h3>
             </div>
 
             {/* File tree toolbar */}
@@ -386,7 +471,7 @@ export default function NewChatWorkspace() {
               <FileTree
                 tree={tree}
                 mode="editable"
-                selectedPath={activeTabId !== "__chat__" ? activeTabId : null}
+                selectedPath={activeTabId !== "__chat__" && activeTabId !== PROJECT_INFO_TAB ? activeTabId : null}
                 onFileClick={(node) => handleFileClick(node)}
                 onNewDirectory={(parentPath) => handleStartNewDir(parentPath)}
                 onNewFile={(parentPath) => { setNewFileParent(parentPath); setShowNewFile(true); }}
@@ -441,6 +526,23 @@ export default function NewChatWorkspace() {
           <>
             {/* Tab Bar */}
             <div className="flex items-center h-[41px] bg-gray-50 border-b border-gray-200 overflow-x-auto shrink-0">
+              {/* Project Info tab */}
+              <button
+                onClick={() => setActiveTabId(PROJECT_INFO_TAB)}
+                className={`flex items-center gap-1.5 h-full px-3 text-xs font-medium whitespace-nowrap border-b-2 transition-colors ${
+                  activeTabId === PROJECT_INFO_TAB
+                    ? "bg-white text-blue-600 border-blue-600"
+                    : "text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                项目信息
+              </button>
+
               {/* Chat tab */}
               <button
                 onClick={() => setActiveTabId("__chat__")}
@@ -488,6 +590,22 @@ export default function NewChatWorkspace() {
 
             {/* Tab Content */}
             <div className="flex-1 min-h-0 relative">
+              {/* Project Info tab content */}
+              <div
+                className="absolute inset-0 overflow-y-auto"
+                style={{ display: activeTabId === PROJECT_INFO_TAB ? "flex" : "none", flexDirection: "column" }}
+              >
+                <ProjectInfoTab
+                  projectId={selectedProjectId}
+                  projectName={selectedProjectName}
+                  projectMeta={projectMeta}
+                  projectPath={`personal/default/projects/${selectedProjectId}`}
+                  recentChats={recentChats}
+                  onSwitchToChat={handleSwitchToChat}
+                  onNewChat={handleNewChat}
+                />
+              </div>
+
               {/* Chat workspace */}
               <div
                 className="absolute inset-0"
@@ -495,9 +613,11 @@ export default function NewChatWorkspace() {
               >
                 <ChatWorkspace
                   key={chatKey}
-                  chatId={null}
-                  chatTitle="New Chat"
-                  initialMessages={[]}
+                  chatId={activeChatId}
+                  chatTitle={activeChatTitle}
+                  initialMessages={activeChatMessages}
+                  initialModelId={activeChatModelId}
+                  initialTemplateId={activeChatTemplateId}
                   embedded
                   projectId={selectedProjectId}
                   onDocumentSaved={refreshTree}
@@ -535,11 +655,19 @@ export default function NewChatWorkspace() {
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center bg-gray-100">
-            <div className="text-center">
-              <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <div className="text-center bg-purple-50 rounded-xl p-8 border-l-4 border-purple-400 max-w-sm mx-4 shadow-sm">
+              {/* 指向左侧的弹跳箭头 */}
+              <div className="flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-purple-500 animate-slide-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 19l-7-7 7-7" />
+                </svg>
+              </div>
+              {/* 主图标 */}
+              <svg className="w-16 h-16 mx-auto mb-4 text-purple-400 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
-              <p className="text-sm text-gray-400">请先在左侧选择一个项目</p>
+              {/* 提示文字 */}
+              <p className="text-lg text-gray-700 font-medium">请先在左侧选择一个项目</p>
             </div>
           </div>
         )}

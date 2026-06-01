@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Bubble, Sender, Welcome, Prompts, XProvider, Actions } from "@ant-design/x";
-import { Button, Space, Avatar, Dropdown, Tooltip, Tag } from "antd";
+import { Button, Space, Avatar, Dropdown, Tooltip, Tag, Typography } from "antd";
+import XMarkdown from "@ant-design/x-markdown";
 import {
   RobotOutlined,
   UserOutlined,
@@ -39,6 +40,7 @@ interface ChatWorkspaceProps {
   mentionFile?: string | null;
   onMentionConsumed?: () => void;
   onToolCall?: (toolCall: { toolName: string; args: Record<string, unknown> }) => void;
+  onSwitchToChat?: (chatId: number) => void;
 }
 
 const roles = {
@@ -88,6 +90,7 @@ export default function ChatWorkspace({
   mentionFile,
   onMentionConsumed,
   onToolCall,
+  onSwitchToChat,
 }: ChatWorkspaceProps) {
   const router = useRouter();
   const [effectiveChatId, setEffectiveChatId] = useState<number | null>(chatId ?? null);
@@ -452,7 +455,9 @@ export default function ChatWorkspace({
   };
 
   const handleHistorySelect = (chatId: number) => {
-    if (embedded) {
+    if (onSwitchToChat) {
+      onSwitchToChat(chatId);
+    } else if (embedded) {
       window.location.href = `/chat/${chatId}`;
     } else {
       router.push(`/chat/${chatId}`);
@@ -644,6 +649,12 @@ export default function ChatWorkspace({
     setLoading(false);
   };
 
+  const renderMarkdown = (content: string) => (
+    <Typography>
+      <XMarkdown content={content} />
+    </Typography>
+  );
+
   // Convert messages to Bubble.List items
   const bubbleItems: BubbleItemType[] = messages.map((msg) => {
     const isAiLoading =
@@ -658,6 +669,7 @@ export default function ChatWorkspace({
       key: msg.id.toString(),
       role: msg.role,
       content: msg.content,
+      contentRender: renderMarkdown,
       loading: isAiLoading || undefined,
       // Only apply typing to new AI messages that have content
       typing:
@@ -713,6 +725,7 @@ export default function ChatWorkspace({
           </h2>
         </div>
         <Space size="small">
+          {/* Save to Document 按钮 - 暂时隐藏，功能待完善
           {messages.length > 0 && (
             selectedProject ? (
               <Button
@@ -738,6 +751,7 @@ export default function ChatWorkspace({
               </Tooltip>
             )
           )}
+          */}
           <Tooltip title="新会话">
             <Button
               icon={<PlusOutlined />}

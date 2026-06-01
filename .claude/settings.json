@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "everything-claude-code": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/xujialiang/Downloads/ECC-1.10.0"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "everything-claude-code@everything-claude-code": true
+  }
+}

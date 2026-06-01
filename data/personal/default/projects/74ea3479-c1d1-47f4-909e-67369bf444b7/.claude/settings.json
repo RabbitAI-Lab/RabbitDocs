@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "everything-claude-code": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/xujialiang/Desktop/Dev/RabbitAI-Lab/ChatWiki/vendor/ECC-1.10.0"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "everything-claude-code@everything-claude-code": true
+  }
+}

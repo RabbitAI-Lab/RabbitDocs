@@ -15,12 +15,12 @@ export function registerFileTools(server: McpServer) {
     "read_file",
     {
       description:
-        "读取文件内容（Markdown 文档）。路径格式如：personal/default/projects/{projectId}/doc-name",
+        "读取文件内容（Markdown 文档）。路径格式如：personal/default/projects/{projectId}/docs/doc-name",
       inputSchema: z.object({
         path: z
           .string()
           .describe(
-            "文件路径，如 personal/default/projects/{projectId}/doc-name"
+            "文件路径，如 personal/default/projects/{projectId}/docs/doc-name"
           ),
       }),
     },
@@ -114,11 +114,11 @@ export function registerFileTools(server: McpServer) {
     "read_tree",
     {
       description:
-        "获取目录树结构，递归列出所有子目录和 .md 文件。路径格式如：personal/default/projects/{projectId}",
+        "获取目录树结构，递归列出所有子目录和 .md 文件。路径格式如：personal/default/projects/{projectId}/docs",
       inputSchema: z.object({
         path: z
           .string()
-          .describe("目录路径，如 personal/default/projects/{projectId}"),
+          .describe("目录路径，如 personal/default/projects/{projectId}/docs"),
       }),
     },
     async ({ path }) => {

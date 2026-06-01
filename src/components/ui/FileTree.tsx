@@ -37,7 +37,7 @@ function FileTreeNode({
     return (
       <div>
         <div
-          className={`flex items-center gap-1.5 w-full px-2 py-1 text-xs transition-colors select-none ${
+          className={`flex items-center gap-1.5 w-full px-2 py-1 text-sm transition-colors select-none ${
             isEditable
               ? "text-gray-500 hover:bg-gray-100 cursor-default group"
               : "text-gray-500 cursor-default"
@@ -154,7 +154,7 @@ function FileTreeNode({
               }
             : undefined
         }
-        className={`flex items-center gap-1.5 w-full px-2 py-1 text-xs transition-colors select-none ${
+        className={`flex items-center gap-1.5 w-full px-2 py-1 text-sm transition-colors select-none ${
           isSelected
             ? "bg-blue-50 text-blue-700 font-medium"
             : isEditable
@@ -252,7 +252,7 @@ function renderNewDirInput(level: number, props: FileTreeProps) {
           if (e.key === "Escape") props.onCreatingDirCancel?.();
         }}
         onBlur={() => props.onCreatingDirCancel?.()}
-        className="flex-1 min-w-0 px-1.5 py-0.5 text-xs border border-blue-300 rounded focus:outline-none focus:border-blue-500 bg-white"
+        className="flex-1 min-w-0 px-1.5 py-0.5 text-sm border border-blue-300 rounded focus:outline-none focus:border-blue-500 bg-white"
       />
     </div>
   );
@@ -270,7 +270,7 @@ export default function FileTree(props: FileTreeProps) {
         <FileTreeNode key={node.path} node={node} level={0} props={props} />
       ))}
       {tree.length === 0 && props.creatingDirParent == null && (
-        <p className="px-3 py-4 text-xs text-gray-400 text-center">{emptyText}</p>
+        <p className="px-3 py-4 text-sm text-gray-400 text-center">{emptyText}</p>
       )}
     </div>
   );

@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import ChatWorkspace from "@/components/chat/ChatWorkspace";
 import FileTree from "@/components/ui/FileTree";
+import ProjectInfoTab from "@/components/project/ProjectInfoTab";
+import type { Repository } from "@/lib/fs";
 import { TreeNode } from "@/lib/tree";
+
+const PROJECT_INFO_TAB = "__project_info__" as const;
 
 const CherryEditor = dynamic(() => import("@/components/editor/CherryEditor"), {
   ssr: false,
@@ -24,11 +28,14 @@ interface FileTab {
 }
 
 interface ProjectMeta {
+  id: string;
   name: string;
   description: string;
   createdAt: string;
   accountId: string;
   accountType: string;
+  sortOrder: number;
+  repositories?: Repository[];
 }
 
 interface AccountInfo {
@@ -46,6 +53,7 @@ interface RecentChat {
 interface ProjectWorkspaceProps {
   projectName: string;
   projectPath: string; // e.g. "personal/default/projects/{projectId}"
+  docsPath: string; // e.g. "personal/default/projects/{projectId}/docs"
   tree: TreeNode[];
   selectedFile: string | null; // relative path within project, from ?file= URL param
   initialContent: string; // file content preloaded by server
@@ -81,9 +89,12 @@ function findChildren(nodes: TreeNode[], parentPath: string): TreeNode[] {
 export default function ProjectWorkspace({
   projectName,
   projectPath,
+  docsPath,
   tree,
   selectedFile,
   initialContent,
+  projectMeta,
+  recentChats,
 }: ProjectWorkspaceProps) {
   const router = useRouter();
 
@@ -110,7 +121,7 @@ export default function ProjectWorkspace({
     ? [{ filePath: selectedFile, content: initialContent, loaded: true }]
     : [];
   const [tabs, setTabs] = useState<FileTab[]>(initialTab);
-  const [activeTabId, setActiveTabId] = useState<string>(selectedFile || "__chat__");
+  const [activeTabId, setActiveTabId] = useState<string>(PROJECT_INFO_TAB);
   const contentCache = useRef<Record<string, string>>(
     selectedFile && initialContent !== undefined ? { [selectedFile]: initialContent } : {}
   );
@@ -131,8 +142,8 @@ export default function ProjectWorkspace({
   const handleCreateDir = async () => {
     if (!newDirName.trim()) return;
     const fullPath = newDirParent
-      ? `${projectPath}/${newDirParent}/${newDirName.trim()}`
-      : `${projectPath}/${newDirName.trim()}`;
+      ? `${docsPath}/${newDirParent}/${newDirName.trim()}`
+      : `${docsPath}/${newDirName.trim()}`;
     await fetch("/api/fs/directory", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -156,7 +167,7 @@ export default function ProjectWorkspace({
     await fetch("/api/fs/directory", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ path: `${projectPath}/${dirPath}` }),
+      body: JSON.stringify({ path: `${docsPath}/${dirPath}` }),
     });
     router.refresh();
   };
@@ -167,7 +178,7 @@ export default function ProjectWorkspace({
     await fetch("/api/fs/document", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ path: `${projectPath}/${filePath}` }),
+      body: JSON.stringify({ path: `${docsPath}/${filePath}` }),
     });
     // Close the tab if open
     if (tabs.some((t) => t.filePath === filePath)) {
@@ -179,8 +190,8 @@ export default function ProjectWorkspace({
   const handleCreateFile = async () => {
     if (!newFileName.trim()) return;
     const fullPath = newFileParent
-      ? `${projectPath}/${newFileParent}/${newFileName.trim()}`
-      : `${projectPath}/${newFileName.trim()}`;
+      ? `${docsPath}/${newFileParent}/${newFileName.trim()}`
+      : `${docsPath}/${newFileName.trim()}`;
     await fetch("/api/fs/document", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -221,7 +232,7 @@ export default function ProjectWorkspace({
 
       // Fetch content if not cached
       if (!cachedContent) {
-        fetch(`/api/fs/document?path=${projectPath}/${filePath}`)
+        fetch(`/api/fs/document?path=${docsPath}/${filePath}`)
           .then((r) => r.json())
           .then((data) => {
             const content = data.content ?? "";
@@ -243,7 +254,7 @@ export default function ProjectWorkspace({
 
       return [...prev, newTab];
     });
-  }, [projectPath]);
+  }, [docsPath]);
 
   const handleTabClose = useCallback((tabId: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -252,7 +263,7 @@ export default function ProjectWorkspace({
       const newTabs = prev.filter((t) => t.filePath !== tabId);
       if (activeTabId === tabId) {
         if (newTabs.length === 0) {
-          setActiveTabId("__chat__");
+          setActiveTabId(PROJECT_INFO_TAB);
         } else if (idx < newTabs.length) {
           setActiveTabId(newTabs[idx].filePath);
         } else {
@@ -268,20 +279,54 @@ export default function ProjectWorkspace({
     await fetch("/api/fs/document", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ path: `${projectPath}/${filePath}`, content: markdown }),
+      body: JSON.stringify({ path: `${docsPath}/${filePath}`, content: markdown }),
     });
-  }, [projectPath]);
+  }, [docsPath]);
 
   const handleFileChange = useCallback((filePath: string, markdown: string) => {
     contentCache.current[filePath] = markdown;
   }, []);
+
+  // --- Chat navigation from ProjectInfoTab ---
+
+  const handleSwitchToChat = useCallback(async (chatId: number) => {
+    try {
+      const [chatRes, msgRes] = await Promise.all([
+        fetch(`/api/chats/${chatId}`),
+        fetch(`/api/chats/${chatId}/messages`),
+      ]);
+      const chatData = await chatRes.json();
+      const msgData = await msgRes.json();
+
+      setActiveChatId(chatId);
+      setActiveChatTitle(chatData.title || "新对话");
+      setActiveChatMessages(
+        (msgData.messages || []).map((m: { id: number; role: "user" | "assistant"; content: string }) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+        }))
+      );
+      setActiveChatModelId(chatData.modelId);
+      setActiveChatTemplateId(chatData.templateId);
+      setChatKey((k) => k + 1);
+      setActiveTabId("__chat__");
+    } catch {
+      // fallback: just switch to chat tab
+      setActiveTabId("__chat__");
+    }
+  }, []);
+
+  const handleNewChat = useCallback(() => {
+    router.push(`/chat/new?project=${projectId}`);
+  }, [router, projectId]);
 
   return (
     <div className="flex h-full">
       {/* Left: File tree sidebar */}
       <div className="w-[240px] h-full flex flex-col border-r border-gray-200 bg-gray-50 shrink-0">
         <div className="px-3 h-[41px] flex items-center border-b border-gray-200 bg-white">
-          <h3 className="text-sm font-semibold text-gray-800 truncate">{projectName}</h3>
+          <h3 className="text-sm font-semibold text-gray-800 truncate">{projectName} 文档</h3>
         </div>
 
         <div className="px-2 py-1.5 border-b border-gray-100 flex gap-1">
@@ -339,7 +384,7 @@ export default function ProjectWorkspace({
         <FileTree
           tree={tree}
           mode="editable"
-          selectedPath={activeTabId !== "__chat__" ? activeTabId : null}
+          selectedPath={activeTabId !== "__chat__" && activeTabId !== PROJECT_INFO_TAB ? activeTabId : null}
           onFileClick={(node) => handleFileClick(node)}
           onNewDirectory={(parentPath) => handleStartNewDir(parentPath)}
           onNewFile={(parentPath) => { setNewFileParent(parentPath); setShowNewFile(true); }}
@@ -362,6 +407,23 @@ export default function ProjectWorkspace({
       <div className="flex-1 h-full flex flex-col overflow-hidden">
         {/* Tab Bar */}
         <div className="flex items-center h-[41px] bg-gray-50 border-b border-gray-200 overflow-x-auto shrink-0">
+          {/* Project Info tab (fixed, first) */}
+          <button
+            onClick={() => setActiveTabId(PROJECT_INFO_TAB)}
+            className={`flex items-center gap-1.5 h-full px-3 text-xs font-medium whitespace-nowrap border-b-2 transition-colors ${
+              activeTabId === PROJECT_INFO_TAB
+                ? "bg-white text-blue-600 border-blue-600"
+                : "text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            项目信息
+          </button>
+
           {/* Chat tab */}
           <button
             onClick={() => setActiveTabId("__chat__")}
@@ -409,6 +471,22 @@ export default function ProjectWorkspace({
 
         {/* Tab Content */}
         <div className="flex-1 min-h-0 relative">
+          {/* Project Info tab content */}
+          <div
+            className="absolute inset-0 overflow-y-auto"
+            style={{ display: activeTabId === PROJECT_INFO_TAB ? "flex" : "none", flexDirection: "column" }}
+          >
+            <ProjectInfoTab
+              projectId={projectId}
+              projectName={projectName}
+              projectMeta={projectMeta}
+              projectPath={projectPath}
+              recentChats={recentChats}
+              onSwitchToChat={handleSwitchToChat}
+              onNewChat={handleNewChat}
+            />
+          </div>
+
           {/* Chat workspace */}
           <div
             className="absolute inset-0"

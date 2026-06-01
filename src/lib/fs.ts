@@ -187,6 +187,7 @@ export function createProject(type: "personal" | "enterprise", accountId: string
   const projectId = randomUUID();
   const dirSegments = [...accountSegs, "projects", projectId];
   createDir(dirSegments);
+  createDir([...dirSegments, "docs"]);
 
   const meta: ProjectMeta = {
     id: projectId,
@@ -260,6 +261,66 @@ export function renameDocument(newTitle: string, ...fileSegments: string[]): voi
 }
 
 /**
+ * Repository metadata for project integration.
+ */
+export interface RepositoryCredentials {
+  type: "token" | "username_password" | "none";
+  token?: string;
+  username?: string;
+  password?: string;
+}
+
+export interface Repository {
+  id: string;
+  name: string;
+  url: string;
+  type: "github" | "gitlab" | "other";
+  credentials: RepositoryCredentials;
+  // 同步状态字段
+  syncStatus?: "not_cloned" | "synced" | "behind" | "error";
+  lastSyncAt?: string;      // 上次同步时间 (ISO)
+  lastCheckedAt?: string;   // 上次检查时间 (ISO)
+  localCommitHash?: string; // 本地 HEAD commit hash
+  remoteCommitHash?: string; // 远程 HEAD commit hash
+  errorMessage?: string;    // 错误信息
+}
+
+/**
+ * Sandbox status for a project.
+ */
+export interface SandboxStatus {
+  enabled: boolean;        // 是否已申请沙盒
+  requestedAt?: string;    // 申请时间
+  releasedAt?: string;     // 释放时间
+}
+
+/**
+ * Skill status for a project.
+ */
+export interface SkillStatus {
+  enabled: boolean;
+  installedAt?: string;
+  uninstalledAt?: string;
+  version?: string;
+}
+
+/**
+ * Project skills configuration.
+ */
+export interface ProjectSkills {
+  ecc?: SkillStatus;
+}
+
+/**
+ * Project member.
+ */
+export interface ProjectMember {
+  id: string;           // UUID
+  accountName: string;  // 账号名称
+  addedAt: string;      // 添加时间 (ISO)
+}
+
+/**
  * Project metadata stored as .project.json in each project directory.
  */
 export interface ProjectMeta {
@@ -270,6 +331,10 @@ export interface ProjectMeta {
   accountId: string;
   accountType: string;
   sortOrder: number;   // lower = higher priority (appears first)
+  repositories?: Repository[];
+  sandbox?: SandboxStatus;  // 沙盒状态
+  skills?: ProjectSkills;   // Skills 状态
+  members?: ProjectMember[]; // 项目成员
 }
 
 /**
@@ -295,6 +360,64 @@ export function writeProjectMeta(meta: ProjectMeta, dirSegments: string[]): void
   fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), "utf-8");
 }
 
+/** Add a repository to project metadata. */
+export function addRepository(dirSegments: string[], repository: Repository): Repository[] {
+  const meta = readProjectMeta(dirSegments);
+  if (!meta) throw new Error("Project not found");
+  if (!meta.repositories) meta.repositories = [];
+  meta.repositories.push(repository);
+  writeProjectMeta(meta, dirSegments);
+  return meta.repositories;
+}
+
+/** Remove a repository from project metadata. */
+export function removeRepository(dirSegments: string[], repoId: string): void {
+  const meta = readProjectMeta(dirSegments);
+  if (!meta) throw new Error("Project not found");
+  meta.repositories = (meta.repositories || []).filter((r) => r.id !== repoId);
+  writeProjectMeta(meta, dirSegments);
+}
+
+/** Update a repository in project metadata. */
+export function updateRepository(dirSegments: string[], repoId: string, updates: Partial<Omit<Repository, "id">>): Repository | null {
+  const meta = readProjectMeta(dirSegments);
+  if (!meta) throw new Error("Project not found");
+  const repo = (meta.repositories || []).find((r) => r.id === repoId);
+  if (!repo) return null;
+  Object.assign(repo, updates);
+  writeProjectMeta(meta, dirSegments);
+  return repo;
+}
+
+/** Add a member to project metadata. */
+export function addMember(dirSegments: string[], member: ProjectMember): ProjectMember[] {
+  const meta = readProjectMeta(dirSegments);
+  if (!meta) throw new Error("Project not found");
+  if (!meta.members) meta.members = [];
+  meta.members.push(member);
+  writeProjectMeta(meta, dirSegments);
+  return meta.members;
+}
+
+/** Remove a member from project metadata. */
+export function removeMember(dirSegments: string[], memberId: string): void {
+  const meta = readProjectMeta(dirSegments);
+  if (!meta) throw new Error("Project not found");
+  meta.members = (meta.members || []).filter((m) => m.id !== memberId);
+  writeProjectMeta(meta, dirSegments);
+}
+
+/** Update a member in project metadata. */
+export function updateMember(dirSegments: string[], memberId: string, updates: Partial<Omit<ProjectMember, "id">>): ProjectMember | null {
+  const meta = readProjectMeta(dirSegments);
+  if (!meta) throw new Error("Project not found");
+  const member = (meta.members || []).find((m) => m.id === memberId);
+  if (!member) return null;
+  Object.assign(member, updates);
+  writeProjectMeta(meta, dirSegments);
+  return member;
+}
+
 /**
  * List documents in a directory (only .md files).
  */
@@ -305,6 +428,29 @@ export function listDocuments(...dirSegments: string[]): string[] {
     .readdirSync(dirPath, { withFileTypes: true })
     .filter((d) => d.isFile() && d.name.endsWith(".md"))
     .map((d) => d.name.slice(0, -3));
+}
+
+/**
+ * Read project-level MCP config from .mcp.json.
+ * Returns null if the file doesn't exist.
+ */
+export function readProjectMcpConfig(dirSegments: string[]): Record<string, unknown> | null {
+  const configPath = path.join(getDataRoot(), ...dirSegments, ".mcp.json");
+  if (!fs.existsSync(configPath)) return null;
+  try {
+    const raw = fs.readFileSync(configPath, "utf-8");
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Write project-level MCP config to .mcp.json.
+ */
+export function writeProjectMcpConfig(config: object, dirSegments: string[]): void {
+  const configPath = path.join(getDataRoot(), ...dirSegments, ".mcp.json");
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2), "utf-8");
 }
 
 /* ========== Workspace Functions ========== */

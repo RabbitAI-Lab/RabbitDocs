@@ -7,6 +7,7 @@ import { modelConfigs, mcpConfig } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { ModelError } from "./types";
 import type { StreamEvent } from "./types";
+import { readProjectMcpConfig as readProjectMcpConfigFromFs } from "./fs";
 
 type ModelConfigRow = {
   id: number;
@@ -63,6 +64,7 @@ export async function* streamModelResponse(
   options?: {
     systemPrompt?: string;
     cwd?: string;
+    projectId?: string;
   }
 ): AsyncGenerator<StreamEvent> {
   const config = resolveModelConfig(modelId);
@@ -176,11 +178,23 @@ export async function* streamModelResponse(
     } as Record<string, string | undefined>,
   };
 
-  // 注入 MCP 服务器配置（外部 MCP + 客户端 tool in-process MCP）
-  const mcpServers = readMcpServers();
+  // 注入 MCP 服务器配置（全局 MCP + 项目 MCP + 客户端 tool in-process MCP）
+  const globalMcpServers = readMcpServers();
+  let projectMcpServers: Record<string, McpServerConfig> | undefined;
+  if (options?.projectId) {
+    try {
+      const projectConfig = readProjectMcpConfigFromFs(["personal", "default", "projects", options.projectId]);
+      if (projectConfig?.mcpServers && typeof projectConfig.mcpServers === "object") {
+        projectMcpServers = projectConfig.mcpServers as Record<string, McpServerConfig>;
+      }
+    } catch {
+      // 项目级 MCP 配置读取失败，忽略
+    }
+  }
   const clientToolsServer = createClientToolsMcpServer();
   sdkOptions.mcpServers = {
-    ...mcpServers,
+    ...globalMcpServers,
+    ...projectMcpServers,
     chatwiki_client: clientToolsServer,
   };
   sdkOptions.allowedTools = ["mcp__chatwiki_client__*"];
