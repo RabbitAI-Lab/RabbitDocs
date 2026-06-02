@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Bubble, Sender, Welcome, Prompts, XProvider, Actions } from "@ant-design/x";
-import { Button, Space, Avatar, Dropdown, Tooltip, Tag, Typography } from "antd";
+import { Button, Space, Avatar, Dropdown, Tooltip, Tag, Typography, Popover, Input, App } from "antd";
 import XMarkdown from "@ant-design/x-markdown";
 import {
   RobotOutlined,
@@ -16,6 +16,10 @@ import {
   ArrowLeftOutlined,
   RedoOutlined,
   PlusOutlined,
+  ShareAltOutlined,
+  CopyOutlined,
+  ReloadOutlined,
+  StopOutlined,
 } from "@ant-design/icons";
 import type { BubbleItemType } from "@ant-design/x";
 import ChatHistoryPopover from "./ChatHistoryPopover";
@@ -111,6 +115,10 @@ export default function ChatWorkspace({
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | undefined>(initialTemplateId);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [saveModalContent, setSaveModalContent] = useState("");
+  const [shareToken, setShareToken] = useState<string | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const { message } = App.useApp();
 
   // Persist model/template selection to DB (only when chat exists)
   const updateChatSelection = (field: string, value: number | undefined) => {
@@ -192,6 +200,77 @@ export default function ChatWorkspace({
         }
       });
   }, []);
+
+  // 查询当前会话的分享状态
+  useEffect(() => {
+    if (!effectiveChatId) {
+      setShareToken(null);
+      return;
+    }
+    fetch(`/api/chats/${effectiveChatId}/share`)
+      .then((r) => {
+        if (r.ok) return r.json();
+        return null;
+      })
+      .then((data) => {
+        setShareToken(data?.token ?? null);
+      });
+  }, [effectiveChatId]);
+
+  const handleShare = async () => {
+    if (!effectiveChatId) return;
+    setShareLoading(true);
+    try {
+      if (!shareToken) {
+        const res = await fetch(`/api/chats/${effectiveChatId}/share`, { method: "POST" });
+        if (res.ok) {
+          const data = await res.json();
+          setShareToken(data.token);
+        }
+      }
+      setShareOpen(true);
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const handleCopyLink = () => {
+    const url = shareToken ? `${window.location.origin}/share/${shareToken}` : "";
+    if (url) {
+      navigator.clipboard.writeText(url);
+      message.success("分享链接已复制到剪贴板");
+    }
+  };
+
+  const handleRegenerateLink = async () => {
+    if (!effectiveChatId) return;
+    setShareLoading(true);
+    try {
+      const res = await fetch(`/api/chats/${effectiveChatId}/share`, { method: "PATCH" });
+      if (res.ok) {
+        const data = await res.json();
+        setShareToken(data.token);
+        message.success("已重新生成分享链接");
+      }
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const handleCancelShare = async () => {
+    if (!effectiveChatId) return;
+    setShareLoading(true);
+    try {
+      const res = await fetch(`/api/chats/${effectiveChatId}/share`, { method: "DELETE" });
+      if (res.ok) {
+        setShareToken(null);
+        setShareOpen(false);
+        message.success("已取消分享");
+      }
+    } finally {
+      setShareLoading(false);
+    }
+  };
 
   const handleSend = async (content: string) => {
     if (!content.trim() || loading) return;
@@ -765,6 +844,67 @@ export default function ChatWorkspace({
               }}
             />
           </Tooltip>
+          {effectiveChatId && (
+            <Popover
+              open={shareOpen}
+              onOpenChange={setShareOpen}
+              trigger="click"
+              placement="bottomRight"
+              title="分享对话"
+              content={
+                <div style={{ width: 280 }}>
+                  <Input.TextArea
+                    readOnly
+                    value={shareToken ? `${window.location.origin}/share/${shareToken}` : ""}
+                    autoSize={{ minRows: 2, maxRows: 3 }}
+                    style={{ fontSize: 12, marginBottom: 12 }}
+                  />
+                  <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                    <Button
+                      type="primary"
+                      icon={<CopyOutlined />}
+                      size="small"
+                      onClick={handleCopyLink}
+                      block
+                    >
+                      复制链接
+                    </Button>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <Button
+                      icon={<ReloadOutlined />}
+                      size="small"
+                      danger
+                      loading={shareLoading}
+                      onClick={handleRegenerateLink}
+                      block
+                    >
+                      重新生成
+                    </Button>
+                    <Button
+                      icon={<StopOutlined />}
+                      size="small"
+                      danger
+                      loading={shareLoading}
+                      onClick={handleCancelShare}
+                      block
+                    >
+                      取消分享
+                    </Button>
+                  </div>
+                </div>
+              }
+            >
+              <Tooltip title="分享">
+                <Button
+                  icon={<ShareAltOutlined />}
+                  size="small"
+                  loading={shareLoading}
+                  onClick={handleShare}
+                />
+              </Tooltip>
+            </Popover>
+          )}
           <ChatHistoryPopover
             currentChatId={effectiveChatId}
             onSelect={handleHistorySelect}

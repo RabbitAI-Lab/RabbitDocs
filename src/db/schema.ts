@@ -93,3 +93,11 @@ export const storageConfig = sqliteTable("storage_config", {
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
+
+// shared_chats: 会话分享
+export const sharedChats = sqliteTable("shared_chats", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  chatId: integer("chat_id").notNull().references(() => chats.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  createdAt: text("created_at").notNull(),
+});

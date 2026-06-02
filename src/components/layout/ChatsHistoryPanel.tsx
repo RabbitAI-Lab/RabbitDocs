@@ -122,14 +122,14 @@ export default function ChatsHistoryPanel({ chats }: ChatsHistoryPanelProps) {
     <CollapsibleGroup title="Chats History" defaultOpen={true}>
       <div className="space-y-1">
         {groups.length === 0 && (
-          <p className="px-3 py-2 text-xs text-gray-400">暂无聊天记录</p>
+          <p className="px-3 py-2 text-sm text-gray-400">暂无聊天记录</p>
         )}
         {groups.map((group) => (
           <div key={group.label}>
-            <div className="px-3 py-1 text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+            <div className="px-3 py-1 text-xs font-medium text-gray-400">
               {group.label}
             </div>
-            <div className="space-y-0.5">
+            <div className="space-y-[1.5px] px-2">
               {group.chats.map((chat) => {
                 const chatPath = `/chat/${chat.id}`;
                 const isActive = pathname === chatPath;
@@ -138,15 +138,15 @@ export default function ChatsHistoryPanel({ chats }: ChatsHistoryPanelProps) {
                     key={chat.id}
                     onClick={() => router.push(chatPath)}
                     className={cn(
-                      "group relative flex items-center justify-between w-full px-3 py-1.5 text-sm rounded-lg transition-colors text-left cursor-pointer",
+                      "group relative flex items-center justify-between w-full px-2 py-1.5 text-sm rounded-lg transition-colors text-left cursor-pointer",
                       isActive
-                        ? "bg-blue-50 text-blue-700 font-medium"
-                        : "text-blue-600 hover:bg-blue-50"
+                        ? "bg-gray-100 text-gray-900 font-medium"
+                        : "text-gray-700 hover:bg-gray-100"
                     )}
                   >
                     <span className="truncate">{chat.title}</span>
                     <span className="flex items-center shrink-0 ml-2">
-                      <span className="text-xs text-gray-400 group-hover:opacity-0 transition-opacity">
+                      <span className="text-xs text-gray-300 group-hover:opacity-0 transition-opacity">
                         {formatTime(chat.updatedAt)}
                       </span>
                       <span className="relative">

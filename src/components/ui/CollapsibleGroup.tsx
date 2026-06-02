@@ -17,12 +17,19 @@ export default function CollapsibleGroup({ title, defaultOpen = true, children, 
     <div className="mb-1">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 w-full px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
+        className="flex items-center gap-1.5 w-full px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors sticky top-0 bg-white z-10"
       >
+        <span className="uppercase tracking-wider">{title}</span>
+        {actions && (
+          <span className="ml-auto" onClick={(e) => e.stopPropagation()}>
+            {actions}
+          </span>
+        )}
         <svg
           className={cn(
-            "w-3 h-3 transition-transform duration-150",
-            isOpen ? "rotate-90" : "rotate-0"
+            "w-3 h-3 transition-transform duration-150 shrink-0",
+            isOpen ? "rotate-90" : "rotate-0",
+            !actions && "ml-auto"
           )}
           viewBox="0 0 24 24"
           fill="none"
@@ -33,12 +40,6 @@ export default function CollapsibleGroup({ title, defaultOpen = true, children, 
         >
           <polyline points="9 18 15 12 9 6" />
         </svg>
-        <span className="uppercase tracking-wider">{title}</span>
-        {actions && (
-          <span className="ml-auto" onClick={(e) => e.stopPropagation()}>
-            {actions}
-          </span>
-        )}
       </button>
       {isOpen && <div className="mt-0.5">{children}</div>}
     </div>
