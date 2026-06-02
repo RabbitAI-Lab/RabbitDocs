@@ -63,12 +63,12 @@ export default function ChatPageContent({
   initialMessages,
   initialModelId,
   initialTemplateId,
-  projectId,
+  projectId: initialProjectId,
   initialTree,
-  projectName,
-  projectMeta,
-  recentChats,
-  recentDocuments,
+  projectName: initialProjectName,
+  projectMeta: initialProjectMeta,
+  recentChats: initialRecentChats,
+  recentDocuments: initialRecentDocuments,
 }: ChatPageContentProps) {
   const router = useRouter();
   const { message } = App.useApp();
@@ -81,6 +81,13 @@ export default function ChatPageContent({
   const [activeChatModelId, setActiveChatModelId] = useState(initialModelId);
   const [activeChatTemplateId, setActiveChatTemplateId] = useState(initialTemplateId);
   const [chatKey, setChatKey] = useState(0);
+
+  // Project context state (mutable for chat switching)
+  const [projectId, setProjectId] = useState(initialProjectId);
+  const [projectName, setProjectName] = useState(initialProjectName);
+  const [projectMeta, setProjectMeta] = useState<ProjectMetaType | null | undefined>(initialProjectMeta);
+  const [recentChats, setRecentChats] = useState(initialRecentChats);
+  const [recentDocuments, setRecentDocuments] = useState(initialRecentDocuments);
 
   // File tree state
   const [tree, setTree] = useState<TreeNode[]>(initialTree);
@@ -97,10 +104,11 @@ export default function ChatPageContent({
 
   const docsPath = projectId ? `personal/default/projects/${projectId}/docs` : "";
 
-  const refreshTree = async () => {
-    if (!projectId) return;
+  const refreshTree = useCallback(async (targetProjectId?: string) => {
+    const pid = targetProjectId ?? projectId;
+    if (!pid) return;
     setTreeLoading(true);
-    const prefix = `personal/default/projects/${projectId}/docs`;
+    const prefix = `personal/default/projects/${pid}/docs`;
     try {
       const res = await fetch(`/api/fs/tree?path=${prefix}`);
       const data = await res.json();
@@ -109,21 +117,30 @@ export default function ChatPageContent({
       setTree([]);
     }
     setTreeLoading(false);
-  };
+  }, [projectId]);
 
   // --- Chat switching ---
 
-  const handleSwitchToChat = useCallback(async (chatId: number) => {
+  const handleSwitchToChat = useCallback(async (targetChatId: number) => {
+    // Fetch chat metadata to check project association
     try {
-      const [chatRes, msgRes] = await Promise.all([
-        fetch(`/api/chats/${chatId}`),
-        fetch(`/api/chats/${chatId}/messages`),
-      ]);
+      const chatRes = await fetch(`/api/chats/${targetChatId}`);
       const chatData = await chatRes.json();
+      const targetProjectId = chatData.projectId || undefined;
+
+      // If the target chat belongs to a different project, do a full page navigation
+      // to let the server component reload all project context (tree, meta, etc.)
+      if (targetProjectId !== projectId) {
+        router.push(`/chat/${targetChatId}`);
+        return;
+      }
+
+      // Same project (or both no project) — fast client-side switch
+      const msgRes = await fetch(`/api/chats/${targetChatId}/messages`);
       const msgData = await msgRes.json();
 
-      setActiveChatId(chatId);
-      setActiveChatTitle(chatData.title || "新Chat");
+      setActiveChatId(targetChatId);
+      setActiveChatTitle(chatData.title || "New Conversation");
       setActiveChatMessages(
         (Array.isArray(msgData) ? msgData : msgData.messages || []).map(
           (m: { id: number; role: "user" | "assistant"; content: string }) => ({
@@ -137,11 +154,12 @@ export default function ChatPageContent({
       setActiveChatTemplateId(chatData.templateId);
       setChatKey((k) => k + 1);
       setActiveTabId(CHAT_TAB);
-      window.history.replaceState(null, "", `/chat/${chatId}`);
+      window.history.replaceState(null, "", `/chat/${targetChatId}`);
     } catch {
-      setActiveTabId(CHAT_TAB);
+      // Fallback to full page navigation on error
+      router.push(`/chat/${targetChatId}`);
     }
-  }, []);
+  }, [projectId, router]);
 
   const handleNewChat = useCallback(() => {
     router.push("/chat/new");

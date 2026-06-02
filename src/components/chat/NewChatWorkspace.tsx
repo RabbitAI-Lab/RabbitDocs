@@ -59,7 +59,7 @@ export default function NewChatWorkspace() {
 
   // Chat switching state
   const [activeChatId, setActiveChatId] = useState<number | null>(null);
-  const [activeChatTitle, setActiveChatTitle] = useState("新Chat");
+  const [activeChatTitle, setActiveChatTitle] = useState("New Conversation");
   const [activeChatMessages, setActiveChatMessages] = useState<Array<{ id: number; role: "user" | "assistant"; content: string }>>([]);
   const [activeChatModelId, setActiveChatModelId] = useState<number | undefined>();
   const [activeChatTemplateId, setActiveChatTemplateId] = useState<number | undefined>();
@@ -151,7 +151,7 @@ export default function NewChatWorkspace() {
     contentCache.current = {};
     // Reset chat switching state
     setActiveChatId(null);
-    setActiveChatTitle("新Chat");
+    setActiveChatTitle("New Conversation");
     setActiveChatMessages([]);
     setActiveChatModelId(undefined);
     setActiveChatTemplateId(undefined);
@@ -177,7 +177,7 @@ export default function NewChatWorkspace() {
     contentCache.current = {};
     // Reset chat switching state
     setActiveChatId(null);
-    setActiveChatTitle("新Chat");
+    setActiveChatTitle("New Conversation");
     setActiveChatMessages([]);
     setActiveChatModelId(undefined);
     setActiveChatTemplateId(undefined);
@@ -419,7 +419,7 @@ export default function NewChatWorkspace() {
       const msgData = await msgRes.json();
 
       setActiveChatId(chatId);
-      setActiveChatTitle(chatData.title || "新Chat");
+      setActiveChatTitle(chatData.title || "New Conversation");
       setActiveChatMessages(
         (Array.isArray(msgData) ? msgData : msgData.messages || []).map(
           (m: { id: number; role: "user" | "assistant"; content: string }) => ({
@@ -439,7 +439,7 @@ export default function NewChatWorkspace() {
 
   const handleNewChat = useCallback(() => {
     setActiveChatId(null);
-    setActiveChatTitle("新Chat");
+    setActiveChatTitle("New Conversation");
     setActiveChatMessages([]);
     setActiveChatModelId(undefined);
     setActiveChatTemplateId(undefined);
@@ -551,9 +551,9 @@ export default function NewChatWorkspace() {
             )}
           </>
         ) : (
-          <>
+          <div className="flex-1 flex flex-col m-2 animate-blue-breathing overflow-hidden bg-white">
             {/* Project selection header */}
-            <div className="px-3 h-[41px] border-b border-gray-200 bg-white flex items-center">
+            <div className="px-3 h-[41px] border-b border-gray-200 flex items-center">
               <h3 className="text-sm font-semibold text-gray-800">选择项目</h3>
             </div>
 
@@ -576,7 +576,7 @@ export default function NewChatWorkspace() {
                 ))
               )}
             </div>
-          </>
+          </div>
         )}
       </div>
 
@@ -734,19 +734,19 @@ export default function NewChatWorkspace() {
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center bg-gray-100">
-            <div className="text-center bg-purple-50 rounded-xl p-8 border-l-4 border-purple-400 max-w-sm mx-4 shadow-sm">
+            <div className="text-center bg-blue-50 rounded-xl p-8 border-l-4 border-blue-400 max-w-sm mx-4 shadow-sm">
               {/* 指向左侧的弹跳箭头 */}
               <div className="flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-purple-500 animate-slide-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="w-8 h-8 text-blue-500 animate-slide-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M15 19l-7-7 7-7" />
                 </svg>
               </div>
               {/* 主图标 */}
-              <svg className="w-16 h-16 mx-auto mb-4 text-purple-400 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg className="w-16 h-16 mx-auto mb-4 text-blue-400 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
               {/* 提示文字 */}
-              <p className="text-lg text-gray-700 font-medium">请先在左侧选择一个项目</p>
+              <p className="text-lg text-blue-700 font-medium">请先在左侧选择一个项目</p>
             </div>
           </div>
         )}

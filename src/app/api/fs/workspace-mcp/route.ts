@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readProjectMcpConfig, writeProjectMcpConfig } from "@/lib/fs";
+import { readWorkspaceMcpConfig, writeWorkspaceMcpConfig } from "@/lib/fs";
 import { logOperation, extractProjectId } from "@/lib/operation-log";
 
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/fs/project-mcp?dirSegments=...
+ * GET /api/fs/workspace-mcp?dirSegments=...
  *
- * 返回项目级 MCP 配置的完整结构（mcpJson），让前端可以渲染任意条 MCP server。
+ * 返回工作区级 MCP 配置的完整结构（mcpJson），让前端可以渲染任意条 MCP server。
  * 兼容老字段 enabled/apiKey（基于 zhipu-web-search-sse 计算），便于旧调用方降级。
  */
 export async function GET(req: NextRequest) {
@@ -19,16 +19,11 @@ export async function GET(req: NextRequest) {
   }
 
   const dirSegments = dirSegmentsStr.split(",");
-  const config = readProjectMcpConfig(dirSegments);
+  const config = readWorkspaceMcpConfig(dirSegments);
 
   const mcpServers =
     config && typeof config.mcpServers === "object" && config.mcpServers
       ? (config.mcpServers as Record<string, unknown>)
-      : {};
-  // disabled 字段：存被禁用的 server（保留配置，但 model-service 不会注入到 Agent SDK）
-  const disabled =
-    config && typeof config.disabled === "object" && config.disabled
-      ? (config.disabled as Record<string, unknown>)
       : {};
   const apiKeys =
     config && typeof config._apiKeys === "object" && config._apiKeys
@@ -44,7 +39,7 @@ export async function GET(req: NextRequest) {
   const apiKey = match ? match[1] : apiKeys["zhipu-web-search-sse"] || null;
 
   return NextResponse.json({
-    mcpJson: { mcpServers, disabled, _apiKeys: apiKeys },
+    mcpJson: { mcpServers, _apiKeys: apiKeys },
     // 兼容旧字段
     enabled,
     apiKey,
@@ -52,7 +47,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * PUT /api/fs/project-mcp
+ * PUT /api/fs/workspace-mcp
  *
  * 两种模式：
  *   1. { dirSegments, mcpJson: { mcpServers, _apiKeys } } - 结构化模式（推荐）
@@ -68,13 +63,7 @@ export async function PUT(req: NextRequest) {
 
   // ----- 模式 1: 结构化模式 -----
   if (body.mcpJson !== undefined) {
-    const { mcpJson } = body as {
-      mcpJson: {
-        mcpServers?: unknown;
-        disabled?: unknown;
-        _apiKeys?: unknown;
-      };
-    };
+    const { mcpJson } = body as { mcpJson: { mcpServers?: unknown; _apiKeys?: unknown } };
 
     if (!mcpJson || typeof mcpJson !== "object") {
       return NextResponse.json({ error: "mcpJson 必须是对象" }, { status: 400 });
@@ -86,22 +75,8 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // disabled 可选；若提供必须是对象
-    if (
-      mcpJson.disabled !== undefined &&
-      (typeof mcpJson.disabled !== "object" || mcpJson.disabled === null)
-    ) {
-      return NextResponse.json(
-        { error: "mcpJson.disabled 必须是对象" },
-        { status: 400 }
-      );
-    }
-
     // _apiKeys 可选；若提供必须是对象
-    if (
-      mcpJson._apiKeys !== undefined &&
-      (typeof mcpJson._apiKeys !== "object" || mcpJson._apiKeys === null)
-    ) {
+    if (mcpJson._apiKeys !== undefined && (typeof mcpJson._apiKeys !== "object" || mcpJson._apiKeys === null)) {
       return NextResponse.json(
         { error: "mcpJson._apiKeys 必须是对象" },
         { status: 400 }
@@ -110,11 +85,10 @@ export async function PUT(req: NextRequest) {
 
     const normalized = {
       mcpServers: mcpJson.mcpServers as Record<string, unknown>,
-      disabled: (mcpJson.disabled ?? {}) as Record<string, unknown>,
       _apiKeys: (mcpJson._apiKeys ?? {}) as Record<string, string>,
     };
 
-    writeProjectMcpConfig(normalized, dirSegments);
+    writeWorkspaceMcpConfig(normalized, dirSegments);
     logOperation({
       projectId: extractProjectId(dirSegments),
       category: "mcp",
@@ -137,7 +111,7 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    writeProjectMcpConfig(raw as object, dirSegments);
+    writeWorkspaceMcpConfig(raw as object, dirSegments);
     logOperation({
       projectId: extractProjectId(dirSegments),
       category: "mcp",
@@ -145,17 +119,13 @@ export async function PUT(req: NextRequest) {
       detail: "更新了 MCP 配置（rawJson）",
     });
 
-    const saved = readProjectMcpConfig(dirSegments) || {};
+    const saved = readWorkspaceMcpConfig(dirSegments) || {};
     return NextResponse.json({
       ok: true,
       mcpJson: {
         mcpServers:
           (saved.mcpServers && typeof saved.mcpServers === "object"
             ? saved.mcpServers
-            : {}) as Record<string, unknown>,
-        disabled:
-          (saved.disabled && typeof saved.disabled === "object"
-            ? saved.disabled
             : {}) as Record<string, unknown>,
         _apiKeys:
           (saved._apiKeys && typeof saved._apiKeys === "object"

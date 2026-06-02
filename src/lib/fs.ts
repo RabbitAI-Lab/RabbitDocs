@@ -32,8 +32,10 @@ export function getDataRoot(): string {
 /**
  * Build a full file system path from path segments.
  * Example: buildPath("personal", "default", "projects", "my-project", "doc") => "data/personal/default/projects/my-project/doc.md"
+ * Rejects path segments containing ".." or null bytes to prevent path traversal attacks.
  */
 export function buildPath(...segments: string[]): string {
+  assertValidSegments(segments);
   const last = segments[segments.length - 1];
   // If the last segment doesn't already end with .md, add it
   const withMd =
@@ -41,6 +43,32 @@ export function buildPath(...segments: string[]): string {
       ? [...segments.slice(0, -1), `${last}.md`]
       : segments;
   return path.join(getDataRoot(), ...withMd);
+}
+
+/**
+ * Build a full file system path for an HTML file (e.g. ".html" extension).
+ * Mirrors {@link buildPath} but uses ".html" as the default extension.
+ * Rejects path segments containing ".." or null bytes.
+ */
+export function buildHtmlPath(...segments: string[]): string {
+  assertValidSegments(segments);
+  const last = segments[segments.length - 1];
+  const withHtml =
+    segments.length > 0 && !last.endsWith(".html")
+      ? [...segments.slice(0, -1), `${last}.html`]
+      : segments;
+  return path.join(getDataRoot(), ...withHtml);
+}
+
+/**
+ * Reject path traversal attempts (e.g. "..") and null bytes inside path segments.
+ */
+function assertValidSegments(segments: string[]): void {
+  for (const seg of segments) {
+    if (seg === ".." || seg.includes("\0")) {
+      throw new Error("Invalid path segment");
+    }
+  }
 }
 
 /**
@@ -112,9 +140,11 @@ export function listOrgs(enterpriseId: string): string[] {
 }
 
 /**
- * Recursively list a directory tree: directories and .md files.
+ * Recursively list a directory tree: directories and files matching the provided extensions.
+ * Default behavior (exts = [".md"]) preserves backward compatibility with the original
+ * Markdown-only tree.
  */
-export function listTree(dirSegments: string[]): TreeNode[] {
+export function listTree(dirSegments: string[], exts: string[] = [".md"]): TreeNode[] {
   const dirPath = path.join(getDataRoot(), ...dirSegments);
   if (!fs.existsSync(dirPath)) return [];
 
@@ -132,15 +162,18 @@ export function listTree(dirSegments: string[]): TreeNode[] {
         name: entry.name,
         type: "directory",
         path: relPath,
-        children: listTree([...dirSegments, entry.name]),
+        children: listTree([...dirSegments, entry.name], exts),
       });
-    } else if (entry.name.endsWith(".md")) {
-      const nameWithoutExt = entry.name.slice(0, -3);
-      result.push({
-        name: nameWithoutExt,
-        type: "file",
-        path: relPath,
-      });
+    } else {
+      const matchedExt = exts.find((ext) => entry.name.endsWith(ext));
+      if (matchedExt) {
+        const nameWithoutExt = entry.name.slice(0, -matchedExt.length);
+        result.push({
+          name: nameWithoutExt,
+          type: "file",
+          path: relPath,
+        });
+      }
     }
   }
 
@@ -255,6 +288,50 @@ export function renameDocument(newTitle: string, ...fileSegments: string[]): voi
   if (fs.existsSync(oldPath)) {
     fs.renameSync(oldPath, newPath);
   }
+}
+
+/* ========== HTML document helpers (.html files under docs/) ========== */
+
+/** Read a .html document. Returns null if not found. */
+export function readHtmlDocument(...fileSegments: string[]): string | null {
+  const filePath = buildHtmlPath(...fileSegments);
+  if (!fs.existsSync(filePath)) return null;
+  return fs.readFileSync(filePath, "utf-8");
+}
+
+/** Write content to a .html document. Creates parent directories as needed. */
+export function writeHtmlDocument(content: string, ...fileSegments: string[]): void {
+  const filePath = buildHtmlPath(...fileSegments);
+  const dirPath = path.dirname(filePath);
+  fs.mkdirSync(dirPath, { recursive: true });
+  fs.writeFileSync(filePath, content, "utf-8");
+}
+
+/** Delete a .html document if it exists. */
+export function deleteHtmlDocument(...fileSegments: string[]): void {
+  const filePath = buildHtmlPath(...fileSegments);
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+  }
+}
+
+/** Rename a .html document. newTitle may or may not include the ".html" suffix. */
+export function renameHtmlDocument(newTitle: string, ...fileSegments: string[]): void {
+  const oldPath = buildHtmlPath(...fileSegments);
+  const newPath = buildHtmlPath(...fileSegments.slice(0, -1), newTitle);
+  if (fs.existsSync(oldPath)) {
+    fs.renameSync(oldPath, newPath);
+  }
+}
+
+/** List .html files in a directory (returns filenames without the ".html" suffix). */
+export function listHtmlDocuments(...dirSegments: string[]): string[] {
+  const dirPath = path.join(getDataRoot(), ...dirSegments);
+  if (!fs.existsSync(dirPath)) return [];
+  return fs
+    .readdirSync(dirPath, { withFileTypes: true })
+    .filter((d) => d.isFile() && d.name.endsWith(".html"))
+    .map((d) => d.name.slice(0, -5));
 }
 
 /**
@@ -475,6 +552,10 @@ export interface WorkspaceMeta {
   accountId: string;
   accountType: string;
   sortOrder: number;   // lower = higher priority (appears first)
+  repositories?: Repository[];
+  sandbox?: SandboxStatus;
+  skills?: ProjectSkills;
+  members?: ProjectMember[];
 }
 
 /**
@@ -639,4 +720,87 @@ export function unlinkProjectFromWorkspace(type: "personal" | "enterprise", acco
   if (fs.existsSync(linkPath)) {
     fs.unlinkSync(linkPath);
   }
+}
+
+/* ========== Workspace Configuration CRUD ========== */
+
+/** Add a repository to workspace metadata. */
+export function addWorkspaceRepository(dirSegments: string[], repository: Repository): Repository[] {
+  const meta = readWorkspaceMeta(dirSegments);
+  if (!meta) throw new Error("Workspace not found");
+  if (!meta.repositories) meta.repositories = [];
+  meta.repositories.push(repository);
+  writeWorkspaceMeta(meta, dirSegments);
+  return meta.repositories;
+}
+
+/** Remove a repository from workspace metadata. */
+export function removeWorkspaceRepository(dirSegments: string[], repoId: string): void {
+  const meta = readWorkspaceMeta(dirSegments);
+  if (!meta) throw new Error("Workspace not found");
+  meta.repositories = (meta.repositories || []).filter((r) => r.id !== repoId);
+  writeWorkspaceMeta(meta, dirSegments);
+}
+
+/** Update a repository in workspace metadata. */
+export function updateWorkspaceRepository(dirSegments: string[], repoId: string, updates: Partial<Omit<Repository, "id">>): Repository | null {
+  const meta = readWorkspaceMeta(dirSegments);
+  if (!meta) throw new Error("Workspace not found");
+  const repo = (meta.repositories || []).find((r) => r.id === repoId);
+  if (!repo) return null;
+  Object.assign(repo, updates);
+  writeWorkspaceMeta(meta, dirSegments);
+  return repo;
+}
+
+/** Add a member to workspace metadata. */
+export function addWorkspaceMember(dirSegments: string[], member: ProjectMember): ProjectMember[] {
+  const meta = readWorkspaceMeta(dirSegments);
+  if (!meta) throw new Error("Workspace not found");
+  if (!meta.members) meta.members = [];
+  meta.members.push(member);
+  writeWorkspaceMeta(meta, dirSegments);
+  return meta.members;
+}
+
+/** Remove a member from workspace metadata. */
+export function removeWorkspaceMember(dirSegments: string[], memberId: string): void {
+  const meta = readWorkspaceMeta(dirSegments);
+  if (!meta) throw new Error("Workspace not found");
+  meta.members = (meta.members || []).filter((m) => m.id !== memberId);
+  writeWorkspaceMeta(meta, dirSegments);
+}
+
+/** Update a member in workspace metadata. */
+export function updateWorkspaceMember(dirSegments: string[], memberId: string, updates: Partial<Omit<ProjectMember, "id">>): ProjectMember | null {
+  const meta = readWorkspaceMeta(dirSegments);
+  if (!meta) throw new Error("Workspace not found");
+  const member = (meta.members || []).find((m) => m.id === memberId);
+  if (!member) return null;
+  Object.assign(member, updates);
+  writeWorkspaceMeta(meta, dirSegments);
+  return member;
+}
+
+/**
+ * Read workspace-level MCP config from .mcp.json.
+ * Returns null if the file doesn't exist.
+ */
+export function readWorkspaceMcpConfig(dirSegments: string[]): Record<string, unknown> | null {
+  const configPath = path.join(getDataRoot(), ...dirSegments, ".mcp.json");
+  if (!fs.existsSync(configPath)) return null;
+  try {
+    const raw = fs.readFileSync(configPath, "utf-8");
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Write workspace-level MCP config to .mcp.json.
+ */
+export function writeWorkspaceMcpConfig(config: object, dirSegments: string[]): void {
+  const configPath = path.join(getDataRoot(), ...dirSegments, ".mcp.json");
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2), "utf-8");
 }

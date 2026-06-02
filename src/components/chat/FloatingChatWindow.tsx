@@ -379,7 +379,7 @@ export default function FloatingChatWindow() {
           ref={workspaceRef}
           key={windowKey}
           chatId={null}
-          chatTitle="新Chat"
+          chatTitle="New Conversation"
           initialMessages={[]}
           embedded={false}
           floating={true}

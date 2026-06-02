@@ -71,6 +71,15 @@ function checkIntegrity(db: Database.Database): boolean {
   }
 }
 
+function hasSchema(db: Database.Database): boolean {
+  try {
+    const result = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='accounts'").get() as { name: string } | undefined;
+    return !!result;
+  } catch {
+    return false;
+  }
+}
+
 function tryApplyPragmas(db: Database.Database): boolean {
   try {
     db.pragma("journal_mode = WAL");
@@ -85,8 +94,8 @@ function tryApplyPragmas(db: Database.Database): boolean {
 function initDatabase(): Database.Database {
   const db = new Database(DB_PATH);
 
-  if (tryApplyPragmas(db) && checkIntegrity(db)) {
-    // Only run NEW migrations that haven't been applied yet
+  if (tryApplyPragmas(db) && checkIntegrity(db) && hasSchema(db)) {
+    // Existing healthy database with schema — apply only NEW migrations
     try {
       bootstrapMigrationTracking(db);
       const applied = getAppliedMigrations(db);
@@ -100,8 +109,6 @@ function initDatabase(): Database.Database {
         for (const file of migrationFiles) {
           try {
             const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, file), "utf-8");
-            // Use db.exec for the full file — drizzle migration breakpoints use --> statement-breakpoint
-            // which we split by the semicolons between statements
             const statements = sql.split(";").map(s => s.trim()).filter(s => s.length > 0);
             for (const stmt of statements) {
               try {
@@ -123,22 +130,25 @@ function initDatabase(): Database.Database {
     return db;
   }
 
-  console.warn("[db] Integrity check FAILED, recreating database...");
+  // Database missing schema or integrity check failed — recreate from scratch
+  console.warn(
+    !checkIntegrity(db)
+      ? "[db] Integrity check FAILED, recreating database..."
+      : "[db] Schema missing, recreating database..."
+  );
   db.close();
 
-  // Delete all DB files
   for (const p of [DB_PATH, WAL_PATH, SHM_PATH]) {
     try { fs.unlinkSync(p); } catch { /* ok */ }
   }
 
-  // Recreate
   const newDb = new Database(DB_PATH);
   newDb.pragma("journal_mode = WAL");
   newDb.pragma("foreign_keys = ON");
 
   runMigrations(newDb);
-  
-  console.log("[db] Database recreated successfully.");
+
+  console.log("[db] Database initialized successfully.");
   return newDb;
 }
 

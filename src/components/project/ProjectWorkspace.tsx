@@ -24,10 +24,21 @@ const CherryEditor = dynamic(() => import("@/components/editor/CherryEditor"), {
   ),
 });
 
+const HtmlEditor = dynamic(() => import("@/components/editor/HtmlEditor"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-64 text-gray-400">
+      <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-blue-600 mr-2" />
+      加载编辑器中...
+    </div>
+  ),
+});
+
 interface FileTab {
   filePath: string;
   content: string;
   loaded: boolean;
+  type: "markdown" | "html";
 }
 
 interface ProjectMeta {
@@ -104,7 +115,12 @@ export default function ProjectWorkspace({
 
   // Tab system state — initialize from URL ?file= param
   const initTab = selectedFile && initialContent !== undefined
-    ? [{ filePath: selectedFile, content: initialContent, loaded: true }]
+    ? [{
+        filePath: selectedFile,
+        content: initialContent,
+        loaded: true,
+        type: (selectedFile.toLowerCase().endsWith(".html") ? "html" : "markdown") as "markdown" | "html",
+      }]
     : [];
   const [tabs, setTabs] = useState<FileTab[]>(initTab);
   const [activeTabId, setActiveTabId] = useState<string>(PROJECT_INFO_TAB);
@@ -140,7 +156,7 @@ export default function ProjectWorkspace({
     // Open the new file as a tab
     const fileContent = `# ${defaultName}\n\n`;
     contentCache.current[relativePath] = fileContent;
-    setTabs((prev) => [...prev, { filePath: relativePath, content: fileContent, loaded: true }]);
+    setTabs((prev) => [...prev, { filePath: relativePath, content: fileContent, loaded: true, type: "markdown" }]);
     setActiveTabId(relativePath);
     router.refresh();
   }, [tree, docsPath, router]);
@@ -275,10 +291,14 @@ export default function ProjectWorkspace({
       }
       // Create new tab
       const cachedContent = contentCache.current[filePath] ?? "";
+      const tabType: "markdown" | "html" = filePath.toLowerCase().endsWith(".html")
+        ? "html"
+        : "markdown";
       const newTab: FileTab = {
         filePath,
         content: cachedContent,
         loaded: !!cachedContent,
+        type: tabType,
       };
       setActiveTabId(filePath);
 
@@ -307,6 +327,56 @@ export default function ProjectWorkspace({
       return [...prev, newTab];
     });
   }, [docsPath]);
+
+  // Open (or switch to) an HTML file in a tab. Triggered by preview_html client tool.
+  const handlePreviewHtml = useCallback(async (filePath: string) => {
+    if (!filePath || !filePath.toLowerCase().endsWith(".html")) {
+      message.warning("preview_html 仅支持 .html 文件");
+      return;
+    }
+    setTabs((prev) => {
+      const existing = prev.find((t) => t.filePath === filePath);
+      if (existing) {
+        setActiveTabId(filePath);
+        return prev;
+      }
+      const cached = contentCache.current[filePath];
+      if (cached !== undefined) {
+        setActiveTabId(filePath);
+        return [...prev, { filePath, content: cached, loaded: true, type: "html" }];
+      }
+      // Otherwise create a loading tab and fetch content asynchronously.
+      setActiveTabId(filePath);
+      fetch(`/api/fs/document?path=${docsPath}/${filePath}`)
+        .then((r) => {
+          if (!r.ok) throw new Error("fetch failed");
+          return r.json();
+        })
+        .then((data) => {
+          const content = data.content ?? "";
+          contentCache.current[filePath] = content;
+          setTabs((prev2) => {
+            if (prev2.some((t) => t.filePath === filePath)) {
+              return prev2.map((t) =>
+                t.filePath === filePath ? { ...t, content, loaded: true } : t
+              );
+            }
+            return [...prev2, { filePath, content, loaded: true, type: "html" }];
+          });
+        })
+        .catch(() => {
+          setTabs((prev2) => {
+            if (prev2.some((t) => t.filePath === filePath)) {
+              return prev2.map((t) =>
+                t.filePath === filePath ? { ...t, content: "", loaded: true } : t
+              );
+            }
+            return [...prev2, { filePath, content: "", loaded: true, type: "html" }];
+          });
+        });
+      return [...prev, { filePath, content: "", loaded: false, type: "html" }];
+    });
+  }, [docsPath, message]);
 
   const handleTabClose = useCallback((tabId: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -510,10 +580,35 @@ export default function ProjectWorkspace({
                     : "text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-100"
                 }`}
               >
-                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                </svg>
+                {tab.type === "html" ? (
+                  <svg
+                    className="w-3.5 h-3.5 shrink-0 text-orange-500"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-label="HTML tab"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <polyline points="9 13 7 15 9 17" />
+                    <polyline points="15 13 17 15 15 17" />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-3.5 h-3.5 shrink-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    aria-label="Markdown tab"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                )}
                 <span className="truncate max-w-[120px]">{fileName}</span>
                 <span
                   role="button"
@@ -569,7 +664,13 @@ export default function ProjectWorkspace({
               onBack={undefined}
               mentionFile={mentionFile}
               onMentionConsumed={() => setMentionFile(null)}
-              onToolCall={({ toolName }) => { if (toolName === "refresh_file_tree") router.refresh(); }}
+              onToolCall={({ toolName, input }) => {
+                if (toolName === "refresh_file_tree") {
+                  router.refresh();
+                } else if (toolName === "preview_html" && input && typeof input.path === "string") {
+                  handlePreviewHtml(input.path);
+                }
+              }}
             />
           </div>
 
@@ -580,7 +681,18 @@ export default function ProjectWorkspace({
               className="absolute inset-0"
               style={{ display: activeTabId === tab.filePath ? "flex" : "none", flexDirection: "column" }}
             >
-              {tab.loaded ? (
+              {tab.type === "html" ? (
+                <HtmlEditor
+                  key={tab.filePath}
+                  filePath={tab.filePath}
+                  projectId={projectId}
+                  docsPath={docsPath}
+                  initialValue={tab.content}
+                  loaded={tab.loaded}
+                  onSave={(content) => handleFileSave(tab.filePath, content)}
+                  onContentChange={(content) => handleFileChange(tab.filePath, content)}
+                />
+              ) : tab.loaded ? (
                 <CherryEditor
                   key={tab.filePath}
                   editorId={"cherry-" + tab.filePath.replace(/\//g, "-")}

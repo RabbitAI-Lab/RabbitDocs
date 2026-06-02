@@ -111,6 +111,17 @@ export const sharedChats = sqliteTable("shared_chats", {
   createdAt: text("created_at").notNull(),
 });
 
+// shared_html_files: HTML 文件分享（独立于 chat 分享）
+// 一个项目下同一路径同一时刻最多一条活跃分享记录
+export const sharedHtmlFiles = sqliteTable("shared_html_files", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  projectId: text("project_id").notNull(),
+  htmlPath: text("html_path").notNull(), // 相对项目根目录的路径，如 "docs/index.html"
+  token: text("token").notNull().unique(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
 // operation_logs: 操作日志
 export const operationLogs = sqliteTable("operation_logs", {
   id: integer("id").primaryKey({ autoIncrement: true }),

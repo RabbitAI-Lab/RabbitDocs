@@ -18,8 +18,8 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 
-interface McpPanelProps {
-  projectPath: string;
+interface WorkspaceMcpPanelProps {
+  workspacePath: string;
 }
 
 const MCP_BASE_URL =
@@ -38,16 +38,7 @@ interface McpServerEntry {
 
 interface McpJson {
   mcpServers: Record<string, McpServerEntry>;
-  /**
-   * 禁用的 server。保留配置但不注入到 Agent SDK。列表中会灰显并显示 "Disabled" Tag。
-   * 用户可随时启用 —— 启用时若 _apiKeys 有匹配的 key，会自动重建 zhipu-style url。
-   */
-  disabled?: Record<string, McpServerEntry>;
   _apiKeys: Record<string, string>;
-}
-
-function emptyMcpJson(): McpJson {
-  return { mcpServers: {}, disabled: {}, _apiKeys: {} };
 }
 
 const NAME_PATTERN = /^[a-zA-Z0-9_\-]+$/;
@@ -58,7 +49,6 @@ function describeServer(entry: McpServerEntry): string {
     return `${entry.command} ${args}`.trim();
   }
   if (entry.url) {
-    // 截断 url 中的 Authorization=xxx 部分以避免泄露
     return entry.url.replace(/Authorization=[^&]+/g, "Authorization=***");
   }
   return "(empty)";
@@ -70,53 +60,54 @@ function inferType(entry: McpServerEntry): McpServerType {
   }
   if (entry.command) return "stdio";
   if (entry.url) {
-    if (entry.url.includes("/sse") || /\.sse(\?|$)/.test(entry.url)) return "sse";
+    if (entry.url.includes("/sse") || /\.sse(\?|$)/.test(entry.url))
+      return "sse";
     return "http";
   }
   return "stdio";
 }
 
-export default function McpPanel({ projectPath }: McpPanelProps) {
-  const [mcpJson, setMcpJson] = useState<McpJson>(emptyMcpJson());
+export default function WorkspaceMcpPanel({
+  workspacePath,
+}: WorkspaceMcpPanelProps) {
+  const [mcpJson, setMcpJson] = useState<McpJson>({
+    mcpServers: {},
+    _apiKeys: {},
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Edit JSON modal
   const [editTarget, setEditTarget] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
 
-  // Add MCP modal
   const [addOpen, setAddOpen] = useState(false);
   const [addForm] = Form.useForm();
 
-  // API Key modal (用于 zhipu 等需要 Authorization 的 server)
   const [keyTarget, setKeyTarget] = useState<string | null>(null);
   const [keyInput, setKeyInput] = useState("");
 
   const { message } = App.useApp();
 
-  const dirSegments = projectPath.split(",");
+  // 修复 bug: 实际是 "/" 分隔
+  const dirSegments = workspacePath.split("/").filter(Boolean);
 
   const fetchConfig = async () => {
     try {
       const res = await fetch(
-        `/api/fs/project-mcp?dirSegments=${dirSegments.join(",")}`
+        `/api/fs/workspace-mcp?dirSegments=${dirSegments.join(",")}`,
       );
       if (!res.ok) return;
       const data = await res.json();
       const mcpServers =
-        (data.mcpJson?.mcpServers && typeof data.mcpJson.mcpServers === "object"
+        (data.mcpJson?.mcpServers &&
+        typeof data.mcpJson.mcpServers === "object"
           ? data.mcpJson.mcpServers
-          : {}) as Record<string, McpServerEntry>;
-      const disabled =
-        (data.mcpJson?.disabled && typeof data.mcpJson.disabled === "object"
-          ? data.mcpJson.disabled
           : {}) as Record<string, McpServerEntry>;
       const apiKeys =
         (data.mcpJson?._apiKeys && typeof data.mcpJson._apiKeys === "object"
           ? data.mcpJson._apiKeys
           : {}) as Record<string, string>;
-      setMcpJson({ mcpServers, disabled, _apiKeys: apiKeys });
+      setMcpJson({ mcpServers, _apiKeys: apiKeys });
     } finally {
       setLoading(false);
     }
@@ -125,26 +116,16 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
   useEffect(() => {
     fetchConfig();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectPath]);
+  }, [workspacePath]);
 
-  /**
-   * 写回：先乐观更新 UI → PUT → 成功后 refetch 校准
-   */
   const writeBack = async (next: McpJson, successMsg?: string) => {
-    setMcpJson(next); // 立即更新 UI
+    setMcpJson(next);
     setSaving(true);
     try {
-      const res = await fetch("/api/fs/project-mcp", {
+      const res = await fetch("/api/fs/workspace-mcp", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          dirSegments,
-          mcpJson: {
-            mcpServers: next.mcpServers,
-            disabled: next.disabled || {},
-            _apiKeys: next._apiKeys,
-          },
-        }),
+        body: JSON.stringify({ dirSegments, mcpJson: next }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -156,71 +137,48 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
           string,
           McpServerEntry
         >;
-        const disabled = (data.mcpJson.disabled || {}) as Record<
-          string,
-          McpServerEntry
-        >;
         const apiKeys = (data.mcpJson._apiKeys || {}) as Record<string, string>;
-        setMcpJson({ mcpServers, disabled, _apiKeys: apiKeys });
+        setMcpJson({ mcpServers, _apiKeys: apiKeys });
       }
       if (successMsg) message.success(successMsg);
     } catch (err) {
       message.error(`保存失败: ${(err as Error).message}`);
-      // 回滚
       await fetchConfig();
     } finally {
       setSaving(false);
     }
   };
 
-  // -------- Switch 启用 / 禁用 --------
-  // 关键修改：禁用不再删除条目，而是从 mcpServers 移到 disabled。
-  // 列表会同时渲染 mcpServers + disabled，禁用行视觉灰显，Switch 状态对应所在 map。
   const handleToggle = async (name: string, checked: boolean) => {
+    const entry = mcpJson.mcpServers[name];
+    if (!entry) return;
+
     if (checked) {
-      // 启用：从 disabled 移回 mcpServers
-      const disabledEntry = mcpJson.disabled?.[name];
-      if (!disabledEntry) return; // 已经启用了，忽略
       const storedKey = mcpJson._apiKeys[name];
-      let entry = disabledEntry;
-      // zhipu-style 特判：若 _apiKeys 有，则重建 url
       if (storedKey) {
-        entry = { ...entry, url: `${MCP_BASE_URL}${storedKey}` };
+        const nextServers = {
+          ...mcpJson.mcpServers,
+          [name]: { ...entry, url: `${MCP_BASE_URL}${storedKey}` },
+        };
+        await writeBack(
+          { mcpServers: nextServers, _apiKeys: mcpJson._apiKeys },
+          "Enabled",
+        );
+        return;
       }
-      const nextServers = { ...mcpJson.mcpServers, [name]: entry };
-      const nextDisabled = { ...(mcpJson.disabled || {}) };
-      delete nextDisabled[name];
-      await writeBack(
-        {
-          mcpServers: nextServers,
-          disabled: nextDisabled,
-          _apiKeys: mcpJson._apiKeys,
-        },
-        "Enabled"
-      );
-    } else {
-      // 禁用：从 mcpServers 移到 disabled（保留配置和 apiKey，url 维持原样）
-      const entry = mcpJson.mcpServers[name];
-      if (!entry) return;
-      const nextServers = { ...mcpJson.mcpServers };
-      delete nextServers[name];
-      const nextDisabled = {
-        ...(mcpJson.disabled || {}),
-        [name]: entry,
-      };
-      await writeBack(
-        {
-          mcpServers: nextServers,
-          disabled: nextDisabled,
-          _apiKeys: mcpJson._apiKeys,
-        },
-        "Disabled"
-      );
+      message.warning("Please configure API Key first");
+      setKeyTarget(name);
+      return;
     }
+
+    const nextServers = { ...mcpJson.mcpServers };
+    delete nextServers[name];
+    await writeBack(
+      { mcpServers: nextServers, _apiKeys: mcpJson._apiKeys },
+      "Disabled",
+    );
   };
 
-  // -------- API Key 修改 --------
-  // Key 保存总是写到 mcpServers（启用状态），同时从 disabled 移除（任何状态下都能调用）
   const handleSaveKey = async () => {
     if (!keyTarget) return;
     const trimmed = keyInput.trim();
@@ -228,34 +186,23 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
       message.error("Please enter API Key");
       return;
     }
-    const entry =
-      mcpJson.mcpServers[keyTarget] || mcpJson.disabled?.[keyTarget] || {};
+    const entry = mcpJson.mcpServers[keyTarget] || {};
     const nextServers = {
       ...mcpJson.mcpServers,
       [keyTarget]: { ...entry, url: `${MCP_BASE_URL}${trimmed}` },
     };
-    const nextDisabled = { ...(mcpJson.disabled || {}) };
-    delete nextDisabled[keyTarget];
     const nextKeys = { ...mcpJson._apiKeys, [keyTarget]: trimmed };
     await writeBack(
-      {
-        mcpServers: nextServers,
-        disabled: nextDisabled,
-        _apiKeys: nextKeys,
-      },
-      "API Key saved"
+      { mcpServers: nextServers, _apiKeys: nextKeys },
+      "API Key saved",
     );
     setKeyTarget(null);
     setKeyInput("");
   };
 
-  // -------- 编辑单条 JSON --------
-  // 从 mcpServers 或 disabled 任一边查找；保存后总是写到 mcpServers（编辑动作隐含启用）
   const openEdit = (name: string) => {
     setEditTarget(name);
-    const entry =
-      mcpJson.mcpServers[name] ?? mcpJson.disabled?.[name] ?? {};
-    setEditText(JSON.stringify(entry, null, 2));
+    setEditText(JSON.stringify(mcpJson.mcpServers[name] ?? {}, null, 2));
   };
 
   const handleSaveEdit = async () => {
@@ -271,39 +218,24 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
       return;
     }
     const nextServers = { ...mcpJson.mcpServers, [editTarget]: parsed };
-    const nextDisabled = { ...(mcpJson.disabled || {}) };
-    delete nextDisabled[editTarget];
     await writeBack(
-      {
-        mcpServers: nextServers,
-        disabled: nextDisabled,
-        _apiKeys: mcpJson._apiKeys,
-      },
-      "Saved"
+      { mcpServers: nextServers, _apiKeys: mcpJson._apiKeys },
+      "Saved",
     );
     setEditTarget(null);
   };
 
-  // -------- 删除 --------
-  // 从 mcpServers 和 disabled 两边都查
   const handleDelete = async (name: string) => {
     const nextServers = { ...mcpJson.mcpServers };
     delete nextServers[name];
-    const nextDisabled = { ...(mcpJson.disabled || {}) };
-    delete nextDisabled[name];
     const nextKeys = { ...mcpJson._apiKeys };
     delete nextKeys[name];
     await writeBack(
-      {
-        mcpServers: nextServers,
-        disabled: nextDisabled,
-        _apiKeys: nextKeys,
-      },
-      "Deleted"
+      { mcpServers: nextServers, _apiKeys: nextKeys },
+      "Deleted",
     );
   };
 
-  // -------- 新增 MCP --------
   const openAdd = () => {
     addForm.resetFields();
     addForm.setFieldsValue({ type: "stdio", args: "" });
@@ -314,8 +246,8 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
     try {
       const values = await addForm.validateFields();
       const name = values.name as string;
-      if (mcpJson.mcpServers[name] || mcpJson.disabled?.[name]) {
-        message.error(`MCP "${name}" 已存在`);
+      if (mcpJson.mcpServers[name]) {
+        message.error(`MCP "${name}" already exists`);
         return;
       }
       const entry: McpServerEntry = { type: values.type };
@@ -333,8 +265,13 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
               .filter(Boolean)
               .map((line: string) => {
                 const idx = line.indexOf("=");
-                return idx > 0 ? [line.slice(0, idx).trim(), line.slice(idx + 1).trim()] : [line, ""];
-              })
+                return idx > 0
+                  ? [
+                      line.slice(0, idx).trim(),
+                      line.slice(idx + 1).trim(),
+                    ]
+                  : [line, ""];
+              }),
           );
         }
       } else {
@@ -347,19 +284,20 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
               .filter(Boolean)
               .map((line: string) => {
                 const idx = line.indexOf(":");
-                return idx > 0 ? [line.slice(0, idx).trim(), line.slice(idx + 1).trim()] : [line, ""];
-              })
+                return idx > 0
+                  ? [
+                      line.slice(0, idx).trim(),
+                      line.slice(idx + 1).trim(),
+                    ]
+                  : [line, ""];
+              }),
           );
         }
       }
       const nextServers = { ...mcpJson.mcpServers, [name]: entry };
       await writeBack(
-        {
-          mcpServers: nextServers,
-          disabled: mcpJson.disabled || {},
-          _apiKeys: mcpJson._apiKeys,
-        },
-        "MCP added"
+        { mcpServers: nextServers, _apiKeys: mcpJson._apiKeys },
+        "MCP added",
       );
       setAddOpen(false);
     } catch {
@@ -384,26 +322,13 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
     );
   }
 
-  // 合并启用 + 禁用的 server 渲染。启用的在前，禁用的在后面。
-  // isEnabled 决定 Switch 状态和行视觉。
-  const enabledEntries: Array<[string, McpServerEntry]> = Object.entries(
-    mcpJson.mcpServers
-  );
-  const disabledEntries: Array<[string, McpServerEntry]> = Object.entries(
-    mcpJson.disabled || {}
-  );
-  const allEntries: Array<{ name: string; entry: McpServerEntry; isEnabled: boolean }> = [
-    ...enabledEntries.map(([name, entry]) => ({ name, entry, isEnabled: true })),
-    ...disabledEntries.map(([name, entry]) => ({ name, entry, isEnabled: false })),
-  ];
-  const totalCount = allEntries.length;
+  const entries = Object.entries(mcpJson.mcpServers);
 
   return (
     <div className="space-y-3">
-      {/* 提示信息 */}
-      <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg border border-blue-100">
+      <div className="flex items-start gap-2 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
         <svg
-          className="w-4 h-4 text-blue-500 shrink-0 mt-0.5"
+          className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -412,16 +337,17 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
           <circle cx="11" cy="11" r="8" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
-        <p className="text-sm text-blue-700">
-          Configure MCP servers for this project. Each entry is available to AI
-          chats as <code className="px-1 bg-white/60 rounded">mcp__{"<name>"}__*</code> tools.
+        <p className="text-sm text-indigo-700">
+          Configure MCP servers at the workspace level. Each entry is available
+          to AI chats in all projects of this workspace as{" "}
+          <code className="px-1 bg-white/60 rounded">mcp__{"<name>"}__*</code>{" "}
+          tools.
         </p>
       </div>
 
-      {/* 工具栏 */}
       <div className="flex items-center justify-between">
         <span className="text-xs text-gray-500">
-          {enabledEntries.length} enabled / {totalCount} configured
+          {entries.length} server{entries.length === 1 ? "" : "s"} configured
         </span>
         <button
           onClick={openAdd}
@@ -432,14 +358,13 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
         </button>
       </div>
 
-      {/* 列表 */}
-      {allEntries.length === 0 ? (
+      {entries.length === 0 ? (
         <div className="py-8 text-center text-sm text-gray-400 border border-dashed border-gray-200 rounded-lg">
           No MCP servers yet. Click &quot;Add MCP&quot; to create one.
         </div>
       ) : (
         <div className="space-y-2">
-          {allEntries.map(({ name, entry, isEnabled }) => {
+          {entries.map(([name, entry]) => {
             const type = inferType(entry);
             const hasAuth = !!(
               entry.url && entry.url.includes("Authorization=")
@@ -447,27 +372,17 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
             return (
               <div
                 key={name}
-                className={
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors " +
-                  (isEnabled
-                    ? "border-gray-200 hover:border-gray-300"
-                    : "border-gray-100 bg-gray-50 opacity-60")
-                }
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
               >
                 <Switch
                   size="small"
-                  checked={isEnabled}
+                  checked={true}
                   loading={saving}
                   onChange={(checked) => handleToggle(name, checked)}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span
-                      className={
-                        "text-sm font-medium truncate " +
-                        (isEnabled ? "text-gray-700" : "text-gray-400 line-through")
-                      }
-                    >
+                    <span className="text-sm font-medium text-gray-700 truncate">
                       {name}
                     </span>
                     <Tag
@@ -475,21 +390,13 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
                         type === "stdio"
                           ? "blue"
                           : type === "sse"
-                          ? "purple"
-                          : "green"
+                            ? "purple"
+                            : "green"
                       }
                       className="text-[10px] leading-4 m-0"
                     >
                       {type}
                     </Tag>
-                    {!isEnabled && (
-                      <Tag
-                        color="default"
-                        className="text-[10px] leading-4 m-0"
-                      >
-                        Disabled
-                      </Tag>
-                    )}
                   </div>
                   <div
                     className="text-xs text-gray-400 truncate font-mono mt-0.5"
@@ -502,7 +409,7 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
                   {hasAuth && (
                     <KeyOutlined
                       className="text-gray-400 hover:text-blue-500 cursor-pointer text-base p-1"
-                      title="修改 API Key"
+                      title="Edit API Key"
                       onClick={() => {
                         setKeyTarget(name);
                         setKeyInput(mcpJson._apiKeys[name] || "");
@@ -534,7 +441,6 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
         </div>
       )}
 
-      {/* 编辑单条 JSON Modal */}
       <Modal
         title={editTarget ? `Edit "${editTarget}"` : "Edit MCP"}
         open={!!editTarget}
@@ -553,7 +459,6 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
         />
       </Modal>
 
-      {/* API Key 修改 Modal */}
       <Modal
         title={keyTarget ? `API Key for "${keyTarget}"` : "API Key"}
         open={!!keyTarget}
@@ -578,7 +483,6 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
         />
       </Modal>
 
-      {/* 新增 MCP Modal */}
       <Modal
         title="Add MCP Server"
         open={addOpen}
@@ -618,11 +522,14 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
                 { value: "sse", label: "sse (server-sent events)" },
               ]}
               onChange={(val) => {
-                // 切换 type 时清空无关字段
                 if (val === "stdio") {
                   addForm.setFieldsValue({ url: undefined, headers: undefined });
                 } else {
-                  addForm.setFieldsValue({ command: undefined, args: undefined, env: undefined });
+                  addForm.setFieldsValue({
+                    command: undefined,
+                    args: undefined,
+                    env: undefined,
+                  });
                 }
               }}
             />
@@ -637,7 +544,9 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
                     <Form.Item
                       name="command"
                       label="Command"
-                      rules={[{ required: true, message: "Please input command" }]}
+                      rules={[
+                        { required: true, message: "Please input command" },
+                      ]}
                     >
                       <Input placeholder="e.g. npx" />
                     </Form.Item>

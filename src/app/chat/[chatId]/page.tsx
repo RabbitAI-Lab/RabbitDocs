@@ -56,6 +56,7 @@ export default async function ChatPage({
 
   return (
     <ChatPageContent
+      key={chat.id}
       chatId={chat.id}
       chatTitle={chat.title}
       initialMessages={messages}

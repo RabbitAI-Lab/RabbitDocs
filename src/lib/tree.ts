@@ -100,7 +100,19 @@ function updateDescendantPaths(children: TreeNode[], oldParent: string, newParen
     };
   });
 }
-export function stripTreePrefix(nodes: TreeNode[], prefix: string): TreeNode[] {
+/**
+ * Strip project prefix from tree paths and remove the configured file extension
+ * (default ".md") from file nodes.
+ *
+ * Converts full paths (e.g. "personal/default/projects/{id}/Root/test.md")
+ * to relative paths (e.g. "Root/test"). Pass `ext = ".html"` to strip a
+ * different extension.
+ */
+export function stripTreePrefix(
+  nodes: TreeNode[],
+  prefix: string,
+  ext: string = ".md",
+): TreeNode[] {
   return nodes.map((node) => {
     let relPath = node.path;
     if (relPath.startsWith(prefix + "/")) {
@@ -108,14 +120,14 @@ export function stripTreePrefix(nodes: TreeNode[], prefix: string): TreeNode[] {
     } else if (relPath.startsWith(prefix)) {
       relPath = relPath.slice(prefix.length);
     }
-    if (node.type === "file" && relPath.endsWith(".md")) {
-      relPath = relPath.slice(0, -3);
+    if (node.type === "file" && ext && relPath.endsWith(ext)) {
+      relPath = relPath.slice(0, -ext.length);
     }
     return {
       ...node,
       path: relPath,
       ...(node.children
-        ? { children: stripTreePrefix(node.children, prefix) }
+        ? { children: stripTreePrefix(node.children, prefix, ext) }
         : {}),
     };
   });

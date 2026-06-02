@@ -1,7 +1,0 @@
-{
-  "mcpServers": {
-    "zhipu-web-search-sse": {
-      "url": "https://open.bigmodel.cn/api/mcp-broker/proxy/web-search/mcp?Authorization=ddd"
-    }
-  }
-}

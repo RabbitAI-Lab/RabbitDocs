@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
+import { eq, and } from "drizzle-orm";
 import {
   readDocument,
   writeDocument,
@@ -7,7 +8,12 @@ import {
   renameDocument,
   listDocuments,
   listTree,
+  readHtmlDocument,
+  writeHtmlDocument,
+  deleteHtmlDocument,
 } from "@/lib/fs";
+import { db } from "@/db";
+import { documentActivities, sharedHtmlFiles } from "@/db/schema";
 import { parsePath } from "../utils";
 
 /**
@@ -23,6 +29,64 @@ function requireDocsPath(segments: string[]): string | null {
     return `File operations are only allowed under the docs directory. The 5th path segment must be "docs", got: "${segments[4]}"`;
   }
   return null;
+}
+
+/**
+ * 校验路径最后一段以 .html 结尾。
+ */
+function requireHtmlExtension(segments: string[]): string | null {
+  const last = segments[segments.length - 1];
+  if (!last || !last.endsWith(".html")) {
+    return `HTML file path must end with .html. Got: "${last}"`;
+  }
+  return null;
+}
+
+/**
+ * 从 docs 路径段中解析 projectId 与 htmlPath（相对项目根目录，含 .html）。
+ * 期望：segments[0..4] = ["personal", "{accountId}", "projects", "{projectId}", "docs", ...]
+ */
+function parseHtmlMeta(segments: string[]): { projectId: string; htmlPath: string; title: string } | null {
+  if (segments.length < 6 || segments[4] !== "docs" || !segments[3]) return null;
+  const projectId = segments[3];
+  const docSegments = segments.slice(5);
+  const htmlPath = docSegments.join("/");
+  const title = (docSegments[docSegments.length - 1] || "").replace(/\.html$/, "");
+  return { projectId, htmlPath, title };
+}
+
+/**
+ * 记录 HTML 文档活动（create/update/delete）。
+ */
+function recordHtmlActivity(
+  projectId: string,
+  htmlPath: string,
+  title: string,
+  action: "create" | "update" | "delete"
+): void {
+  db.insert(documentActivities)
+    .values({
+      projectId,
+      documentPath: htmlPath,
+      documentTitle: title,
+      action,
+      createdAt: new Date().toISOString(),
+    })
+    .run();
+}
+
+/**
+ * 删除与某个 HTML 文件关联的分享记录（级联清理）。
+ */
+function deleteSharedHtmlFiles(projectId: string, htmlPath: string): void {
+  db.delete(sharedHtmlFiles)
+    .where(
+      and(
+        eq(sharedHtmlFiles.projectId, projectId),
+        eq(sharedHtmlFiles.htmlPath, htmlPath)
+      )
+    )
+    .run();
 }
 
 export function registerFileTools(server: McpServer) {
@@ -184,6 +248,121 @@ export function registerFileTools(server: McpServer) {
       const tree = listTree(segments);
       return {
         content: [{ type: "text", text: JSON.stringify(tree, null, 2) }],
+      };
+    }
+  );
+
+  // ──────────── HTML tools (.html files under docs/) ────────────
+
+  server.registerTool(
+    "create_html",
+    {
+      description:
+        "在 docs 目录下创建 .html 文件。路径必须以 .html 结尾，如 personal/default/projects/{projectId}/docs/index.html。",
+      inputSchema: z.object({
+        path: z
+          .string()
+          .describe(
+            "HTML 文件路径（必须以 .html 结尾），如 personal/default/projects/{projectId}/docs/index.html"
+          ),
+        content: z.string().describe("HTML 文件内容（完整 HTML 源码）"),
+      }),
+    },
+    async ({ path, content }) => {
+      const segments = parsePath(path);
+      const invalidPath = requireDocsPath(segments);
+      if (invalidPath) {
+        return { content: [{ type: "text", text: invalidPath }], isError: true };
+      }
+      const invalidExt = requireHtmlExtension(segments);
+      if (invalidExt) {
+        return { content: [{ type: "text", text: invalidExt }], isError: true };
+      }
+      const meta = parseHtmlMeta(segments);
+      writeHtmlDocument(content, ...segments);
+      if (meta) {
+        recordHtmlActivity(meta.projectId, meta.htmlPath, meta.title, "create");
+      }
+      return {
+        content: [{ type: "text", text: `HTML file created: ${path}` }],
+      };
+    }
+  );
+
+  server.registerTool(
+    "update_html",
+    {
+      description:
+        "更新 docs 目录下的 .html 文件。路径必须以 .html 结尾。文件不存在将报错。",
+      inputSchema: z.object({
+        path: z
+          .string()
+          .describe(
+            "HTML 文件路径（必须以 .html 结尾），如 personal/default/projects/{projectId}/docs/index.html"
+          ),
+        content: z.string().describe("新的 HTML 文件内容（完整 HTML 源码）"),
+      }),
+    },
+    async ({ path, content }) => {
+      const segments = parsePath(path);
+      const invalidPath = requireDocsPath(segments);
+      if (invalidPath) {
+        return { content: [{ type: "text", text: invalidPath }], isError: true };
+      }
+      const invalidExt = requireHtmlExtension(segments);
+      if (invalidExt) {
+        return { content: [{ type: "text", text: invalidExt }], isError: true };
+      }
+      const existing = readHtmlDocument(...segments);
+      if (existing === null) {
+        return {
+          content: [{ type: "text", text: `HTML file not found: ${path}` }],
+          isError: true,
+        };
+      }
+      const meta = parseHtmlMeta(segments);
+      writeHtmlDocument(content, ...segments);
+      if (meta) {
+        recordHtmlActivity(meta.projectId, meta.htmlPath, meta.title, "update");
+      }
+      return {
+        content: [{ type: "text", text: `HTML file updated: ${path}` }],
+      };
+    }
+  );
+
+  server.registerTool(
+    "delete_html",
+    {
+      description:
+        "删除 docs 目录下的 .html 文件。同时会清理该文件关联的所有分享链接。",
+      inputSchema: z.object({
+        path: z
+          .string()
+          .describe(
+            "HTML 文件路径（必须以 .html 结尾），如 personal/default/projects/{projectId}/docs/index.html"
+          ),
+      }),
+    },
+    async ({ path }) => {
+      const segments = parsePath(path);
+      const invalidPath = requireDocsPath(segments);
+      if (invalidPath) {
+        return { content: [{ type: "text", text: invalidPath }], isError: true };
+      }
+      const invalidExt = requireHtmlExtension(segments);
+      if (invalidExt) {
+        return { content: [{ type: "text", text: invalidExt }], isError: true };
+      }
+      const meta = parseHtmlMeta(segments);
+      deleteHtmlDocument(...segments);
+      if (meta) {
+        // 级联清理分享记录
+        deleteSharedHtmlFiles(meta.projectId, meta.htmlPath);
+        recordHtmlActivity(meta.projectId, meta.htmlPath, meta.title, "delete");
+      }
+      return {
+        content: [{ type: "text", text: `HTML file deleted: ${path}` }],
       };
     }
   );
