@@ -57,6 +57,7 @@ interface ChatWorkspaceProps {
   onSwitchToChat?: (chatId: number) => void;
   onChatCreated?: (chatId: number) => void;
   floating?: boolean;
+  showProjectSelector?: boolean;
 }
 
 export interface ChatWorkspaceRef {
@@ -230,6 +231,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
   onSwitchToChat,
   onChatCreated,
   floating = false,
+  showProjectSelector = false,
 }, ref) {
   const router = useRouter();
   const [effectiveChatId, setEffectiveChatId] = useState<number | null>(chatId ?? null);
@@ -1110,6 +1112,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
           */}
           <Tooltip title="新会话">
             <Button
+              type="text"
               icon={<PlusOutlined />}
               size="small"
               onClick={() => {
@@ -1179,6 +1182,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
             >
               <Tooltip title="分享">
                 <Button
+                  type="text"
                   icon={<ShareAltOutlined />}
                   size="small"
                   loading={shareLoading}
@@ -1193,6 +1197,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
           />
           <Tooltip title="Clear">
             <Button
+              type="text"
               icon={<ClearOutlined />}
               size="small"
               onClick={handleClear}
@@ -1303,7 +1308,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
                       styles={switchStyles}
                     />
                   </Dropdown>
-                  {!embedded && projects.length > 0 && (
+                  {((!embedded) || showProjectSelector) && projects.length > 0 && (
                     <Dropdown
                       getPopupContainer={floating ? () => document.getElementById('floating-chat-window') || document.body : undefined}
                       menu={{

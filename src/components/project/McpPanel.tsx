@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Switch,
   Input,
@@ -52,6 +52,14 @@ function emptyMcpJson(): McpJson {
 
 const NAME_PATTERN = /^[a-zA-Z0-9_\-]+$/;
 
+/** 系统 MCP：由平台注入，不允许删除 */
+const SYSTEM_MCP_NAMES = new Set(["gitnexus", "zhipu-web-search-sse"]);
+
+/** 判断是否为系统 MCP */
+function isSystemMcp(name: string): boolean {
+  return SYSTEM_MCP_NAMES.has(name);
+}
+
 function describeServer(entry: McpServerEntry): string {
   if (entry.command) {
     const args = (entry.args || []).join(" ");
@@ -96,6 +104,9 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
   const { message } = App.useApp();
 
   const dirSegments = projectPath.split(",");
+
+  // 稳定的条目顺序追踪：toggle 时不会改变列表顺序（必须在所有 early return 之前调用）
+  const entryOrderRef = useRef<string[]>([]);
 
   const fetchConfig = async () => {
     try {
@@ -384,18 +395,37 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
     );
   }
 
-  // 合并启用 + 禁用的 server 渲染。启用的在前，禁用的在后面。
-  // isEnabled 决定 Switch 状态和行视觉。
-  const enabledEntries: Array<[string, McpServerEntry]> = Object.entries(
-    mcpJson.mcpServers
-  );
-  const disabledEntries: Array<[string, McpServerEntry]> = Object.entries(
-    mcpJson.disabled || {}
-  );
-  const allEntries: Array<{ name: string; entry: McpServerEntry; isEnabled: boolean }> = [
-    ...enabledEntries.map(([name, entry]) => ({ name, entry, isEnabled: true })),
-    ...disabledEntries.map(([name, entry]) => ({ name, entry, isEnabled: false })),
-  ];
+  // 合并启用 + 禁用的 server 渲染，保持条目的原始出现顺序
+  const allEntries: Array<{ name: string; entry: McpServerEntry; isEnabled: boolean }> = (() => {
+    const existing = new Set(entryOrderRef.current);
+    const disabled = mcpJson.disabled || {};
+    // 添加新出现的 key（先 mcpServers 再 disabled）
+    Object.keys(mcpJson.mcpServers).forEach(k => {
+      if (!existing.has(k)) {
+        entryOrderRef.current.push(k);
+        existing.add(k);
+      }
+    });
+    Object.keys(disabled).forEach(k => {
+      if (!existing.has(k)) {
+        entryOrderRef.current.push(k);
+        existing.add(k);
+      }
+    });
+    // 移除已删除的 key
+    const currentKeys = new Set([
+      ...Object.keys(mcpJson.mcpServers),
+      ...Object.keys(disabled),
+    ]);
+    entryOrderRef.current = entryOrderRef.current.filter(k => currentKeys.has(k));
+    // 按稳定顺序构建渲染数组
+    return entryOrderRef.current.map(name => {
+      const isEnabled = !!mcpJson.mcpServers[name];
+      const entry = isEnabled ? mcpJson.mcpServers[name] : disabled[name];
+      return { name, entry, isEnabled };
+    });
+  })();
+  const enabledCount = Object.keys(mcpJson.mcpServers).length;
   const totalCount = allEntries.length;
 
   return (
@@ -421,7 +451,7 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
       {/* 工具栏 */}
       <div className="flex items-center justify-between">
         <span className="text-xs text-gray-500">
-          {enabledEntries.length} enabled / {totalCount} configured
+          {enabledCount} enabled / {totalCount} configured
         </span>
         <button
           onClick={openAdd}
@@ -465,7 +495,7 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
                     <span
                       className={
                         "text-sm font-medium truncate " +
-                        (isEnabled ? "text-gray-700" : "text-gray-400 line-through")
+                        (isEnabled ? "text-gray-700" : "text-gray-400")
                       }
                     >
                       {name}
@@ -510,10 +540,11 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
                     />
                   )}
                   <EditOutlined
-                    className="text-gray-400 hover:text-blue-500 cursor-pointer text-base p-1"
+                    className={isSystemMcp(name) ? "text-gray-300 cursor-not-allowed text-base p-1" : "text-gray-400 hover:text-blue-500 cursor-pointer text-base p-1"}
                     title="Edit JSON"
                     onClick={() => openEdit(name)}
                   />
+                  {!isSystemMcp(name) && (
                   <Popconfirm
                     title={`Delete "${name}"?`}
                     description="This will also remove its saved API Key."
@@ -527,6 +558,7 @@ export default function McpPanel({ projectPath }: McpPanelProps) {
                       title="Delete"
                     />
                   </Popconfirm>
+                  )}
                 </div>
               </div>
             );

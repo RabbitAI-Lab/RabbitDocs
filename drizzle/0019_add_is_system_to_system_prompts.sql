@@ -1,0 +1,1 @@
+ALTER TABLE system_prompts ADD COLUMN is_system INTEGER NOT NULL DEFAULT 0;

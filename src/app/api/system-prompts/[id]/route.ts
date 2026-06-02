@@ -49,6 +49,18 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+
+  // 禁止删除内置系统提示词
+  const record = db
+    .select()
+    .from(systemPrompts)
+    .where(eq(systemPrompts.id, parseInt(id)))
+    .get();
+  if (!record)
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (record.isSystem === 1)
+    return NextResponse.json({ error: "Cannot delete built-in system prompt" }, { status: 403 });
+
   db.delete(systemPrompts)
     .where(eq(systemPrompts.id, parseInt(id)))
     .run();

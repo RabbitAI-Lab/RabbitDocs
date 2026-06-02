@@ -153,6 +153,7 @@ export const systemPrompts = sqliteTable("system_prompts", {
   description: text("description"),
   enabled: integer("enabled").notNull().default(1),
   sortOrder: integer("sort_order").notNull().default(0),
+  isSystem: integer("is_system").notNull().default(0),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });

@@ -29,6 +29,7 @@ interface SystemPrompt {
   content: string;
   enabled: number;
   sortOrder: number;
+  isSystem: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -171,13 +172,15 @@ export default function SystemPromptsPageClient({ initialPrompts }: Props) {
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
           />
-          <Button
-            type="text"
-            size="small"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id, record.name)}
-          />
+          {record.isSystem !== 1 && (
+            <Button
+              type="text"
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(record.id, record.name)}
+            />
+          )}
         </Space>
       ),
     },

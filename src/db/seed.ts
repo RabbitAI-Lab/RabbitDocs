@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { accounts, templates } from "./schema";
+import { accounts, templates, systemPrompts } from "./schema";
 
 export async function seed() {
   console.log("[seed] Seeding database...");
@@ -183,6 +183,33 @@ export async function seed() {
     console.log(`[seed] ${templateData.length} templates created.`);
   } else {
     console.log(`[seed] ${existingTemplates.length} templates already exist.`);
+  }
+
+  // 插入内置系统提示词
+  const existingSystemPrompts = db.select().from(systemPrompts).all();
+  if (existingSystemPrompts.length === 0) {
+    const now = new Date().toISOString();
+    db.insert(systemPrompts).values({
+      name: "Wiki",
+      content: `如果涉及到Wiki的增删改查操作，需要使用ChatWiki MCP进行。
+使用ChatWiki MCP前，先检查ChatWiki MCP是否已安装。
+MCP配置是:
+{
+  "chatwiki": {
+    "type": "http",
+    "url": "http://127.0.0.1:4001/mcp"
+  }
+}`,
+      description: null,
+      enabled: 1,
+      sortOrder: 0,
+      isSystem: 1,
+      createdAt: now,
+      updatedAt: now,
+    }).run();
+    console.log("[seed] Built-in Wiki system prompt created.");
+  } else {
+    console.log(`[seed] ${existingSystemPrompts.length} system prompts already exist.`);
   }
 
   console.log("[seed] Done.");
