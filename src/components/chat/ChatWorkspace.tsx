@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { useRouter } from "next/navigation";
-import { Bubble, Sender, Welcome, Prompts, XProvider, Actions } from "@ant-design/x";
+import { Bubble, Sender, XProvider, Actions } from "@ant-design/x";
 import { Button, Space, Avatar, Dropdown, Tooltip, Tag, Typography, Popover, Input, App } from "antd";
 import XMarkdown from "@ant-design/x-markdown";
 import {
@@ -10,7 +10,6 @@ import {
   UserOutlined,
   SaveOutlined,
   ClearOutlined,
-  FileTextOutlined,
   FolderOutlined,
   ProfileOutlined,
   ArrowLeftOutlined,
@@ -126,20 +125,6 @@ const roles = {
   },
 };
 
-const promptItems = [
-  {
-    key: "discuss",
-    label: "讨论需求",
-    description: "描述你的想法，整理为结构化文档",
-    icon: <FileTextOutlined />,
-  },
-  {
-    key: "save",
-    label: "保存发布",
-    description: "一键保存为 Markdown 文档并发布",
-    icon: <SaveOutlined />,
-  },
-];
 
 const switchStyles: Record<string, React.CSSProperties> = {
   root: { fontSize: 12, lineHeight: '20px', padding: '0 4px', gap: 2 },
@@ -1207,34 +1192,26 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
       </div>
       )}
 
-      {/* Main content */}
-      {messages.length === 0 && !floating ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div style={{ width: 600 }}>
-            <Welcome
-              icon={
-                <RobotOutlined style={{ fontSize: 40, color: "#1677ff" }} />
-              }
-              title="Start New Chat"
-              description="Enter a message below to start chatting. You can save the conversation as a Markdown document."
-            />
-            <Prompts
-              title="你可以尝试"
-              items={promptItems}
-              onItemClick={(info) => {
-                if (info.data.key === "discuss") {
-                  setInputValue("我想讨论一个新需求...");
-                } else if (info.data.key === "save") {
-                  setInputValue("请帮我整理一份文档...");
-                }
-              }}
-              styles={{ item: { width: "calc(50% - 8px)" } }}
-              wrap
-            />
-          </div>
-        </div>
-      ) : (
-        <div className="flex-1 overflow-hidden">
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        {/* Spacer - 空对话时撑开，把输入框推到中间；有消息时收缩 */}
+        <div
+          style={{
+            flex: messages.length === 0 && !floating ? '1 1 0%' : '0 0 0px',
+            minHeight: 0,
+            transition: 'flex 0.5s ease',
+          }}
+        />
+
+        {/* Messages area - 始终渲染，无消息时高度为 0 */}
+        <div
+          style={{
+            flex: messages.length === 0 && !floating ? '0 0 0px' : '1 1 0%',
+            minHeight: 0,
+            overflow: 'hidden',
+            transition: 'flex 0.5s ease',
+          }}
+        >
           <Bubble.List
             style={{ height: "100%", maxWidth: '48rem', margin: '0 auto' }}
             items={bubbleItems}
@@ -1242,132 +1219,145 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
             autoScroll
           />
         </div>
-      )}
 
-      {/* Input */}
-      <div className="px-4 py-3">
-        <div className="max-w-3xl mx-auto">
-          <Sender
-            value={inputValue}
-            onChange={setInputValue}
-            onSubmit={handleSend}
-            loading={loading}
-            onCancel={handleCancel}
-            placeholder="输入消息..."
-            autoSize={{ minRows: 1, maxRows: 4 }}
-            suffix={false}
-            header={
-              mentionedFiles.length > 0 ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 4, padding: "6px 12px" }}>
-                  {mentionedFiles.map((filePath) => {
-                    const fileName = filePath.split("/").pop() || filePath;
-                    return (
-                      <Tag
-                        key={filePath}
-                        closable
-                        onClose={() =>
-                          setMentionedFiles((prev) =>
-                            prev.filter((f) => f !== filePath)
-                          )
-                        }
-                        style={{ margin: 0 }}
+        {/* Input */}
+        <div className="px-4 py-3 shrink-0">
+          <div className="max-w-3xl mx-auto">
+            <Sender
+              value={inputValue}
+              onChange={setInputValue}
+              onSubmit={handleSend}
+              loading={loading}
+              onCancel={handleCancel}
+              placeholder="输入消息..."
+              autoSize={
+                messages.length === 0 && !floating
+                  ? { minRows: 2, maxRows: 6 }
+                  : { minRows: 1, maxRows: 4 }
+              }
+              suffix={false}
+              header={
+                mentionedFiles.length > 0 ? (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4, padding: "6px 12px" }}>
+                    {mentionedFiles.map((filePath) => {
+                      const fileName = filePath.split("/").pop() || filePath;
+                      return (
+                        <Tag
+                          key={filePath}
+                          closable
+                          onClose={() =>
+                            setMentionedFiles((prev) =>
+                              prev.filter((f) => f !== filePath)
+                            )
+                          }
+                          style={{ margin: 0 }}
+                        >
+                          @{fileName}
+                        </Tag>
+                      );
+                    })}
+                  </div>
+                ) : false
+              }
+              styles={{ root: { backgroundColor: '#fff' } }}
+              footer={(oriNode) => (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px' }}>
+                  <div style={{ display: 'flex' }}>
+                    <Dropdown
+                      getPopupContainer={floating ? () => document.getElementById('floating-chat-window') || document.body : undefined}
+                      menu={{
+                        items: [
+                          ...(selectedModelId ? [{ key: '__clear_model__', label: '✕ 清除选择' }] : []),
+                          ...models.map((m) => ({ key: String(m.id), label: `${m.provider} / ${m.modelName}` })),
+                        ],
+                        onClick: ({ key }) => {
+                          if (key === '__clear_model__') {
+                            handleModelChange(undefined);
+                          } else {
+                            handleModelChange(Number(key));
+                          }
+                        },
+                        selectedKeys: selectedModelId ? [String(selectedModelId)] : [],
+                      }}
+                    >
+                      <Sender.Switch
+                        value={!!selectedModelId}
+                        icon={<RobotOutlined />}
+                        checkedChildren={models.find((m) => m.id === selectedModelId)?.modelName}
+                        unCheckedChildren="模型"
+                        styles={switchStyles}
+                      />
+                    </Dropdown>
+                    {((!embedded) || showProjectSelector) && projects.length > 0 && (
+                      <Dropdown
+                        getPopupContainer={floating ? () => document.getElementById('floating-chat-window') || document.body : undefined}
+                        menu={{
+                          items: [
+                            ...(selectedProject ? [{ key: '__clear_project__', label: '✕ 清除选择' }] : []),
+                            ...projects.map((p) => ({ key: p.id, label: p.name })),
+                          ],
+                          onClick: ({ key }) => {
+                            if (key === '__clear_project__') {
+                              handleProjectChange(undefined);
+                            } else {
+                              handleProjectChange(key);
+                            }
+                          },
+                          selectedKeys: selectedProject ? [selectedProject] : [],
+                        }}
                       >
-                        @{fileName}
-                      </Tag>
-                    );
-                  })}
+                        <Sender.Switch
+                          value={!!selectedProject}
+                          icon={<FolderOutlined />}
+                          checkedChildren={projects.find((p) => p.id === selectedProject)?.name}
+                          unCheckedChildren="项目"
+                          styles={switchStyles}
+                        />
+                      </Dropdown>
+                    )}
+                    {templates.length > 0 && (
+                      <Dropdown
+                        getPopupContainer={floating ? () => document.getElementById('floating-chat-window') || document.body : undefined}
+                        menu={{
+                          items: [
+                            ...(selectedTemplateId ? [{ key: '__clear_template__', label: '✕ 清除选择' }] : []),
+                            ...templates.map((t) => ({ key: String(t.id), label: t.name })),
+                          ],
+                          onClick: ({ key }) => {
+                            if (key === '__clear_template__') {
+                              handleTemplateChange(undefined);
+                            } else {
+                              handleTemplateChange(Number(key));
+                            }
+                          },
+                          selectedKeys: selectedTemplateId ? [String(selectedTemplateId)] : [],
+                        }}
+                      >
+                        <Sender.Switch
+                          value={!!selectedTemplateId}
+                          icon={<ProfileOutlined />}
+                          checkedChildren={templates.find((t) => t.id === selectedTemplateId)?.name}
+                          unCheckedChildren="模板"
+                          styles={switchStyles}
+                        />
+                      </Dropdown>
+                    )}
+                  </div>
+                  {oriNode}
                 </div>
-              ) : false
-            }
-            styles={{ root: { backgroundColor: '#fff' } }}
-            footer={(oriNode) => (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px' }}>
-                <div style={{ display: 'flex' }}>
-                  <Dropdown
-                    getPopupContainer={floating ? () => document.getElementById('floating-chat-window') || document.body : undefined}
-                    menu={{
-                      items: [
-                        ...(selectedModelId ? [{ key: '__clear_model__', label: '✕ 清除选择' }] : []),
-                        ...models.map((m) => ({ key: String(m.id), label: `${m.provider} / ${m.modelName}` })),
-                      ],
-                      onClick: ({ key }) => {
-                        if (key === '__clear_model__') {
-                          handleModelChange(undefined);
-                        } else {
-                          handleModelChange(Number(key));
-                        }
-                      },
-                      selectedKeys: selectedModelId ? [String(selectedModelId)] : [],
-                    }}
-                  >
-                    <Sender.Switch
-                      value={!!selectedModelId}
-                      icon={<RobotOutlined />}
-                      checkedChildren={models.find((m) => m.id === selectedModelId)?.modelName}
-                      unCheckedChildren="模型"
-                      styles={switchStyles}
-                    />
-                  </Dropdown>
-                  {((!embedded) || showProjectSelector) && projects.length > 0 && (
-                    <Dropdown
-                      getPopupContainer={floating ? () => document.getElementById('floating-chat-window') || document.body : undefined}
-                      menu={{
-                        items: [
-                          ...(selectedProject ? [{ key: '__clear_project__', label: '✕ 清除选择' }] : []),
-                          ...projects.map((p) => ({ key: p.id, label: p.name })),
-                        ],
-                        onClick: ({ key }) => {
-                          if (key === '__clear_project__') {
-                            handleProjectChange(undefined);
-                          } else {
-                            handleProjectChange(key);
-                          }
-                        },
-                        selectedKeys: selectedProject ? [selectedProject] : [],
-                      }}
-                    >
-                      <Sender.Switch
-                        value={!!selectedProject}
-                        icon={<FolderOutlined />}
-                        checkedChildren={projects.find((p) => p.id === selectedProject)?.name}
-                        unCheckedChildren="项目"
-                        styles={switchStyles}
-                      />
-                    </Dropdown>
-                  )}
-                  {templates.length > 0 && (
-                    <Dropdown
-                      getPopupContainer={floating ? () => document.getElementById('floating-chat-window') || document.body : undefined}
-                      menu={{
-                        items: [
-                          ...(selectedTemplateId ? [{ key: '__clear_template__', label: '✕ 清除选择' }] : []),
-                          ...templates.map((t) => ({ key: String(t.id), label: t.name })),
-                        ],
-                        onClick: ({ key }) => {
-                          if (key === '__clear_template__') {
-                            handleTemplateChange(undefined);
-                          } else {
-                            handleTemplateChange(Number(key));
-                          }
-                        },
-                        selectedKeys: selectedTemplateId ? [String(selectedTemplateId)] : [],
-                      }}
-                    >
-                      <Sender.Switch
-                        value={!!selectedTemplateId}
-                        icon={<ProfileOutlined />}
-                        checkedChildren={templates.find((t) => t.id === selectedTemplateId)?.name}
-                        unCheckedChildren="模板"
-                        styles={switchStyles}
-                      />
-                    </Dropdown>
-                  )}
-                </div>
-                {oriNode}
-              </div>
-            )}
-          />
+              )}
+            />
+          </div>
         </div>
+
+        {/* Bottom spacer - 空对话时与上方 spacer 对称，把输入框居中 */}
+        <div
+          style={{
+            flex: messages.length === 0 && !floating ? '1 1 0%' : '0 0 0px',
+            minHeight: 0,
+            transition: 'flex 0.5s ease',
+          }}
+        />
       </div>
     </div>
     <SaveToDocumentModal
