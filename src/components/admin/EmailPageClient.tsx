@@ -352,7 +352,7 @@ export default function EmailPageClient() {
             type="info"
             showIcon
             className="!mt-3"
-            message="This name is used in email subjects, email body, and other system displays."
+            title="This name is used in email subjects, email body, and other system displays."
           />
         </Card>
 
@@ -367,7 +367,7 @@ export default function EmailPageClient() {
         />
 
         <Card title="Current Configuration">
-          <Space direction="vertical" size="small">
+          <Space orientation="vertical" size="small">
             <div>
               <Text type="secondary">SMTP Email Service: </Text>
               {smtp ? (
@@ -483,7 +483,7 @@ function EmailTemplateCard(props: {
           type="info"
           showIcon
           className="!mt-2"
-          message={
+          title={
             <span>
               Available variables:{" "}
               <code className="bg-gray-100 px-1 rounded">{"{{brandName}}"}</code>{" "}
@@ -500,7 +500,7 @@ function EmailTemplateCard(props: {
           }
         />
 
-        <Space>
+        <Space className="!mt-2">
           <Button
             icon={<EyeOutlined />}
             loading={previewing}
@@ -596,7 +596,7 @@ function SmtpCard(props: {
           type="warning"
           showIcon
           className="!mb-4"
-          message="SMTP email service not configured"
+          title="SMTP email service not configured"
           description="Without SMTP configured, verification emails will only be printed to the server console and users will not receive them."
           action={
             <Button size="small" type="primary" onClick={onInit}>
@@ -708,7 +708,7 @@ function SmtpCard(props: {
               className="!mt-3"
               type={testState.result.success ? "success" : "error"}
               showIcon
-              message={
+              title={
                 testState.result.success
                   ? "Sent successfully"
                   : "Send failed"
