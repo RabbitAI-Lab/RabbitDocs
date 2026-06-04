@@ -16,11 +16,10 @@ services:
       - MCP_PORT=4001
       - HOSTNAME=0.0.0.0
       - DATA_ROOT=/app/data
-      - RABBITDOCS_HOME=/app
+      - RABBITDOCS_HOME=/app/data/home
     volumes:
       # 生产数据使用命名卷，独立于宿主机目录
       - rabbitdocs_data:/app/data
-      - rabbitdocs_db:/app/data.db
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"]
       interval: 30s
@@ -30,4 +29,3 @@ services:
 
 volumes:
   rabbitdocs_data:
-  rabbitdocs_db:
