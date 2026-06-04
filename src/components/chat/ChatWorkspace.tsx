@@ -2,6 +2,7 @@
 
 import { useState, forwardRef, useImperativeHandle } from "react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { Bubble, Sender, XProvider } from "@ant-design/x";
 import { Tag } from "antd";
 import type { Message, ChatWorkspaceProps, ChatWorkspaceRef } from "./chat-workspace-ref";
@@ -38,6 +39,8 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
   workspaceId,
 }, ref) {
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
   const [effectiveChatId, setEffectiveChatId] = useState<number | null>(chatId ?? null);
   const [effectiveChatTitle, setEffectiveChatTitle] = useState<string>(chatTitle);
 
@@ -252,7 +255,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
                   </div>
                 ) : false
               }
-              styles={{ root: { backgroundColor: '#fff' } }}
+              styles={{ root: { backgroundColor: isDark ? '#18181b' : '#fff' } }}
               footer={renderFooter}
             />
           </div>

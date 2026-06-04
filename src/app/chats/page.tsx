@@ -105,22 +105,22 @@ export default function ChatsPageClient() {
   return (
     <div className="h-full flex flex-col p-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Chats</h1>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Chats</h1>
         <span className="flex items-center gap-3">
-          <span className="text-sm text-gray-400">
+          <span className="text-sm text-gray-400 dark:text-gray-500">
             {data ? `Total ${data.total} chats` : ""}
           </span>
           {data && data.total > 0 && (
             <span className="relative">
               <button
                 onClick={() => setShowClearConfirm(true)}
-                className="flex items-center justify-center p-1.5 rounded hover:bg-gray-100 transition-colors"
+                className="flex items-center justify-center p-1.5 rounded hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
                 title="Clear All"
               >
-                <ClearOutlined className="text-gray-500 hover:text-gray-700" style={{ fontSize: '14px' }} />
+                <ClearOutlined className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" style={{ fontSize: '14px' }} />
               </button>
               {showClearConfirm && (
-                <span className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50">
+                <span className="absolute right-0 top-full mt-1 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50">
                   <span className="text-gray-500">Confirm clearing all chats?</span>
                   <button
                     onClick={handleClearAll}
@@ -139,39 +139,39 @@ export default function ChatsPageClient() {
 
       {loading ? (
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-gray-400">Loading...</div>
+          <div className="text-gray-400 dark:text-gray-500">Loading...</div>
         </div>
       ) : data && data.chats.length > 0 ? (
         <>
           <div className="flex-1 overflow-y-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <tr className="border-b border-gray-200 dark:border-zinc-700">
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Title
                   </th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider w-56">
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-56">
                     Project
                   </th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-48">
                     Workspace
                   </th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-36">
                     Model
                   </th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-36">
                     Template
                   </th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider w-44">
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-44">
                     Created
                   </th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider w-44">
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-44">
                     Updated
                   </th>
                   <th className="w-12"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-zinc-700/50">
                 {data.chats.map((chat) => (
                   <tr
                     key={chat.id}
@@ -182,36 +182,36 @@ export default function ChatsPageClient() {
                         router.push(`/chat/${chat.id}`);
                       }
                     }}
-                    className="hover:bg-blue-50 cursor-pointer transition-colors"
+                    className="hover:bg-blue-50 dark:hover:bg-zinc-700/50 cursor-pointer transition-colors"
                   >
                     <td className="py-3 px-4">
-                      <span className="text-sm text-gray-800">
+                      <span className="text-sm text-gray-800 dark:text-gray-100">
                         {chat.title}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-500">
-                      {chat.projectId ? (projectMap.get(chat.projectId) || chat.projectId) : <span className="text-gray-300">-</span>}
+                    <td className="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">
+                      {chat.projectId ? (projectMap.get(chat.projectId) || chat.projectId) : <span className="text-gray-300 dark:text-zinc-600">-</span>}
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-500">
-                      {chat.workspaceId ? (workspaceMap.get(chat.workspaceId) || chat.workspaceId) : <span className="text-gray-300">-</span>}
+                    <td className="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">
+                      {chat.workspaceId ? (workspaceMap.get(chat.workspaceId) || chat.workspaceId) : <span className="text-gray-300 dark:text-zinc-600">-</span>}
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-500">
-                      {chat.modelName || <span className="text-gray-300">-</span>}
+                    <td className="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">
+                      {chat.modelName || <span className="text-gray-300 dark:text-zinc-600">-</span>}
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-500">
-                      {chat.templateName || <span className="text-gray-300">-</span>}
+                    <td className="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">
+                      {chat.templateName || <span className="text-gray-300 dark:text-zinc-600">-</span>}
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-500">
+                    <td className="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">
                       {formatDate(chat.createdAt)}
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-500">
+                    <td className="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">
                       {formatDate(chat.updatedAt)}
                     </td>
                     <td className="py-3 px-4">
                       <span className="relative">
                         <button
                           onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(confirmDeleteId === chat.id ? null : chat.id); }}
-                          className="text-red-400 hover:text-red-600 transition-colors"
+                          className="text-red-400 hover:text-red-600 dark:hover:text-red-500 transition-colors"
                         >
                           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="3 6 5 6 21 6" />
@@ -221,7 +221,7 @@ export default function ChatsPageClient() {
                         {confirmDeleteId === chat.id && (
                           <span
                             onClick={(e) => e.stopPropagation()}
-                            className="absolute right-0 bottom-full mb-1 bg-white rounded-lg shadow-lg border border-gray-200 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50"
+                            className="absolute right-0 bottom-full mb-1 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50"
                           >
                             <span className="text-gray-500">Confirm delete?</span>
                             <button
@@ -244,21 +244,21 @@ export default function ChatsPageClient() {
 
           {/* Pagination */}
           {data.totalPages > 1 && (
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+            <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-zinc-700">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="px-4 py-2 text-sm text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
               </button>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 Page {page} / {data.totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
                 disabled={page >= data.totalPages}
-                className="px-4 py-2 text-sm text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </button>
@@ -268,10 +268,10 @@ export default function ChatsPageClient() {
       ) : (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-gray-400 mb-2">No chat records</p>
+            <p className="text-gray-400 dark:text-gray-500 mb-2">No chat records</p>
             <button
               onClick={() => router.push("/chat/new")}
-              className="text-sm text-blue-600 hover:text-blue-800"
+              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
             >
               Start new chat
             </button>

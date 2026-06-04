@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/useAuth";
 import { useSidebar } from "./SidebarContext";
 import { cn } from "@/lib/utils";
+import ThemeToggle from "./ThemeToggle";
 
 export default function MyAccountMenu() {
   const [open, setOpen] = useState(false);
@@ -57,8 +58,8 @@ export default function MyAccountMenu() {
           "flex items-center gap-2 w-full py-1.5 text-sm rounded-lg transition-colors cursor-pointer select-none",
           collapsed ? "px-0 justify-center" : "px-3",
           open
-            ? "bg-gray-100 text-gray-900 font-medium"
-            : "text-gray-900 hover:bg-gray-100"
+            ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-medium"
+            : "text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
         )}
       >
         <svg
@@ -81,21 +82,27 @@ export default function MyAccountMenu() {
         <div
           ref={menuRef}
           className={cn(
-            "absolute bottom-full left-0 mb-1 w-full bg-white rounded-xl border border-gray-200 shadow-lg z-50 overflow-hidden",
+            "absolute bottom-full left-0 mb-1 w-full bg-white dark:bg-[var(--popup-bg)] rounded-xl border border-gray-200 dark:border-[var(--popup-border)] shadow-lg z-50 overflow-hidden",
             collapsed && "left-full bottom-0 mb-0 ml-2"
           )}
         >
           {/* Header */}
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-[var(--popup-header-bg)]">
             <div className="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold shrink-0">
               {initials}
             </div>
             <div className="min-w-0">
-              <div className="text-sm font-medium text-gray-900 truncate">
+              <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                 {name}
               </div>
-              <div className="text-xs text-gray-500 truncate">{email}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{email}</div>
             </div>
+          </div>
+
+          {/* Appearance Section */}
+          <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+            <span className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">Appearance</span>
+            <ThemeToggle />
           </div>
 
           {/* Menu Items */}
@@ -107,7 +114,7 @@ export default function MyAccountMenu() {
                   setOpen(false);
                   router.push(item.href);
                 }}
-                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer select-none transition-colors"
+                className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer select-none transition-colors"
               >
                 {item.label}
               </div>
@@ -115,13 +122,13 @@ export default function MyAccountMenu() {
           </div>
 
           {/* Footer - Sign Out */}
-          <div className="border-t border-gray-100 py-1">
+          <div className="border-t border-gray-100 dark:border-gray-700 py-1">
             <div
               onClick={() => {
                 setOpen(false);
                 logout();
               }}
-              className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer select-none transition-colors"
+              className="px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 cursor-pointer select-none transition-colors"
             >
               Sign out
             </div>

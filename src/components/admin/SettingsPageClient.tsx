@@ -136,7 +136,6 @@ export default function SettingsPageClient() {
               Reset
             </Button>
             <Button
-              type="primary"
               icon={<SaveOutlined />}
               disabled={!dirty}
               loading={saving}

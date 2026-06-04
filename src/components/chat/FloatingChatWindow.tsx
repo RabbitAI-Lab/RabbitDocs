@@ -242,7 +242,7 @@ export default function FloatingChatWindow() {
       <div
         id="floating-chat-window"
         ref={containerRef}
-        className="fixed bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
+        className="fixed bg-white dark:bg-zinc-800 rounded-xl shadow-2xl border border-gray-200 dark:border-zinc-700 flex flex-col overflow-hidden"
         style={{
           left: position.x,
           top: position.y,
@@ -254,7 +254,7 @@ export default function FloatingChatWindow() {
       >
       {/* Header - draggable */}
       <div
-        className="flex items-center gap-2 h-10 px-3 border-b border-gray-100 shrink-0 cursor-grab active:cursor-grabbing select-none"
+        className="flex items-center gap-2 h-10 px-3 border-b border-gray-100 dark:border-zinc-700 shrink-0 cursor-grab active:cursor-grabbing select-none"
         onPointerDown={handleDragStart}
       >
         <Avatar size={24} icon={<RobotOutlined />} style={{ backgroundColor: "#1677ff" }} />
@@ -292,7 +292,6 @@ export default function FloatingChatWindow() {
                   />
                   <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                     <Button
-                      type="primary"
                       icon={<CopyOutlined />}
                       size="small"
                       onClick={() => ws.handleCopyLink()}

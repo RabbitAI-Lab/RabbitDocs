@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import CollapsibleGroup from "@/components/ui/CollapsibleGroup";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./SidebarContext";
+import { useAuth } from "@/components/auth/useAuth";
 
 interface Chat {
   id: number;
@@ -97,6 +98,7 @@ export default function ChatsHistoryPanel({ chats, panelCollapsed, onTogglePanel
   const { collapsed } = useSidebar();
   const groups = groupChats(chats);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const { authFetch } = useAuth();
 
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -104,7 +106,7 @@ export default function ChatsHistoryPanel({ chats, panelCollapsed, onTogglePanel
   };
 
   const handleDelete = async (chatId: number) => {
-    await fetch(`/api/chats/${chatId}`, { method: "DELETE" });
+    await authFetch(`/api/chats/${chatId}`, { method: "DELETE" });
     setConfirmDeleteId(null);
     if (pathname === `/chat/${chatId}`) {
       router.push("/chat/new");
@@ -126,11 +128,11 @@ export default function ChatsHistoryPanel({ chats, panelCollapsed, onTogglePanel
     <CollapsibleGroup title="Chats History" open={panelCollapsed !== undefined ? !panelCollapsed : undefined} onToggle={onTogglePanelCollapse ? (open) => onTogglePanelCollapse(!open) : undefined} storageKey={panelCollapsed === undefined ? "chats-history-collapsed" : undefined}>
       <div className="space-y-1">
         {groups.length === 0 && (
-          <p className="px-3 py-2 text-sm text-gray-400 text-center">No chat history</p>
+          <p className="px-3 py-2 text-sm text-gray-400 dark:text-gray-500 text-center">No chat history</p>
         )}
         {groups.map((group) => (
           <div key={group.label}>
-            <div className="px-3 py-1 text-xs font-medium text-gray-400">
+            <div className="px-3 py-1 text-xs font-medium text-gray-400 dark:text-gray-500">
               {group.label}
             </div>
             <div className="space-y-[1.5px] px-2">
@@ -151,13 +153,13 @@ export default function ChatsHistoryPanel({ chats, panelCollapsed, onTogglePanel
                     className={cn(
                       "group relative flex items-center justify-between w-full px-2 py-1.5 text-sm rounded-lg transition-colors text-left cursor-pointer",
                       isActive
-                        ? "bg-gray-100 text-gray-900 font-medium"
-                        : "text-gray-700 hover:bg-gray-100"
+                        ? "bg-gray-100 dark:bg-zinc-700 text-gray-900 dark:text-gray-100 font-medium"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-700"
                     )}
                   >
                     <span className="truncate">{chat.title}</span>
                     <span className="flex items-center shrink-0 ml-2">
-                      <span className="text-xs text-gray-300 group-hover:opacity-0 transition-opacity">
+                      <span className="text-xs text-gray-300 dark:text-gray-600 group-hover:opacity-0 transition-opacity">
                         {formatTime(chat.updatedAt)}
                       </span>
                       <span className="relative">
@@ -173,16 +175,16 @@ export default function ChatsHistoryPanel({ chats, panelCollapsed, onTogglePanel
                         {confirmDeleteId === chat.id && (
                           <span
                             onClick={(e) => e.stopPropagation()}
-                            className="absolute right-0 bottom-full mb-1 bg-white rounded-lg shadow-lg border border-gray-200 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50"
+                            className="absolute right-0 bottom-full mb-1 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50"
                           >
-                            <span className="text-gray-500">确认删除?</span>
+                            <span className="text-gray-500 dark:text-gray-400">确认删除?</span>
                             <button
                               onClick={() => handleDelete(chat.id)}
                               className="px-1.5 py-0.5 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                             >删除</button>
                             <button
                               onClick={() => setConfirmDeleteId(null)}
-                              className="px-1.5 py-0.5 text-gray-500 hover:text-gray-700 transition-colors"
+                              className="px-1.5 py-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
                             >取消</button>
                           </span>
                         )}

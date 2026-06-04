@@ -154,6 +154,25 @@ const menuGroups = [
           </svg>
         ),
       },
+      {
+        href: "/admin/database",
+        label: "Database",
+        icon: (
+          <svg
+            className="w-4 h-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <ellipse cx="12" cy="5" rx="9" ry="3" />
+            <path d="M3 5V19A9 3 0 0 0 21 19V5" />
+            <path d="M3 12A9 3 0 0 0 21 12" />
+          </svg>
+        ),
+      },
     ],
   },
   {
@@ -249,10 +268,10 @@ export default function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="w-[200px] h-full flex flex-col border-r border-gray-200 bg-white shrink-0">
+    <div className="w-[200px] h-full flex flex-col border-r border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shrink-0">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-100">
-        <h2 className="text-sm font-semibold text-gray-800">System Admin</h2>
+      <div className="px-4 py-3 border-b border-gray-100 dark:border-zinc-700">
+        <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">System Admin</h2>
       </div>
 
       {/* Menu Items */}
@@ -261,7 +280,7 @@ export default function AdminSidebar() {
           <div key={group.title}>
             <div
               className={cn(
-                "px-3 text-xs font-medium text-gray-400 uppercase tracking-wider",
+                "px-3 text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider",
                 groupIndex === 0 ? "pt-1 pb-1" : "pt-3 pb-1"
               )}
             >
@@ -277,9 +296,9 @@ export default function AdminSidebar() {
                     key={item.href}
                     onClick={() => router.push(item.href)}
                     className={cn(
-                      "flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition-colors cursor-pointer select-none text-gray-900",
-                      isActive && "bg-blue-50 font-medium",
-                      !isActive && "hover:bg-gray-50"
+                      "flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition-colors cursor-pointer select-none text-gray-900 dark:text-gray-100",
+                      isActive && "bg-blue-50 dark:bg-blue-900/30 font-medium",
+                      !isActive && "hover:bg-gray-50 dark:hover:bg-zinc-700/50"
                     )}
                   >
                     <span className={cn("text-blue-500")}>{item.icon}</span>

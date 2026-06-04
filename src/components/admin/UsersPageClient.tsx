@@ -248,7 +248,7 @@ export default function UsersPageClient() {
           options={STATUS_OPTIONS}
           style={{ width: 180 }}
         />
-        <Button type="primary" onClick={() => loadUsers(1)}>
+        <Button onClick={() => loadUsers(1)}>
           Search
         </Button>
       </div>

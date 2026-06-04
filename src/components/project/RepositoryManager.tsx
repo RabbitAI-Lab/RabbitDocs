@@ -243,7 +243,7 @@ export default function RepositoryManager({
 
       {/* Add form */}
       {showAddForm && (
-        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
+        <div className="p-4 bg-gray-50 dark:bg-zinc-800 rounded-lg border border-gray-200 space-y-3">
           <div className="flex items-center justify-between mb-1">
             <h4 className="text-sm font-medium text-gray-700">Add Repository</h4>
             <button
@@ -343,7 +343,6 @@ export default function RepositoryManager({
             </Button>
             <Button
               size="small"
-              type="primary"
               loading={submitting}
               disabled={!formName.trim() || !formUrl.trim()}
               onClick={handleAdd}

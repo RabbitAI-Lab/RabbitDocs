@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import localFont from "next/font/local";
-import { App as AntApp } from "antd";
 import "./globals.css";
 import Sidebar from "@/components/layout/Sidebar";
 import ShareLayoutGuard from "@/components/layout/ShareLayoutGuard";
 import FloatingChatProvider from "@/components/chat/FloatingChatProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { getBrandName } from "@/lib/auth/settings";
+import ThemeRegistry from "@/components/layout/ThemeRegistry";
 
 const geistSans = localFont({
   src: [
@@ -62,21 +62,21 @@ export default async function RootLayout({
   const brandName = getBrandName();
 
   return (
-    <html lang="zh-CN" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="h-full flex bg-white">
-        <AntApp className="flex h-full w-full">
+    <html lang="zh-CN" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+      <body className="h-full flex bg-white dark:bg-[var(--background)]">
+        <ThemeRegistry>
           <AuthProvider>
             <FloatingChatProvider>
               <ShareLayoutGuard />
               <div data-sidebar>
                 <Sidebar initialWidth={savedWidth} initialCollapsed={savedCollapsed} brandName={brandName} />
               </div>
-              <main className="flex-1 h-full overflow-y-auto bg-gray-50">
+              <main className="flex-1 h-full overflow-y-auto bg-gray-50 dark:bg-[var(--main-bg)]">
                 {children}
               </main>
             </FloatingChatProvider>
           </AuthProvider>
-        </AntApp>
+        </ThemeRegistry>
       </body>
     </html>
   );

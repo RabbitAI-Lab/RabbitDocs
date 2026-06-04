@@ -327,9 +327,9 @@ export default function WorkspaceMcpPanel({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-start gap-2 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+      <div className="flex items-start gap-2 p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg border border-indigo-100 dark:border-indigo-800">
         <svg
-          className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5"
+          className="w-4 h-4 text-indigo-500 dark:text-indigo-400 shrink-0 mt-0.5"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -338,16 +338,16 @@ export default function WorkspaceMcpPanel({
           <circle cx="11" cy="11" r="8" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
-        <p className="text-sm text-indigo-700">
+        <p className="text-sm text-indigo-700 dark:text-indigo-300">
           Configure MCP servers at the workspace level. Each entry is available
           to AI chats in all projects of this workspace as{" "}
-          <code className="px-1 bg-white/60 rounded">mcp__{"<name>"}__*</code>{" "}
+          <code className="px-1 bg-white/60 dark:bg-zinc-800/60 rounded">mcp__{"<name>"}__*</code>{" "}
           tools.
         </p>
       </div>
 
       <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-gray-500 dark:text-gray-400">
           {entries.length} server{entries.length === 1 ? "" : "s"} configured
         </span>
         <button
@@ -360,7 +360,7 @@ export default function WorkspaceMcpPanel({
       </div>
 
       {entries.length === 0 ? (
-        <div className="py-8 text-center text-sm text-gray-400 border border-dashed border-gray-200 rounded-lg">
+        <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500 border border-dashed border-gray-200 dark:border-zinc-700 rounded-lg">
           No MCP servers yet. Click &quot;Add MCP&quot; to create one.
         </div>
       ) : (
@@ -373,7 +373,7 @@ export default function WorkspaceMcpPanel({
             return (
               <div
                 key={name}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 transition-colors"
               >
                 <Switch
                   size="small"
@@ -383,7 +383,7 @@ export default function WorkspaceMcpPanel({
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700 truncate">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">
                       {name}
                     </span>
                     <Tag
@@ -400,7 +400,7 @@ export default function WorkspaceMcpPanel({
                     </Tag>
                   </div>
                   <div
-                    className="text-xs text-gray-400 truncate font-mono mt-0.5"
+                    className="text-xs text-gray-400 dark:text-gray-500 truncate font-mono mt-0.5"
                     title={describeServer(entry)}
                   >
                     {describeServer(entry)}
@@ -409,7 +409,7 @@ export default function WorkspaceMcpPanel({
                 <div className="flex items-center gap-1 shrink-0">
                   {hasAuth && (
                     <KeyOutlined
-                      className="text-gray-400 hover:text-blue-500 cursor-pointer text-base p-1"
+                      className="text-gray-400 dark:text-gray-500 hover:text-blue-500 cursor-pointer text-base p-1"
                       title="Edit API Key"
                       onClick={() => {
                         setKeyTarget(name);
@@ -418,7 +418,7 @@ export default function WorkspaceMcpPanel({
                     />
                   )}
                   <EditOutlined
-                    className="text-gray-400 hover:text-blue-500 cursor-pointer text-base p-1"
+                    className="text-gray-400 dark:text-gray-500 hover:text-blue-500 cursor-pointer text-base p-1"
                     title="Edit JSON"
                     onClick={() => openEdit(name)}
                   />
@@ -431,7 +431,7 @@ export default function WorkspaceMcpPanel({
                     onConfirm={() => handleDelete(name)}
                   >
                     <DeleteOutlined
-                      className="text-gray-400 hover:text-red-500 cursor-pointer text-base p-1"
+                      className="text-gray-400 dark:text-gray-500 hover:text-red-500 cursor-pointer text-base p-1"
                       title="Delete"
                     />
                   </Popconfirm>

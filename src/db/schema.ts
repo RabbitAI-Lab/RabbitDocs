@@ -281,3 +281,17 @@ export const plans = sqliteTable("plans", {
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
+
+// user_subscriptions: 用户订阅
+export const userSubscriptions = sqliteTable("user_subscriptions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  planId: integer("plan_id").notNull().references(() => plans.id),
+  billingCycle: text("billing_cycle", { enum: ["monthly", "yearly"] }).notNull().default("monthly"),
+  status: text("status", { enum: ["active", "cancelled", "expired"] }).notNull().default("active"),
+  startedAt: text("started_at").notNull(),
+  expiresAt: text("expires_at").notNull(),
+  cancelledAt: text("cancelled_at"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});

@@ -56,7 +56,7 @@ export default function TemplatesPanel({ templates }: TemplatesPanelProps) {
           <button
             key={t.id}
             onClick={() => handleCreate(t)}
-            className="flex items-center gap-2.5 w-full px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-left"
+            className="flex items-center gap-2.5 w-full px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors text-left"
           >
             <span className="w-4 h-4 flex items-center justify-center text-xs shrink-0">
               {t.icon || "📄"}

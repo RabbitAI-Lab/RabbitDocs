@@ -16,21 +16,21 @@ function ThinkingBlock({ text }: { text: string }) {
   const [open, setOpen] = useState(true);
   if (!text) return null;
   return (
-    <div className="mb-2 rounded border border-amber-200 bg-amber-50/40">
+    <div className="mb-2 rounded border border-amber-200 dark:border-amber-700 bg-amber-50/40 dark:bg-amber-900/20">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1 px-2 py-1 text-xs text-amber-700 w-full text-left hover:bg-amber-50 transition-colors"
+        className="flex items-center gap-1 px-2 py-1 text-xs text-amber-700 dark:text-amber-300 w-full text-left hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-colors"
       >
         <ThunderboltOutlined />
         <span className="font-medium">思考过程</span>
-        <span className="text-amber-500">({text.length} 字)</span>
+        <span className="text-amber-500 dark:text-amber-400">({text.length} 字)</span>
         <DownOutlined
           className={`ml-auto transition-transform ${open ? "" : "-rotate-90"}`}
         />
       </button>
       {open && (
-        <div className="px-3 pb-2 pt-1 text-xs text-gray-700 whitespace-pre-wrap border-t border-amber-200/50">
+        <div className="px-3 pb-2 pt-1 text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap border-t border-amber-200/50 dark:border-amber-700/50">
           {text}
         </div>
       )}
@@ -74,7 +74,7 @@ export function mapMessagesToBubbleItems({
       <div>
         <ThinkingBlock text={thinkingText} />
         {msg.isError ? (
-          <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+          <div className="rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">
             {msg.content}
           </div>
         ) : (

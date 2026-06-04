@@ -180,10 +180,10 @@ export default function WorkspacesPanel() {
     <div className="mb-1">
       {/* Header */}
       <div className="flex items-center gap-1.5 px-3 py-1.5">
-        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Workspaces</span>
+        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Workspaces</span>
         <button
           onClick={handleCreateWorkspace}
-          className="ml-auto p-0.5 text-gray-400 hover:text-blue-600 transition-colors"
+          className="ml-auto p-0.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           title="New Workspace"
         >
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -218,7 +218,7 @@ export default function WorkspacesPanel() {
                     if (e.key === "Enter") handleRename(workspace.id);
                     if (e.key === "Escape") { setEditingId(null); setEditName(""); }
                   }}
-                  className="flex-1 min-w-0 px-1.5 py-0 text-sm border border-blue-400 rounded focus:outline-none bg-white"
+                  className="flex-1 min-w-0 px-1.5 py-0 text-sm border border-blue-400 rounded focus:outline-none bg-white dark:bg-zinc-800 dark:text-gray-100"
                 />
               </div>
             );
@@ -236,8 +236,8 @@ export default function WorkspacesPanel() {
               className={cn(
                 "relative flex items-center gap-2 w-full px-3 py-1.5 text-sm rounded-lg transition-colors cursor-pointer select-none",
                 isDragging && "opacity-40",
-                !isDragging && isActive && "bg-gray-100 text-gray-900 font-medium",
-                !isDragging && !isActive && "text-gray-900 hover:bg-gray-100",
+                !isDragging && isActive && "bg-gray-100 dark:bg-zinc-700 text-gray-900 dark:text-gray-100 font-medium",
+                !isDragging && !isActive && "text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-zinc-700",
               )}
               onClick={() => router.push(workspacePath)}
             >

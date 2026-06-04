@@ -120,12 +120,12 @@ export default function MemberManager({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           {members.length} members
         </p>
         <button
           onClick={() => setShowAddForm(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="12" y1="5" x2="12" y2="19" />
@@ -141,9 +141,9 @@ export default function MemberManager({
           {members.map((member) => (
             <div
               key={member.id}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors group"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-100 dark:border-zinc-700 hover:border-gray-200 dark:hover:border-zinc-600 transition-colors group"
             >
-              <svg className="w-4 h-4 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
@@ -159,7 +159,6 @@ export default function MemberManager({
                     />
                     <Button
                       size="small"
-                      type="primary"
                       loading={editSubmitting}
                       disabled={!editAccountName.trim()}
                       onClick={handleUpdate}
@@ -172,8 +171,8 @@ export default function MemberManager({
                   </div>
                 ) : (
                   <>
-                    <span className="text-sm font-medium text-gray-700">{member.accountName}</span>
-                    <p className="text-xs text-gray-400">Added {formatDate(member.addedAt)}</p>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{member.accountName}</span>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">Added {formatDate(member.addedAt)}</p>
                   </>
                 )}
               </div>
@@ -181,7 +180,7 @@ export default function MemberManager({
                 <>
                   <button
                     onClick={() => startEdit(member)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-blue-500 transition-all"
+                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 dark:text-gray-600 hover:text-blue-500 transition-all"
                     title="Edit"
                   >
                     <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -191,7 +190,7 @@ export default function MemberManager({
                   </button>
                   <button
                     onClick={() => handleDelete(member.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 transition-all"
+                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 dark:text-gray-600 hover:text-red-500 transition-all"
                     title="Delete"
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -228,7 +227,7 @@ export default function MemberManager({
       </Modal>
 
       {members.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+        <div className="flex flex-col items-center justify-center py-8 text-gray-400 dark:text-gray-500">
           <svg className="w-10 h-10 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />

@@ -142,7 +142,7 @@ export default function InviteCodesPageClient() {
           options={STATUS_OPTIONS}
           style={{ width: 160 }}
         />
-        <Button type="primary" onClick={() => load(1)}>
+        <Button onClick={() => load(1)}>
           Search
         </Button>
       </div>

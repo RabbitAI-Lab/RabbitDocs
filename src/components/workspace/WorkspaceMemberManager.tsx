@@ -120,10 +120,10 @@ export default function WorkspaceMemberManager({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">{members.length} members</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{members.length} members</p>
         <button
           onClick={() => setShowAddForm(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors"
         >
           <svg
             className="w-4 h-4"
@@ -144,10 +144,10 @@ export default function WorkspaceMemberManager({
           {members.map((member) => (
             <div
               key={member.id}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors group"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-100 dark:border-zinc-700 hover:border-gray-200 dark:hover:border-zinc-600 transition-colors group"
             >
               <svg
-                className="w-4 h-4 text-gray-400 shrink-0"
+                className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -168,7 +168,6 @@ export default function WorkspaceMemberManager({
                     />
                     <Button
                       size="small"
-                      type="primary"
                       loading={editSubmitting}
                       disabled={!editAccountName.trim()}
                       onClick={handleUpdate}
@@ -181,10 +180,10 @@ export default function WorkspaceMemberManager({
                   </div>
                 ) : (
                   <>
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                       {member.accountName}
                     </span>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
                       Added {formatDate(member.addedAt)}
                     </p>
                   </>
@@ -194,7 +193,7 @@ export default function WorkspaceMemberManager({
                 <>
                   <button
                     onClick={() => startEdit(member)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-blue-500 transition-all"
+                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 dark:text-gray-600 hover:text-blue-500 transition-all"
                     title="Edit"
                   >
                     <svg
@@ -210,7 +209,7 @@ export default function WorkspaceMemberManager({
                   </button>
                   <button
                     onClick={() => handleDelete(member.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 transition-all"
+                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 dark:text-gray-600 hover:text-red-500 transition-all"
                     title="Delete"
                   >
                     <svg
@@ -255,7 +254,7 @@ export default function WorkspaceMemberManager({
       </Modal>
 
       {members.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+        <div className="flex flex-col items-center justify-center py-8 text-gray-400 dark:text-gray-500">
           <svg
             className="w-10 h-10 mb-3"
             viewBox="0 0 24 24"

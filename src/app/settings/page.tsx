@@ -117,8 +117,8 @@ export default function AccountPage() {
     <div className="max-w-4xl mx-auto p-6 sm:p-8">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Account</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Account</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Manage your account security, credentials and authentication methods
         </p>
       </div>
@@ -173,7 +173,7 @@ export default function AccountPage() {
                 <Input.Password prefix={<LockOutlined />} />
               </Form.Item>
               <Form.Item className="!mb-0">
-                <Button type="primary" htmlType="submit" loading={loadingPassword}>
+                <Button htmlType="submit" loading={loadingPassword}>
                   Change Password
                 </Button>
               </Form.Item>
@@ -292,9 +292,9 @@ interface SectionHeaderProps {
 function SectionHeader({ title, description }: SectionHeaderProps) {
   return (
     <div className="mb-4">
-      <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
       {description && (
-        <p className="mt-1 text-sm text-gray-500">{description}</p>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{description}</p>
       )}
     </div>
   );

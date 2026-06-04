@@ -49,7 +49,7 @@ export default function ChatHeader({
   onClear,
 }: ChatHeaderProps) {
   return (
-    <div className="flex items-center justify-between px-3 h-[41px] bg-white border-b border-gray-200">
+    <div className="flex items-center justify-between px-3 h-[41px] bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-700">
       <div className="flex items-center gap-2 min-w-0">
         {embedded && onBack && (
           <Button
@@ -59,7 +59,7 @@ export default function ChatHeader({
             onClick={onBack}
           />
         )}
-        <h2 className="text-sm font-medium text-gray-800 truncate">
+        <h2 className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
           {effectiveChatTitle}
         </h2>
       </div>
@@ -89,7 +89,6 @@ export default function ChatHeader({
                 />
                 <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                   <Button
-                    type="primary"
                     icon={<CopyOutlined />}
                     size="small"
                     onClick={onCopyLink}

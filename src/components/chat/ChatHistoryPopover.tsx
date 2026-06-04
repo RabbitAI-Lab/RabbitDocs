@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Conversations } from "@ant-design/x";
 import { Button, Spin, Empty, Tooltip } from "antd";
 import { HistoryOutlined } from "@ant-design/icons";
+import { useAuth } from "@/components/auth/useAuth";
 
 interface Chat {
   id: number;
@@ -39,6 +40,7 @@ export default function ChatHistoryPopover({
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const { authFetch } = useAuth();
 
   const fetchChats = useCallback(async (pageNum: number, append: boolean = false) => {
     if (append) {
@@ -47,7 +49,7 @@ export default function ChatHistoryPopover({
       setLoading(true);
     }
     try {
-      const res = await fetch(`/api/chats?page=${pageNum}&pageSize=${PAGE_SIZE}`);
+      const res = await authFetch(`/api/chats?page=${pageNum}&pageSize=${PAGE_SIZE}`);
       if (res.ok) {
         const data: ChatsResponse = await res.json();
         if (append) {
@@ -65,7 +67,7 @@ export default function ChatHistoryPopover({
       setLoading(false);
       setLoadingMore(false);
     }
-  }, []);
+  }, [authFetch]);
 
   const loadMore = useCallback(() => {
     const nextPage = page + 1;
@@ -114,20 +116,7 @@ export default function ChatHistoryPopover({
       </Tooltip>
       {open && (
         <div
-          style={{
-            position: "absolute",
-            top: "100%",
-            right: 0,
-            width: 300,
-            maxHeight: 400,
-            overflowY: "auto",
-            background: "#fff",
-            border: "1px solid #f0f0f0",
-            borderRadius: 6,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            zIndex: 50,
-            marginTop: 4,
-          }}
+          className="absolute right-0 w-[300px] max-h-[400px] overflow-y-auto bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-md shadow-md z-50 mt-1"
         >
           {loading ? (
             <div style={{ textAlign: "center", padding: "24px 0" }}>
@@ -151,7 +140,7 @@ export default function ChatHistoryPopover({
                       label: "Delete",
                       danger: true,
                       onClick: async () => {
-                        await fetch(`/api/chats/${conversation.key}`, {
+                        await authFetch(`/api/chats/${conversation.key}`, {
                           method: "DELETE",
                         });
                         setPage(1);
@@ -162,7 +151,7 @@ export default function ChatHistoryPopover({
                 })}
               />
               {hasMore && (
-                <div style={{ textAlign: "center", padding: "8px 0", borderTop: "1px solid #f0f0f0" }}>
+                <div className="text-center py-2 border-t border-gray-200 dark:border-zinc-700">
                   <Button type="link" size="small" onClick={loadMore} loading={loadingMore}>
                     Load more
                   </Button>

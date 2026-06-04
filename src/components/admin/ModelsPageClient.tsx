@@ -268,10 +268,10 @@ export default function ModelsPageClient({ initialModels }: Props) {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
+      <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-700">
         <div>
-          <h1 className="text-lg font-semibold text-gray-800">Model Config</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Model Config</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             Manage AI model API connection configurations
           </p>
         </div>
@@ -282,7 +282,7 @@ export default function ModelsPageClient({ initialModels }: Props) {
           <Button icon={<ImportOutlined />} onClick={handleImport}>
             Import
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
+          <Button icon={<PlusOutlined />} onClick={openCreateModal}>
             Add Model
           </Button>
         </Space>
@@ -299,7 +299,7 @@ export default function ModelsPageClient({ initialModels }: Props) {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         {models.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-[60%] text-gray-400">
+          <div className="flex flex-col items-center justify-center h-[60%] text-gray-400 dark:text-gray-500">
             <CloudServerOutlined style={{ fontSize: 48, marginBottom: 16 }} />
             <p className="text-sm">
               No model configurations, click the button above to add

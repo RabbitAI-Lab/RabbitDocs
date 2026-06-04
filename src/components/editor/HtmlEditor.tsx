@@ -88,9 +88,9 @@ export default function HtmlEditor({
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-white">
+    <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-900">
       {/* Toolbar */}
-      <div className="flex items-center h-[41px] px-3 border-b border-gray-200 bg-gray-50 gap-3 shrink-0">
+      <div className="flex items-center h-[41px] px-3 border-b border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 gap-3 shrink-0">
         <div className="flex items-center gap-1.5 min-w-0">
           <svg
             className="w-3.5 h-3.5 shrink-0 text-orange-500"
@@ -107,7 +107,7 @@ export default function HtmlEditor({
             <polyline points="9 13 7 15 9 17" />
             <polyline points="15 13 17 15 15 17" />
           </svg>
-          <span className="text-xs font-medium text-gray-700 truncate">{fileName}</span>
+          <span className="text-xs font-medium text-gray-700 dark:text-gray-200 truncate">{fileName}</span>
           {isDirty && (
             <span
               className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-amber-500"
@@ -117,14 +117,14 @@ export default function HtmlEditor({
           )}
         </div>
 
-        <div className="flex items-center bg-white border border-gray-200 rounded-md overflow-hidden">
+        <div className="flex items-center bg-white dark:bg-zinc-700 border border-gray-200 dark:border-zinc-600 rounded-md overflow-hidden">
           <button
             type="button"
             onClick={() => setMode("edit")}
             className={`px-2.5 h-7 text-xs transition-colors ${
               mode === "edit"
-                ? "bg-blue-50 text-blue-700"
-                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-600"
             }`}
           >
             编辑
@@ -132,10 +132,10 @@ export default function HtmlEditor({
           <button
             type="button"
             onClick={() => setMode("preview")}
-            className={`px-2.5 h-7 text-xs transition-colors border-l border-gray-200 ${
+            className={`px-2.5 h-7 text-xs transition-colors border-l border-gray-200 dark:border-zinc-600 ${
               mode === "preview"
-                ? "bg-blue-50 text-blue-700"
-                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-600"
             }`}
           >
             预览
@@ -166,7 +166,7 @@ export default function HtmlEditor({
             className={`px-3 h-7 text-xs rounded-md transition-colors ${
               isDirty && !saving
                 ? "bg-blue-600 text-white hover:bg-blue-700"
-                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-gray-100 dark:bg-zinc-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
             }`}
           >
             {saving ? "保存中..." : "保存"}
@@ -204,7 +204,7 @@ export default function HtmlEditor({
             title="HTML preview"
             srcDoc={content}
             sandbox=""
-            className="w-full h-full border-0 bg-white"
+            className="w-full h-full border-0 bg-white dark:bg-zinc-900"
           />
         )}
       </div>

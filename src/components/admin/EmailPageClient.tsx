@@ -296,7 +296,6 @@ export default function EmailPageClient() {
               Reset
             </Button>
             <Button
-              type="primary"
               icon={<SaveOutlined />}
               disabled={!dirty}
               loading={saving}
@@ -563,7 +562,7 @@ function SmtpCard(props: {
           title="SMTP email service not configured"
           description="Without SMTP configured, verification emails will only be printed to the server console and users will not receive them."
           action={
-            <Button size="small" type="primary" onClick={onInit}>
+            <Button size="small" onClick={onInit}>
               Set Up Now
             </Button>
           }
@@ -660,7 +659,6 @@ function SmtpCard(props: {
               onPressEnter={onTest}
             />
             <Button
-              type="primary"
               icon={<SendOutlined />}
               loading={testState.testing}
               onClick={onTest}
@@ -693,7 +691,7 @@ function SmtpCard(props: {
 function FieldRow(props: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-[120px,1fr] sm:items-start gap-1 sm:gap-3">
-      <label className="text-sm font-medium text-gray-700 pt-1.5">
+      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 pt-1.5">
         {props.label}
       </label>
       <div>{props.children}</div>

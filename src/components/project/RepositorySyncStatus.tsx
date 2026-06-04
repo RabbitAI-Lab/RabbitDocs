@@ -8,7 +8,7 @@ interface RepositorySyncStatusProps {
 
 const STATUS_CONFIG: Record<string, { color: string; label: string; icon: string }> = {
   not_cloned: {
-    color: "bg-gray-100 text-gray-600",
+    color: "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-400",
     label: "未克隆",
     icon: "⏳",
   },

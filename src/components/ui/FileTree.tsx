@@ -58,7 +58,7 @@ function RenameInput({
       onBlur={() => {
         if (!confirmingRef.current) onConfirm();
       }}
-      className="flex-1 min-w-0 px-1.5 py-0.5 text-sm border border-blue-300 rounded focus:outline-none focus:border-blue-500 bg-white"
+      className="flex-1 min-w-0 px-1.5 py-0.5 text-sm border border-blue-300 rounded focus:outline-none focus:border-blue-500 bg-white dark:bg-zinc-800 dark:text-gray-200 dark:border-blue-600"
     />
   );
 }
@@ -90,8 +90,8 @@ function FileTreeNode({
         <div
           className={`flex items-center gap-1.5 w-full px-2 py-1 text-sm transition-colors select-none ${
             isEditable
-              ? "text-gray-500 hover:bg-gray-100 cursor-pointer group"
-              : "text-gray-500 cursor-pointer"
+              ? "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-700 cursor-pointer group"
+              : "text-gray-500 dark:text-gray-400 cursor-pointer"
           }`}
           onClick={() => {
             if (!isRenaming) onToggleExpand(node.path);
@@ -108,7 +108,7 @@ function FileTreeNode({
               e.stopPropagation();
               if (!isRenaming) onToggleExpand(node.path);
             }}
-            className="shrink-0 p-0.5 -ml-1.5 text-gray-400 hover:text-gray-600"
+            className="shrink-0 p-0.5 -ml-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             aria-label={expandedPaths.has(node.path) ? "Collapse" : "Expand"}
             tabIndex={-1}
           >
@@ -206,8 +206,8 @@ function FileTreeNode({
                     </svg>
                   </button>
                   {confirmDeletePath === node.path && (
-                    <span className="absolute right-0 bottom-full mb-1 bg-white rounded-lg shadow-lg border border-gray-200 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50">
-                      <span className="text-gray-500">确认删除?</span>
+                    <span className="absolute right-0 bottom-full mb-1 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50">
+                      <span className="text-gray-500 dark:text-gray-400">确认删除?</span>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -221,7 +221,7 @@ function FileTreeNode({
                           e.stopPropagation();
                           setConfirmDeletePath(null);
                         }}
-                        className="px-1.5 py-0.5 text-gray-500 hover:text-gray-700"
+                        className="px-1.5 py-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                       >取消</button>
                     </span>
                   )}
@@ -272,10 +272,10 @@ function FileTreeNode({
         }
         className={`flex items-center gap-1.5 w-full px-2 py-1 text-sm transition-colors select-none ${
           isSelected
-            ? "bg-blue-50 text-blue-700 font-medium"
+            ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium"
             : isEditable
-              ? "text-gray-600 hover:bg-gray-50 cursor-default"
-              : "text-gray-600 cursor-default"
+              ? "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-700/50 cursor-default"
+              : "text-gray-600 dark:text-gray-400 cursor-default"
         }`}
         onDoubleClick={() => {
           if (isEditable && !isRenaming && props.onStartRename) {
@@ -373,8 +373,8 @@ function FileTreeNode({
                     </svg>
                   </button>
                   {confirmDeletePath === node.path && (
-                    <span className="absolute right-0 bottom-full mb-1 bg-white rounded-lg shadow-lg border border-gray-200 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50">
-                      <span className="text-gray-500">确认删除?</span>
+                    <span className="absolute right-0 bottom-full mb-1 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50">
+                      <span className="text-gray-500 dark:text-gray-400">确认删除?</span>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -388,7 +388,7 @@ function FileTreeNode({
                           e.stopPropagation();
                           setConfirmDeletePath(null);
                         }}
-                        className="px-1.5 py-0.5 text-gray-500 hover:text-gray-700"
+                        className="px-1.5 py-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                       >取消</button>
                     </span>
                   )}
@@ -446,7 +446,7 @@ export default function FileTree(props: FileTreeProps) {
         />
       ))}
       {tree.length === 0 && props.renamingPath == null && (
-        <p className="px-3 py-4 text-sm text-gray-400 text-center">{emptyText}</p>
+        <p className="px-3 py-4 text-sm text-gray-400 dark:text-gray-500 text-center">{emptyText}</p>
       )}
     </div>
   );

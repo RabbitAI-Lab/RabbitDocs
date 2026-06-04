@@ -122,9 +122,9 @@ export default function ResizableChatsHistory({ chats }: { chats: ChatItem[] }) 
               "flex gap-[2px] transition-opacity",
               isResizing ? "opacity-100" : "opacity-0 group-hover:opacity-100"
             )}>
-              <div className="w-1 h-[2px] rounded-full bg-gray-300" />
-              <div className="w-1 h-[2px] rounded-full bg-gray-300" />
-              <div className="w-1 h-[2px] rounded-full bg-gray-300" />
+              <div className="w-1 h-[2px] rounded-full bg-gray-300 dark:bg-gray-600" />
+              <div className="w-1 h-[2px] rounded-full bg-gray-300 dark:bg-gray-600" />
+              <div className="w-1 h-[2px] rounded-full bg-gray-300 dark:bg-gray-600" />
             </div>
           </div>
         </div>

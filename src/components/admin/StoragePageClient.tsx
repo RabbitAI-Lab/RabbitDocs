@@ -75,16 +75,15 @@ export default function StoragePageClient({ initialConfig }: Props) {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
+      <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-700">
         <div>
-          <h1 className="text-lg font-semibold text-gray-800">File Storage</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">File Storage</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             Configure file storage data directory, all project documents will be stored in this directory
           </p>
         </div>
         <Space>
           <Button
-            type="primary"
             icon={<SaveOutlined />}
             loading={isSaving}
             onClick={handleSave}
@@ -96,7 +95,7 @@ export default function StoragePageClient({ initialConfig }: Props) {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="bg-white dark:bg-zinc-800 rounded-lg border border-gray-200 dark:border-zinc-700 p-4">
           <div className="mb-3">
             <Text type="secondary" className="text-xs">
               Configure the root directory for file storage. Leave empty to use the default path (data folder under project directory).
@@ -105,7 +104,7 @@ export default function StoragePageClient({ initialConfig }: Props) {
           </div>
 
           <div className="mb-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Storage Directory
             </label>
             <Input

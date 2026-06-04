@@ -27,8 +27,8 @@ export default function NavLink({ href, icon, children, badgeCount }: NavLinkPro
         "flex items-center gap-2 w-full py-1.5 text-sm rounded-lg transition-colors cursor-pointer select-none",
         collapsed ? "px-0 justify-center" : "px-3",
         isActive
-          ? "bg-gray-100 text-gray-900 font-medium"
-          : "text-gray-900 hover:bg-gray-100"
+          ? "bg-gray-100 dark:bg-zinc-700 text-gray-900 dark:text-gray-100 font-medium"
+          : "text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-zinc-700"
       )}
     >
       <span className="relative inline-flex">

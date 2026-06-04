@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { App } from "antd";
+import { useAuth } from "@/components/auth/useAuth";
 import { useFloatingChat } from "./FloatingChatContext";
 import ChatWorkspace from "@/components/chat/ChatWorkspace";
 import FileTree from "@/components/ui/FileTree";
@@ -76,6 +77,7 @@ export default function ChatPageContent({
 }: ChatPageContentProps) {
   const router = useRouter();
   const { message } = App.useApp();
+  const { authFetch } = useAuth();
   const { open: openFloatingChat, isOpen: floatingChatOpen, isMinimized: floatingChatMinimized, setMentionFile: setFloatingMentionFile } = useFloatingChat();
 
   // Project context state
@@ -131,7 +133,7 @@ export default function ChatPageContent({
 
   const handleNavigateToDocument = useCallback(async (documentPath: string) => {
     try {
-      const res = await fetch(`/api/fs/document?path=${projectPath}/${documentPath}`);
+      const res = await authFetch(`/api/fs/document?path=${projectPath}/${documentPath}`);
       if (res.status === 404) {
         message.warning("Document has been deleted");
         return;
@@ -142,7 +144,7 @@ export default function ChatPageContent({
     }
     const node = { name: documentPath.split("/").pop() || documentPath, type: "file" as const, path: documentPath };
     tabSystem.handleFileClick(node);
-  }, [projectPath, tabSystem, message]);
+  }, [projectPath, tabSystem, message, authFetch]);
 
   const handleToolCall = useCallback(({ toolName }: { toolName: string }) => {
     if (toolName === "refresh_file_tree") {
@@ -208,9 +210,9 @@ export default function ChatPageContent({
   return (
     <div className="flex h-full">
       {/* Left Panel - File Tree */}
-      <div className="w-[240px] h-full flex flex-col border-r border-gray-200 bg-gray-50 shrink-0">
-        <div className="px-3 h-[41px] border-b border-gray-200 bg-white flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-gray-800 truncate">
+      <div className="w-[240px] h-full flex flex-col border-r border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900 shrink-0">
+        <div className="px-3 h-[41px] border-b border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
             {projectName || projectId} Documents
           </h3>
         </div>

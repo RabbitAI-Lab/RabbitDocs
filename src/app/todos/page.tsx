@@ -137,7 +137,7 @@ export default function TodosPage() {
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="text-gray-400">Loading...</div>
+        <div className="text-gray-400 dark:text-gray-500">Loading...</div>
       </div>
     );
   }
@@ -146,10 +146,10 @@ export default function TodosPage() {
     <div className="h-full flex flex-col p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Todo</h1>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Todo</h1>
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19" />
@@ -248,10 +248,10 @@ export default function TodosPage() {
         {todos.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <p className="text-gray-400 mb-2">No todos yet</p>
+              <p className="text-gray-400 dark:text-gray-500 mb-2">No todos yet</p>
               <button
                 onClick={() => setShowForm(true)}
-                className="text-sm text-blue-600 hover:text-blue-800"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
               >
                 Add your first todo
               </button>
@@ -261,11 +261,11 @@ export default function TodosPage() {
           <div className="space-y-6">
             {/* Pending Section */}
             <section>
-              <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+              <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
                 Pending ({pendingTodos.length})
               </h2>
               {pendingTodos.length === 0 ? (
-                <p className="text-sm text-gray-300 py-2">All caught up!</p>
+                <p className="text-sm text-gray-300 dark:text-gray-600 py-2">All caught up!</p>
               ) : (
                 <div className="space-y-2">
                   {pendingTodos.map((todo) => (
@@ -286,7 +286,7 @@ export default function TodosPage() {
             {/* Completed Section */}
             {completedTodos.length > 0 && (
               <section>
-                <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+                <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
                   Completed ({completedTodos.length})
                 </h2>
                 <div className="space-y-2">
@@ -334,8 +334,8 @@ function TodoItem({
     <div
       className={`group flex items-start gap-3 p-3 rounded-lg border transition-colors ${
         isCompleted
-          ? "bg-gray-50 border-gray-100"
-          : "bg-white border-gray-200 hover:border-blue-200"
+          ? "bg-gray-50 dark:bg-zinc-800 border-gray-100 dark:border-zinc-700"
+          : "bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 hover:border-blue-200 dark:hover:border-blue-800"
       }`}
     >
       {/* Checkbox */}
@@ -350,7 +350,7 @@ function TodoItem({
             <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
         ) : (
-          <svg className="w-5 h-5 text-gray-300 hover:text-blue-400 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="w-5 h-5 text-gray-300 dark:text-gray-600 hover:text-blue-400 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10" />
           </svg>
         )}
@@ -361,11 +361,11 @@ function TodoItem({
         onClick={() => onEdit(todo)}
         className="flex-1 min-w-0 text-left"
       >
-        <p className={`text-sm ${isCompleted ? "text-gray-400 line-through" : "text-gray-800 font-medium"}`}>
+        <p className={`text-sm ${isCompleted ? "text-gray-400 dark:text-gray-500 line-through" : "text-gray-800 dark:text-gray-100 font-medium"}`}>
           {todo.title}
         </p>
         {todo.description && (
-          <p className={`text-xs mt-0.5 ${isCompleted ? "text-gray-300" : "text-gray-500"}`}>
+          <p className={`text-xs mt-0.5 ${isCompleted ? "text-gray-300 dark:text-gray-600" : "text-gray-500 dark:text-gray-400"}`}>
             {todo.description}
           </p>
         )}
@@ -375,7 +375,7 @@ function TodoItem({
       <span className="relative flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
         <button
           onClick={() => onEdit(todo)}
-          className="text-gray-300 hover:text-blue-400 transition-colors"
+          className="text-gray-300 dark:text-gray-600 hover:text-blue-400 transition-colors"
           title="Edit"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -385,7 +385,7 @@ function TodoItem({
         </button>
         <button
           onClick={() => setConfirmDeleteId(confirmDeleteId === todo.id ? null : todo.id)}
-          className="text-gray-300 hover:text-red-400 transition-colors"
+          className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors"
           title="Delete"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -394,7 +394,7 @@ function TodoItem({
           </svg>
         </button>
         {confirmDeleteId === todo.id && (
-          <span className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50">
+          <span className="absolute right-0 top-full mt-1 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50">
             <span className="text-gray-500">Delete?</span>
             <button
               onClick={() => onDelete(todo.id)}

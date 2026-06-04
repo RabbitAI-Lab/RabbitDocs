@@ -74,7 +74,7 @@ export default function WorkspaceIntegrationPanel({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-gray-500 dark:text-gray-400">
         Workspace-level integrations shared by all linked projects
       </p>
 
@@ -84,14 +84,14 @@ export default function WorkspaceIntegrationPanel({
           return (
             <div
               key={group.key}
-              className="border border-gray-200 rounded-lg overflow-hidden"
+              className="border border-gray-200 dark:border-zinc-700 rounded-lg overflow-hidden"
             >
               <button
                 onClick={() => toggleGroup(group.key)}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition-colors text-left"
               >
                 <svg
-                  className="w-4 h-4 text-gray-400 shrink-0"
+                  className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -100,15 +100,15 @@ export default function WorkspaceIntegrationPanel({
                   <path d={group.icon} />
                 </svg>
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                     {group.label}
                   </span>
-                  <p className="text-xs text-gray-400 truncate">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
                     {group.description}
                   </p>
                 </div>
                 <svg
-                  className={`w-4 h-4 text-gray-400 transition-transform ${
+                  className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform ${
                     isExpanded ? "rotate-180" : ""
                   }`}
                   viewBox="0 0 24 24"
@@ -121,7 +121,7 @@ export default function WorkspaceIntegrationPanel({
               </button>
 
               {isExpanded && (
-                <div className="px-4 pb-4 border-t border-gray-100">
+                <div className="px-4 pb-4 border-t border-gray-100 dark:border-zinc-700">
                   {group.key === "gitnexus" && (
                     <WorkspaceGitNexusManager
                       workspacePath={workspacePath}

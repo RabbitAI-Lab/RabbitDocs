@@ -18,7 +18,7 @@ interface PhaseBadge {
 }
 
 const PHASE_BADGE: Record<GitNexusPhase, PhaseBadge> = {
-  idle: { text: "Not indexed", color: "bg-gray-100 text-gray-600", spin: false },
+  idle: { text: "Not indexed", color: "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-400", spin: false },
   analyzing: { text: "Analyzing…", color: "bg-blue-100 text-blue-700", spin: true },
   cleaning: { text: "Cleaning…", color: "bg-blue-100 text-blue-700", spin: true },
   success: { text: "Indexed", color: "bg-green-100 text-green-700", spin: false },

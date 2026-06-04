@@ -126,7 +126,7 @@ export default function ShareHtmlButton({
         className="w-[480px] max-w-[90vw] bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center px-4 h-12 border-b border-gray-100">
+        <div className="flex items-center px-4 h-12 border-b border-gray-100 dark:border-zinc-700">
           <h3 className="text-sm font-semibold text-gray-800">分享 HTML</h3>
           <button
             type="button"

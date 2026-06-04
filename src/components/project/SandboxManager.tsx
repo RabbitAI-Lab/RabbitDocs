@@ -83,9 +83,9 @@ export default function SandboxManager({
   return (
     <div className="space-y-3">
       {/* 提示信息 */}
-      <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-lg border border-amber-100">
+      <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800">
         <svg
-          className="w-4 h-4 text-amber-500 shrink-0 mt-0.5"
+          className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -95,29 +95,29 @@ export default function SandboxManager({
           <line x1="12" y1="8" x2="12" y2="12" />
           <line x1="12" y1="16" x2="12.01" y2="16" />
         </svg>
-        <p className="text-sm text-amber-700">
+        <p className="text-sm text-amber-700 dark:text-amber-300">
           Sandbox is only needed when analyzing code. It provides a secure execution environment for running and analyzing code snippets.
         </p>
       </div>
 
       {/* 沙盒状态 */}
-      <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-100">
+      <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-100 dark:border-zinc-700">
         <div
           className={`w-2 h-2 rounded-full ${
-            isEnabled ? "bg-green-500" : "bg-gray-300"
+            isEnabled ? "bg-green-500" : "bg-gray-300 dark:bg-zinc-600"
           }`}
         />
         <div className="flex-1">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
             {isEnabled ? "Sandbox Requested" : "Sandbox Not Requested"}
           </span>
           {isEnabled && sandbox?.requestedAt && (
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-400 dark:text-gray-500">
               Requested at: {new Date(sandbox.requestedAt).toLocaleString()}
             </p>
           )}
           {!isEnabled && sandbox?.releasedAt && (
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-400 dark:text-gray-500">
               Released at: {new Date(sandbox.releasedAt).toLocaleString()}
             </p>
           )}
@@ -165,7 +165,7 @@ export default function SandboxManager({
           <button
             onClick={handleRelease}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 disabled:bg-red-25 rounded-md transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 disabled:bg-red-25 rounded-md transition-colors"
           >
             {loading ? (
               <svg

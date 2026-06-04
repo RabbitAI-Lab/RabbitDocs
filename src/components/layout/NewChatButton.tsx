@@ -15,7 +15,7 @@ export default function NewChatButton() {
     <button
       onClick={handleNewChat}
       title={collapsed ? "New Chat" : undefined}
-      className="flex items-center justify-center gap-2 w-full text-sm font-medium text-blue-600 border border-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+      className="flex items-center justify-center gap-2 w-full text-sm font-medium text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
       style={{ padding: collapsed ? "6px 0" : "6px 12px" }}
     >
       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -49,7 +49,7 @@ export default function CollapsibleGroup({ title, defaultOpen = true, storageKey
     <div className="mb-1">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 w-full px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors sticky top-0 bg-white z-10"
+        className="flex items-center gap-1.5 w-full px-3 py-1.5 text-xs font-medium text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors sticky top-0 bg-white dark:bg-zinc-900 z-10"
       >
         <span className="uppercase tracking-wider">{title}</span>
         {actions && (

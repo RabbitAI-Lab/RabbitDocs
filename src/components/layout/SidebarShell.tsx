@@ -84,24 +84,24 @@ export default function SidebarShell({ children, initialWidth, initialCollapsed,
     <SidebarContext.Provider value={{ collapsed }}>
       <aside
         style={{ width: currentWidth }}
-        className={`h-full flex flex-col bg-white border-r border-gray-200 shrink-0 relative overflow-hidden ${
+        className={`h-full flex flex-col bg-white dark:bg-[var(--sidebar-bg)] border-r border-gray-200 dark:border-[var(--sidebar-border)] shrink-0 relative overflow-hidden ${
           !isResizing ? "transition-[width] duration-200 ease-in-out" : ""
         }`}
       >
         {/* Logo + collapse toggle */}
-        <div className={`border-b border-gray-100 flex items-center justify-between ${collapsed ? "px-0 py-2.5" : "px-3 py-3"}`}>
+        <div className={`border-b border-gray-100 dark:border-[var(--sidebar-border-subtle)] flex items-center justify-between ${collapsed ? "px-0 py-2.5" : "px-3 py-3"}`}>
           {collapsed ? (
-            <span className="text-sm font-bold text-gray-800 mx-auto cursor-pointer select-none" onClick={toggleCollapsed}>🐰</span>
+            <span className="text-sm font-bold text-gray-800 dark:text-gray-200 mx-auto cursor-pointer select-none" onClick={toggleCollapsed}>🐰</span>
           ) : (
             <div>
-              <h1 className="text-lg font-bold text-gray-800">{brandName}</h1>
-              <p className="text-xs text-gray-400 mt-0.5">Document Management & Publishing</p>
+              <h1 className="text-lg font-bold text-gray-800 dark:text-gray-200">{brandName}</h1>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Document Management & Publishing</p>
             </div>
           )}
           {!collapsed && (
             <button
               onClick={toggleCollapsed}
-              className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-800 transition-colors"
               title="折叠侧边栏"
             >
               <MenuOutlined style={{ fontSize: 14 }} />

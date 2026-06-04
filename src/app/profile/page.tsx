@@ -95,7 +95,7 @@ export default function ProfilePage() {
                 <Input placeholder="Name" />
               </Form.Item>
               <Form.Item>
-                <Button type="primary" htmlType="submit" loading={loadingName}>
+                <Button htmlType="submit" loading={loadingName}>
                   Save
                 </Button>
               </Form.Item>

@@ -101,10 +101,10 @@ export default function McpPageClient({ initialConfig, brandName }: Props) {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
+      <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-700">
         <div>
-          <h1 className="text-lg font-semibold text-gray-800">MCP Config</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">MCP Config</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             Manage external MCP server connection configurations
           </p>
         </div>
@@ -116,7 +116,6 @@ export default function McpPageClient({ initialConfig, brandName }: Props) {
             Install {brandName} MCP
           </Button>
           <Button
-            type="primary"
             icon={<SaveOutlined />}
             loading={isSaving}
             onClick={handleSave}
@@ -128,14 +127,14 @@ export default function McpPageClient({ initialConfig, brandName }: Props) {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="bg-white dark:bg-zinc-800 rounded-lg border border-gray-200 dark:border-zinc-700 p-4">
           {/* Tips */}
           <div className="mb-3">
             <Text type="secondary" className="text-xs">
               Enter MCP server configuration JSON, format example:
             </Text>
             <Paragraph className="!mb-0 !mt-1">
-              <pre className="text-xs bg-gray-50 rounded p-2 overflow-x-auto font-mono text-gray-600">
+              <pre className="text-xs bg-gray-50 dark:bg-zinc-800 rounded p-2 overflow-x-auto font-mono text-gray-600 dark:text-gray-300">
                 {EXAMPLE_JSON}
               </pre>
             </Paragraph>

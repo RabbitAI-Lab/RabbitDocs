@@ -44,15 +44,15 @@ export default function WorkspaceProjectsPanel({
   const [deleteStep2, setDeleteStep2] = useState(false);
 
   const refreshProjects = useCallback(async () => {
-    const res = await fetch(
+    const res = await authFetch(
       `/api/fs/workspaces/projects?type=${accountType}&accountId=${accountId}&workspace=${workspaceId}`,
     );
     const data = await res.json();
     setProjects(data);
-  }, [accountType, accountId, workspaceId]);
+  }, [accountType, accountId, workspaceId, authFetch]);
 
   const handleOpenAddProject = async () => {
-    const res = await fetch(
+    const res = await authFetch(
       `/api/fs/projects?type=${accountType}&accountId=${accountId}`,
     );
     const allProjects: ProjectMeta[] = await res.json();
@@ -223,7 +223,7 @@ export default function WorkspaceProjectsPanel({
           Projects ({projects.length})
         </h3>
         {projects.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <div className="text-center py-12 bg-gray-50 dark:bg-zinc-800 rounded-lg">
             <svg
               className="w-12 h-12 mx-auto text-gray-300 mb-3"
               viewBox="0 0 24 24"
@@ -243,7 +243,7 @@ export default function WorkspaceProjectsPanel({
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="group flex items-center justify-between p-3 bg-gray-50 hover:bg-blue-50 rounded-lg transition-colors"
+                className="group flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
               >
                 <button
                   onClick={() =>
@@ -295,7 +295,7 @@ export default function WorkspaceProjectsPanel({
                     </svg>
                   </button>
                   {confirmRemoveId === project.id && (
-                    <span className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50">
+                    <span className="absolute right-0 top-full mt-1 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50">
                       <span className="text-gray-500">Remove link?</span>
                       <button
                         onClick={() => handleRemoveProject(project.id)}

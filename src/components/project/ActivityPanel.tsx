@@ -81,12 +81,12 @@ export default function ActivityPanel({
     <div className="space-y-6">
       {/* Section 1: Recent Chats */}
       <div className="space-y-3">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-300">
           Recent Chats (Last 20 Days)
         </p>
 
         {recentChats.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+          <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500">
             <svg className="w-10 h-10 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
@@ -98,15 +98,15 @@ export default function ActivityPanel({
               <button
                 key={chat.id}
                 onClick={() => onSwitchToChat(chat.id)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-left group"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition-colors text-left group"
               >
-                <svg className="w-4 h-4 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
-                <span className="flex-1 text-sm text-gray-700 truncate group-hover:text-blue-600 transition-colors">
+                <span className="flex-1 text-sm text-gray-700 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                   {chat.title || "New Chat"}
                 </span>
-                <span className="text-xs text-gray-400 shrink-0">
+                <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">
                   {formatDate(chat.updatedAt)}
                 </span>
               </button>
@@ -115,16 +115,16 @@ export default function ActivityPanel({
         )}
       </div>
 
-      <hr className="border-gray-100" />
+      <hr className="border-gray-100 dark:border-zinc-700" />
 
       {/* Section 2: Recent Document Activities */}
       <div className="space-y-3">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-300">
           Recent Document Changes
         </p>
 
         {recentDocuments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+          <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500">
             <svg className="w-10 h-10 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
@@ -142,13 +142,13 @@ export default function ActivityPanel({
                   <span className={`shrink-0 ${config.color}`}>
                     {config.icon}
                   </span>
-                  <span className={`flex-1 text-sm truncate ${isDeleted ? "text-gray-400" : "text-gray-700 group-hover:text-blue-600"} transition-colors`}>
+                  <span className={`flex-1 text-sm truncate ${isDeleted ? "text-gray-400 dark:text-gray-500" : "text-gray-700 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400"} transition-colors`}>
                     {doc.documentTitle}
                   </span>
                   <span className={`text-xs shrink-0 ${config.color}`}>
                     {config.label}
                   </span>
-                  <span className="text-xs text-gray-400 shrink-0">
+                  <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">
                     {formatDate(doc.createdAt)}
                   </span>
                 </>
@@ -170,7 +170,7 @@ export default function ActivityPanel({
                 <button
                   key={doc.id}
                   onClick={() => onNavigateToDocument?.(doc.documentPath)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-left group"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition-colors text-left group"
                 >
                   {content}
                 </button>

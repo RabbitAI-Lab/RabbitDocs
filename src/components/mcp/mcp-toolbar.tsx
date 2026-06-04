@@ -19,7 +19,7 @@ export default function McpToolbar({
 }: McpToolbarProps) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-xs text-gray-500">
+      <span className="text-xs text-gray-500 dark:text-gray-400">
         {enabledCount} enabled / {totalCount} configured
       </span>
       <button

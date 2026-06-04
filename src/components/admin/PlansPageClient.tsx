@@ -318,14 +318,14 @@ export default function PlansPageClient({ initialPlans }: Props) {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
+      <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-700">
         <div>
-          <h1 className="text-lg font-semibold text-gray-800">Plans</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Plans</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             Manage subscription plans and pricing
           </p>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+        <Button icon={<PlusOutlined />} onClick={handleCreate}>
           Add Plan
         </Button>
       </div>
@@ -390,7 +390,7 @@ export default function PlansPageClient({ initialPlans }: Props) {
             <Select options={CURRENCY_OPTIONS} />
           </Form.Item>
 
-          <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mt-4 mb-2">
+          <div className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-4 mb-2">
             Pricing by Currency
           </div>
 
@@ -398,7 +398,7 @@ export default function PlansPageClient({ initialPlans }: Props) {
           <Form.List name="priceList">
             {(fields, { add, remove }) => (
               <div className="space-y-2">
-                <div className="flex items-center gap-2 px-3 text-xs font-medium text-gray-400">
+                <div className="flex items-center gap-2 px-3 text-xs font-medium text-gray-400 dark:text-gray-500">
                   <span className="w-28">Currency</span>
                   <span className="flex-1">Monthly Price (¥)</span>
                   <span className="flex-1">Yearly Price (¥)</span>
@@ -409,7 +409,7 @@ export default function PlansPageClient({ initialPlans }: Props) {
                   return (
                   <div
                     key={field.key}
-                    className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg"
+                    className="flex items-start gap-2 p-3 bg-gray-50 dark:bg-zinc-800 rounded-lg"
                   >
                     <Form.Item
                       {...fieldProps}
@@ -468,7 +468,7 @@ export default function PlansPageClient({ initialPlans }: Props) {
             )}
           </Form.List>
 
-          <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mt-4 mb-2">
+          <div className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-4 mb-2">
             Discount
           </div>
 
@@ -490,7 +490,7 @@ export default function PlansPageClient({ initialPlans }: Props) {
             </Form.Item>
           </div>
 
-          <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mt-4 mb-2">
+          <div className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-4 mb-2">
             Settings
           </div>
 
@@ -508,7 +508,7 @@ export default function PlansPageClient({ initialPlans }: Props) {
             </Form.Item>
           </div>
 
-          <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mt-4 mb-2">
+          <div className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-4 mb-2">
             Features
           </div>
 

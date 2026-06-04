@@ -219,3 +219,17 @@ function shutdown() {
 
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
+
+/**
+ * Get the raw better-sqlite3 instance (for advanced operations like dump/restore).
+ * Throws if DB has not been initialized yet.
+ */
+export function getSqlite(): Database.Database {
+  if (!_sqlite) {
+    initDb();
+  }
+  return _sqlite!;
+}
+
+/** Database file path (for info/dump purposes). */
+export const dbPath = DB_PATH;

@@ -22,7 +22,7 @@ export default function TitleEditor({ title, onTitleChange }: TitleEditorProps) 
 
   if (editing) {
     return (
-      <div className="px-6 py-2 bg-white border-b border-gray-100">
+      <div className="px-6 py-2 bg-white dark:bg-zinc-900 border-b border-gray-100 dark:border-zinc-700">
         <input
           autoFocus
           value={value}
@@ -35,21 +35,21 @@ export default function TitleEditor({ title, onTitleChange }: TitleEditorProps) 
             }
           }}
           onBlur={handleSubmit}
-          className="w-full text-xl font-bold text-gray-800 bg-transparent border-none outline-none"
+          className="w-full text-xl font-bold text-gray-800 dark:text-gray-100 bg-transparent border-none outline-none"
         />
       </div>
     );
   }
 
   return (
-    <div className="px-6 py-2 bg-white border-b border-gray-100">
+    <div className="px-6 py-2 bg-white dark:bg-zinc-900 border-b border-gray-100 dark:border-zinc-700">
       <button
         onClick={() => setEditing(true)}
-        className="text-xl font-bold text-gray-800 hover:text-blue-600 transition-colors cursor-text text-left"
+        className="text-xl font-bold text-gray-800 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-text text-left"
       >
         {title}
         <svg
-          className="inline-block w-4 h-4 ml-2 text-gray-300 opacity-0 hover:opacity-100 transition-opacity"
+          className="inline-block w-4 h-4 ml-2 text-gray-300 dark:text-gray-600 opacity-0 hover:opacity-100 transition-opacity"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"

@@ -107,9 +107,9 @@ export default function WorkspaceActivityPanel({
 }: WorkspaceActivityPanelProps) {
   return (
     <div className="space-y-6">
-      <div className="flex items-start gap-2 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+      <div className="flex items-start gap-2 p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg border border-indigo-100 dark:border-indigo-800">
         <svg
-          className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5"
+          className="w-4 h-4 text-indigo-500 dark:text-indigo-400 shrink-0 mt-0.5"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -118,17 +118,17 @@ export default function WorkspaceActivityPanel({
           <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
           <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
         </svg>
-        <p className="text-sm text-indigo-700">
+        <p className="text-sm text-indigo-700 dark:text-indigo-300">
           Activities aggregated from all projects in this workspace.
         </p>
       </div>
 
       {/* Section 1: Recent Chats */}
       <div className="space-y-3">
-        <p className="text-sm text-gray-500">Recent Chats (Last 20 Days)</p>
+        <p className="text-sm text-gray-500 dark:text-gray-300">Recent Chats (Last 20 Days)</p>
 
         {recentChats.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+          <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500">
             <svg
               className="w-10 h-10 mb-3"
               viewBox="0 0 24 24"
@@ -146,10 +146,10 @@ export default function WorkspaceActivityPanel({
               <button
                 key={chat.id}
                 onClick={() => onSwitchToChat(chat.id, chat.projectId)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-left group"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition-colors text-left group"
               >
                 <svg
-                  className="w-4 h-4 text-gray-400 shrink-0"
+                  className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -157,10 +157,10 @@ export default function WorkspaceActivityPanel({
                 >
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
-                <span className="flex-1 text-sm text-gray-700 truncate group-hover:text-blue-600 transition-colors">
+                <span className="flex-1 text-sm text-gray-700 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                   {chat.title || "New Chat"}
                 </span>
-                <span className="text-xs text-gray-400 shrink-0">
+                <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">
                   {formatDate(chat.updatedAt)}
                 </span>
               </button>
@@ -169,14 +169,14 @@ export default function WorkspaceActivityPanel({
         )}
       </div>
 
-      <hr className="border-gray-100" />
+      <hr className="border-gray-100 dark:border-zinc-700" />
 
       {/* Section 2: Recent Document Activities */}
       <div className="space-y-3">
-        <p className="text-sm text-gray-500">Recent Document Changes</p>
+        <p className="text-sm text-gray-500 dark:text-gray-300">Recent Document Changes</p>
 
         {recentDocuments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+          <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500">
             <svg
               className="w-10 h-10 mb-3"
               viewBox="0 0 24 24"
@@ -203,8 +203,8 @@ export default function WorkspaceActivityPanel({
                   <span
                     className={`flex-1 text-sm truncate ${
                       isDeleted
-                        ? "text-gray-400"
-                        : "text-gray-700 group-hover:text-blue-600"
+                        ? "text-gray-400 dark:text-gray-500"
+                        : "text-gray-700 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400"
                     } transition-colors`}
                   >
                     {doc.documentTitle}
@@ -212,7 +212,7 @@ export default function WorkspaceActivityPanel({
                   <span className={`text-xs shrink-0 ${config.color}`}>
                     {config.label}
                   </span>
-                  <span className="text-xs text-gray-400 shrink-0">
+                  <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">
                     {formatDate(doc.createdAt)}
                   </span>
                 </>
@@ -236,7 +236,7 @@ export default function WorkspaceActivityPanel({
                   onClick={() =>
                     onNavigateToDocument?.(doc.documentPath, doc.projectId)
                   }
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-left group"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition-colors text-left group"
                 >
                   {content}
                 </button>

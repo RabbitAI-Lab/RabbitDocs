@@ -1,8 +1,29 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e5e7eb;
+  --sidebar-border-subtle: #f3f4f6;
+  --main-bg: #f9fafb;
+  --popup-bg: #ffffff;
+  --popup-border: #e5e7eb;
+  --popup-header-bg: rgba(249, 250, 251, 0.5);
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --sidebar-bg: #111113;
+  --sidebar-border: #27272a;
+  --sidebar-border-subtle: #1e1e20;
+  --main-bg: #09090b;
+  --popup-bg: #18181b;
+  --popup-border: #27272a;
+  --popup-header-bg: rgba(24, 24, 27, 0.5);
 }
 
 body {
@@ -50,4 +71,109 @@ input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
   transition: background-color 5000s ease-in-out 0s;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #18181b inset;
+}
+
+/* CherryMarkdown dark mode overrides */
+.dark .cherry-editor-container .cherry {
+  background: #18181b;
+  color: #e4e4e7;
+}
+.dark .cherry-editor-container .cherry-toolbar {
+  background: #27272a;
+  border-color: #3f3f46;
+}
+.dark .cherry-editor-container .cherry-toolbar .cherry-toolbar-button {
+  color: #a1a1aa;
+}
+.dark .cherry-editor-container .cherry-toolbar .cherry-toolbar-button:hover {
+  background: #3f3f46;
+  color: #e4e4e7;
+}
+.dark .cherry-editor-container .cherry-editor {
+  background: #18181b;
+}
+.dark .cherry-editor-container .cm-editor,
+.dark .cherry-editor-container .cm-editor .cm-scroller {
+  background: #18181b;
+  color: #e4e4e7;
+}
+.dark .cherry-editor-container .cm-editor .cm-content {
+  caret-color: #e4e4e7;
+}
+.dark .cherry-editor-container .cm-editor .cm-selectionBackground,
+.dark .cherry-editor-container .cm-editor .cm-focused .cm-selectionBackground {
+  background: rgba(59, 130, 246, 0.3) !important;
+}
+.dark .cherry-editor-container .cm-editor .cm-gutters {
+  background: #18181b;
+  border-color: #3f3f46;
+  color: #71717a;
+}
+.dark .cherry-editor-container .cm-editor .cm-activeLineGutter {
+  background: #27272a;
+  color: #a1a1aa;
+}
+.dark .cherry-editor-container .cm-editor .cm-activeLine {
+  background: rgba(63, 63, 70, 0.5);
+}
+.dark .cherry-editor-container .cherry-previewer {
+  background: #18181b;
+}
+.dark .cherry-editor-container .cherry-previewer .cherry-previewer-codeBlock--title {
+  color: #a1a1aa;
+  border-color: #3f3f46;
+}
+.dark .cherry-editor-container .cherry-previewer .cherry-previewer-codeBlock--body,
+.dark .cherry-editor-container .cherry-previewer pre {
+  background: #27272a;
+  color: #e4e4e7;
+}
+.dark .cherry-editor-container .cherry-previewer .cherry-previewer-codeBlock--lang-select {
+  background: #27272a;
+  color: #a1a1aa;
+  border-color: #3f3f46;
+}
+.dark .cherry-editor-container .cherry-previewer h1,
+.dark .cherry-editor-container .cherry-previewer h2,
+.dark .cherry-editor-container .cherry-previewer h3,
+.dark .cherry-editor-container .cherry-previewer h4,
+.dark .cherry-editor-container .cherry-previewer h5,
+.dark .cherry-editor-container .cherry-previewer h6 {
+  color: #f4f4f5;
+}
+.dark .cherry-editor-container .cherry-previewer p,
+.dark .cherry-editor-container .cherry-previewer li {
+  color: #d4d4d8;
+}
+.dark .cherry-editor-container .cherry-previewer a {
+  color: #60a5fa;
+}
+.dark .cherry-editor-container .cherry-previewer blockquote {
+  border-color: #3f3f46;
+  color: #a1a1aa;
+}
+.dark .cherry-editor-container .cherry-previewer table th {
+  background: #27272a;
+  color: #e4e4e7;
+  border-color: #3f3f46;
+}
+.dark .cherry-editor-container .cherry-previewer table td {
+  border-color: #3f3f46;
+}
+.dark .cherry-editor-container .cherry-previewer code {
+  background: #27272a;
+  color: #f4f4f5;
+}
+.dark .cherry-editor-container .cherry-previewer hr {
+  border-color: #3f3f46;
+}
+.dark .cherry-editor-container .cherry-previewer .cherry-detail__label {
+  color: #a1a1aa;
 }

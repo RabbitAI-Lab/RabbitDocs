@@ -175,15 +175,15 @@ export default function WorkspaceInfoTab({
   return (
     <div className="flex flex-col">
       {/* Sub-tab bar */}
-      <div className="flex items-center px-6 border-b border-gray-200 shrink-0">
+      <div className="flex items-center px-6 border-b border-gray-200 dark:border-zinc-700 shrink-0">
         {SUB_TABS.map((tab) => (
           <button
             key={tab.key}
             onClick={() => handleTabChange(tab.key)}
             className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
               activeSubTab === tab.key
-                ? "text-blue-600 border-blue-600"
-                : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+                ? "text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400"
+                : "text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-zinc-500"
             }`}
           >
             {tab.label}
