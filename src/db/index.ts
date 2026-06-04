@@ -161,18 +161,58 @@ function initDatabase(): Database.Database {
   return newDb;
 }
 
-const sqlite = initDatabase();
+// ── Lazy singleton: defer DB init until first runtime access ──
+// During `next build`, modules are imported for type-checking and SSG.
+// By detecting the build phase, we skip DB initialization entirely.
+// The DB is explicitly initialized via initDb() in instrumentation.ts
+// which only runs at server startup, not during build.
 
-export const db = drizzle(sqlite, { schema });
+let _sqlite: Database.Database | null = null;
+let _drizzleInstance: ReturnType<typeof drizzle<typeof schema>> | null = null;
+let _seeded = false;
 
-// ── Run seed after drizzle is created (dynamic import to avoid circular dependency) ──
-import("./seed").then(({ seed }) => seed()).catch((err) => console.error("[seed] Error:", err));
+function isBuildPhase(): boolean {
+  // Next.js sets NEXT_PHASE during build; also support explicit opt-out
+  return process.env.NEXT_PHASE === "phase-production-build";
+}
+
+/**
+ * Explicitly initialize the database (called from instrumentation.ts at server startup).
+ * This ensures migrations and seeding happen at runtime, not during build.
+ */
+export function initDb() {
+  if (_sqlite) return; // already initialized
+  _sqlite = initDatabase();
+  _drizzleInstance = drizzle(_sqlite, { schema });
+  // Run seed once
+  if (!_seeded) {
+    _seeded = true;
+    import("./seed").then(({ seed }) => seed()).catch((err) => console.error("[seed] Error:", err));
+  }
+}
+
+/**
+ * Get the drizzle DB instance, initializing lazily if needed.
+ * During build phase, property accesses are silently ignored (returns undefined).
+ * At runtime, this initializes on first access and returns a real instance.
+ */
+export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
+  get(_target, prop, receiver) {
+    if (isBuildPhase()) return undefined;
+    if (!_drizzleInstance) {
+      initDb();
+    }
+    return Reflect.get(_drizzleInstance!, prop, receiver);
+  },
+});
 
 // ── Graceful shutdown ──
 function shutdown() {
   try {
-    sqlite.pragma("wal_checkpoint(TRUNCATE)");
-    sqlite.close();
+    if (_sqlite) {
+      _sqlite.pragma("wal_checkpoint(TRUNCATE)");
+      _sqlite.close();
+    }
   } catch { /* ok */ }
   process.exit(0);
 }
