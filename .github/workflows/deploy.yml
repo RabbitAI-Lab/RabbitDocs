@@ -125,11 +125,14 @@ jobs:
             EOF
 
             # ===== Phase 2: 拉取镜像并启动 =====
+            # 清除可能过期的 GHCR 凭证，确保匿名拉取 public 镜像
+            docker logout ghcr.io 2>/dev/null || true
+
             echo "[Deploy] Pulling image: ghcr.io/${REGISTRY_OWNER}/${IMAGE_NAME}:${IMAGE_TAG}"
-            docker compose pull
+            docker pull ghcr.io/${REGISTRY_OWNER}/${IMAGE_NAME}:${IMAGE_TAG}
 
             echo "[Deploy] Starting service..."
-            docker compose up -d --remove-orphans
+            docker compose up -d --no-build --remove-orphans
 
             # ===== Phase 3: 健康检查 =====
             echo "[Deploy] Running health checks..."
