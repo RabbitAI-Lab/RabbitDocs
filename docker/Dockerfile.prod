@@ -23,7 +23,6 @@ RUN pnpm config set ignore-scripts true && pnpm prune --prod
 
 # Stage 3: 运行时
 FROM node:20-bookworm-slim AS runner
-RUN corepack enable && corepack prepare pnpm@10.14.0 --activate
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 make g++ \
  && rm -rf /var/lib/apt/lists/*
@@ -47,9 +46,9 @@ COPY --from=builder   --chown=nextjs:nodejs /app/.next    ./.next
 COPY --from=builder   --chown=nextjs:nodejs /app/public   ./public
 COPY --from=builder   --chown=nextjs:nodejs /app/drizzle  ./drizzle
 
-# 预创建数据目录和 corepack 缓存目录
-RUN mkdir -p /app/data/home /home/nextjs/.cache/node/corepack \
- && chown -R nextjs:nodejs /app/data /home/nextjs
+# 预创建数据目录
+RUN mkdir -p /app/data/home \
+ && chown -R nextjs:nodejs /app/data
 
 USER nextjs
 
@@ -58,4 +57,4 @@ EXPOSE 3000 4001
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD node -e "require('http').get('http://127.0.0.1:3000',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"
 
-CMD ["pnpm", "start:docker"]
+CMD ["node", "node_modules/next/dist/bin/next", "start", "--hostname", "0.0.0.0"]
