@@ -1,3 +1,2 @@
-ALTER TABLE `plans` ADD `default_currency` text DEFAULT 'CNY' NOT NULL;
---> statement-breakpoint
-ALTER TABLE `plans` ADD `prices` text DEFAULT '[]' NOT NULL;
+-- Columns 'default_currency' and 'prices' already exist in 0028_add_plans.sql
+-- This migration is a no-op to preserve the migration journal sequence
