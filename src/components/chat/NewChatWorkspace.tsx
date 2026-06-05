@@ -100,6 +100,8 @@ export default function NewChatWorkspace() {
 
   // --- Project selection handlers ---
 
+  const handleSelectProjectRef = useRef<(project: ProjectMeta) => Promise<void>>((_) => Promise.resolve());
+
   const handleSelectProject = useCallback(async (project: ProjectMeta) => {
     setSelectedProjectId(project.id);
     setSelectedProjectName(project.name);
@@ -127,6 +129,11 @@ export default function NewChatWorkspace() {
     window.history.replaceState(null, "", `/chat/new?project=${project.id}`);
   }, [authFetch, user?.id, fileTree, tabSystem, chatSwitching, refreshRecentChats, refreshRecentDocuments]);
 
+  // Keep ref in sync with latest handleSelectProject on every render
+  useEffect(() => {
+    handleSelectProjectRef.current = handleSelectProject;
+  });
+
   // --- Project list fetch ---
 
   useEffect(() => {
@@ -140,11 +147,11 @@ export default function NewChatWorkspace() {
           const found = list.find((p: ProjectMeta) => p.id === preselectProjectId);
           if (found) {
             autoSelectedRef.current = true;
-            handleSelectProject(found);
+            handleSelectProjectRef.current(found);
           }
         }
       });
-  }, [authFetch, user?.id, handleSelectProject, preselectProjectId]);
+  }, [authFetch, user?.id, preselectProjectId]);
 
   const handleBack = () => {
     setSelectedProjectId(null);
