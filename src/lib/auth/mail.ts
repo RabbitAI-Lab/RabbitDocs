@@ -13,6 +13,7 @@ export const DEFAULT_EMAIL_TEMPLATES = {
   {{codeBlock}}
   <div style="text-align:center;margin:24px 0">
     <a href="{{verifyUrl}}" style="display:inline-block;padding:12px 32px;background:#1677ff;color:white;text-decoration:none;border-radius:6px;font-weight:500">Verify Email</a>
+    <p style="color:#999;font-size:12px;margin-top:12px;word-break:break-all">Or copy this link: <a href="{{verifyUrl}}" style="color:#1677ff">{{verifyUrl}}</a></p>
   </div>
   <p style="color:#999;font-size:12px;margin-top:16px;line-height:1.5">This link expires in 24 hours. If you did not request this, please ignore this email.</p>
   <hr style="margin:24px 0;border:none;border-top:1px solid #eee">

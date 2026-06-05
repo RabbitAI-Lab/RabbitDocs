@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { cliAuthorizationCodes } from "@/db/schema";
 import { requireAuth } from "@/lib/auth/session";
 import crypto from "crypto";
+import { getApiT } from "@/lib/i18n-api";
 
 const approveSchema = z.object({
   code_challenge: z.string(),
@@ -15,6 +16,7 @@ const approveSchema = z.object({
 export async function POST(req: NextRequest) {
   const authResult = await requireAuth(req);
   if (authResult instanceof NextResponse) return authResult;
+  const t = await getApiT();
 
   try {
     const body = await req.json();
@@ -55,6 +57,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.redirect(callbackUrl);
   } catch (error) {
     console.error("[auth] CLI approve error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: t('api.internalError') }, { status: 500 });
   }
 }

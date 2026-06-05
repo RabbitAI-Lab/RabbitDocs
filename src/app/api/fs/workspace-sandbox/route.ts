@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
 import { readWorkspaceMeta, writeWorkspaceMeta, type SandboxStatus } from "@/lib/fs";
 import { logOperation, extractProjectId } from "@/lib/operation-log";
+import { getApiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
@@ -10,16 +11,17 @@ export async function GET(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
   const { searchParams } = new URL(req.url);
   const dirSegments = searchParams.get("dirSegments");
+  const t = await getApiT();
 
   if (!dirSegments) {
-    return NextResponse.json({ error: "缺少 dirSegments 参数" }, { status: 400 });
+    return NextResponse.json({ error: t('api.dirSegmentsRequired') }, { status: 400 });
   }
 
   const segments = dirSegments.split(",");
   const meta = readWorkspaceMeta(segments);
 
   if (!meta) {
-    return NextResponse.json({ error: "工作区不存在" }, { status: 404 });
+    return NextResponse.json({ error: t('api.workspaceNotFound') }, { status: 404 });
   }
 
   return NextResponse.json({ sandbox: meta.sandbox ?? { enabled: false } });
@@ -28,6 +30,7 @@ export async function GET(req: NextRequest) {
 // POST /api/fs/workspace-sandbox - 申请沙盒
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { dirSegments, sandbox } = body as {
     dirSegments: string[];
@@ -35,12 +38,12 @@ export async function POST(req: NextRequest) {
   };
 
   if (!dirSegments || !sandbox) {
-    return NextResponse.json({ error: "缺少必要参数" }, { status: 400 });
+    return NextResponse.json({ error: t('api.missingRequiredParams') }, { status: 400 });
   }
 
   const meta = readWorkspaceMeta(dirSegments);
   if (!meta) {
-    return NextResponse.json({ error: "工作区不存在" }, { status: 404 });
+    return NextResponse.json({ error: t('api.workspaceNotFound') }, { status: 404 });
   }
 
   meta.sandbox = sandbox;
@@ -50,7 +53,7 @@ export async function POST(req: NextRequest) {
     projectId: extractProjectId(dirSegments),
     category: "sandbox",
     action: "create",
-    detail: "申请了沙盒环境",
+    detail: t('api.sandbox.sandboxApply'),
   });
 
   return NextResponse.json({ sandbox: meta.sandbox });
@@ -59,6 +62,7 @@ export async function POST(req: NextRequest) {
 // PUT /api/fs/workspace-sandbox - 释放沙盒
 export async function PUT(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { dirSegments, sandbox } = body as {
     dirSegments: string[];
@@ -66,12 +70,12 @@ export async function PUT(req: NextRequest) {
   };
 
   if (!dirSegments || !sandbox) {
-    return NextResponse.json({ error: "缺少必要参数" }, { status: 400 });
+    return NextResponse.json({ error: t('api.missingRequiredParams') }, { status: 400 });
   }
 
   const meta = readWorkspaceMeta(dirSegments);
   if (!meta) {
-    return NextResponse.json({ error: "工作区不存在" }, { status: 404 });
+    return NextResponse.json({ error: t('api.workspaceNotFound') }, { status: 404 });
   }
 
   meta.sandbox = sandbox;
@@ -81,7 +85,7 @@ export async function PUT(req: NextRequest) {
     projectId: extractProjectId(dirSegments),
     category: "sandbox",
     action: "delete",
-    detail: "释放了沙盒环境",
+    detail: t('api.sandbox.sandboxRelease'),
   });
 
   return NextResponse.json({ sandbox: meta.sandbox });

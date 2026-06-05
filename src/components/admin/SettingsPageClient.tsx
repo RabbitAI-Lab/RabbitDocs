@@ -18,6 +18,7 @@ import {
   SaveOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "@/components/auth/useAuth";
+import { useTranslations } from "next-intl";
 
 const { Text } = Typography;
 
@@ -34,6 +35,7 @@ interface SystemSettings {
 export default function SettingsPageClient() {
   const { authFetch } = useAuth();
   const { message } = App.useApp();
+  const t = useTranslations("admin.authSettingsPage");
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [draft, setDraft] = useState<SystemSettings | null>(null);
   const [loading, setLoading] = useState(false);
@@ -45,13 +47,13 @@ export default function SettingsPageClient() {
       const res = await authFetch("/api/auth/admin/system-settings");
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to load");
+        throw new Error(err.error || t('msgLoadFailed'));
       }
       const data = (await res.json()) as SystemSettings;
       setSettings(data);
       setDraft(data);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Failed to load";
+      const msg = error instanceof Error ? error.message : t('msgLoadFailed');
       message.error(msg);
     } finally {
       setLoading(false);
@@ -99,15 +101,15 @@ export default function SettingsPageClient() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to save");
+        throw new Error(err.error || t('msgSaveFailed'));
       }
       const data = await res.json();
-      message.success(`Saved (${data.updated} item(s))`);
+      message.success(t('msgSaved', { count: data.updated }));
 
       setSettings(draft);
       setDraft(draft);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Failed to save";
+      const msg = error instanceof Error ? error.message : t('msgSaveFailed');
       message.error(msg);
     } finally {
       setSaving(false);
@@ -133,10 +135,10 @@ export default function SettingsPageClient() {
     <div className="h-full overflow-auto p-6">
       <div className="max-w-3xl mx-auto flex flex-col gap-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold">System Settings</h1>
+          <h1 className="text-lg font-semibold">{t('title')}</h1>
           <Space>
             <Button icon={<ReloadOutlined />} onClick={load}>
-              Reset
+              {t('btnReset')}
             </Button>
             <Button
               icon={<SaveOutlined />}
@@ -144,113 +146,116 @@ export default function SettingsPageClient() {
               loading={saving}
               onClick={handleSave}
             >
-              Save
+              {t('btnSave')}
             </Button>
           </Space>
         </div>
 
-        <Card title="Site Configuration">
+        <Card title={t('cardSiteConfig')}>
           <TextFieldRow
-            title="Site URL"
-            description="The public URL of your site (e.g., https://example.com). Used for email verification links, OAuth callbacks, etc. Leave empty to use the NEXT_PUBLIC_APP_URL environment variable or fall back to http://localhost:3000."
+            title={t('siteUrlTitle')}
+            description={t('siteUrlDesc')}
             value={draft.siteUrl}
-            placeholder="https://example.com"
+            placeholder={t('siteUrlPlaceholder')}
             onChange={(v) => update("siteUrl", v)}
-            current={settings.siteUrl || "http://localhost:3000 (default)"}
+            current={settings.siteUrl || t('siteUrlDefault')}
+            currentLabel={t('currentLabel')}
           />
         </Card>
 
-        <Card title="Registration & Verification">
+        <Card title={t('cardRegVerification')}>
           <SettingRow
-            title="Open Registration"
-            description="When disabled, the registration endpoint will reject new users (only admin invites or initial setup can create accounts)"
+            title={t('openRegTitle')}
+            description={t('openRegDesc')}
             value={draft.openRegistration}
             onChange={(v) => update("openRegistration", v)}
             current={settings.openRegistration}
           />
           <Divider className="my-4" />
           <SettingRow
-            title="Require Invite Code"
-            description="When enabled, a valid invite code is required for registration (depends on open registration)"
+            title={t('inviteCodeTitle')}
+            description={t('inviteCodeDesc')}
             value={draft.requireInviteCode}
             onChange={(v) => update("requireInviteCode", v)}
             current={settings.requireInviteCode}
           />
           <Divider className="my-4" />
           <SettingRow
-            title="Require Email Verification"
-            description="When enabled, users with unverified emails cannot log in"
+            title={t('emailVerifyTitle')}
+            description={t('emailVerifyDesc')}
             value={draft.requireEmailVerification}
             onChange={(v) => update("requireEmailVerification", v)}
             current={settings.requireEmailVerification}
           />
         </Card>
 
-        <Card title="Login & Authentication">
+        <Card title={t('cardLoginAuth')}>
           <SettingRow
-            title="Enable Passkey"
-            description="When enabled, users can log in with biometrics or device PIN via WebAuthn on the login page and profile settings"
+            title={t('passkeyTitle')}
+            description={t('passkeyDesc')}
             value={draft.passkeyEnabled}
             onChange={(v) => update("passkeyEnabled", v)}
             current={settings.passkeyEnabled}
           />
           <Divider className="my-4" />
           <TextFieldRow
-            title="Relying Party ID"
-            description="The domain name bound to Passkey (e.g., chat.example.com). Leave empty to auto-detect from the request Host header. Must match the browser's domain, otherwise the browser will reject registration."
+            title={t('rpIdTitle')}
+            description={t('rpIdDesc')}
             value={draft.passkeyRpId}
-            placeholder="(Auto-detect)"
+            placeholder={t('rpIdPlaceholder')}
             onChange={(v) => update("passkeyRpId", v)}
-            current={settings.passkeyRpId || "(Auto-detect)"}
+            current={settings.passkeyRpId || t('rpIdPlaceholder')}
+            currentLabel={t('currentLabel')}
           />
           <Divider className="my-4" />
           <TextFieldRow
-            title="Relying Party Name"
-            description="A friendly name displayed to users in the browser prompt. Defaults to RabbitDocs when left empty"
+            title={t('rpNameTitle')}
+            description={t('rpNameDesc')}
             value={draft.passkeyRpName}
-            placeholder="RabbitDocs"
+            placeholder={t('rpNamePlaceholder')}
             onChange={(v) => update("passkeyRpName", v)}
-            current={settings.passkeyRpName || "RabbitDocs"}
+            current={settings.passkeyRpName || t('rpNamePlaceholder')}
+            currentLabel={t('currentLabel')}
           />
         </Card>
 
-        <Card title="Current Configuration">
+        <Card title={t('cardCurrentConfig')}>
           <Space orientation="vertical" size="small">
             <div>
-              <Text type="secondary">Registration: </Text>
+              <Text type="secondary">{t('labelRegistration')}</Text>
               {settings.openRegistration ? (
-                <Tag color="green">Open</Tag>
+                <Tag color="green">{t('labelOpen')}</Tag>
               ) : (
-                <Tag color="red">Closed</Tag>
+                <Tag color="red">{t('labelClosed')}</Tag>
               )}
-              {settings.requireInviteCode && <Tag color="orange">Invite Required</Tag>}
+              {settings.requireInviteCode && <Tag color="orange">{t('labelInviteRequired')}</Tag>}
             </div>
             <div>
-              <Text type="secondary">Email Verification: </Text>
+              <Text type="secondary">{t('labelEmailVerify')}</Text>
               {settings.requireEmailVerification ? (
-                <Tag color="orange">Required</Tag>
+                <Tag color="orange">{t('labelRequired')}</Tag>
               ) : (
-                <Tag>Optional</Tag>
+                <Tag>{t('labelOptional')}</Tag>
               )}
             </div>
             <div>
-              <Text type="secondary">Passkey: </Text>
+              <Text type="secondary">{t('labelPasskey')}</Text>
               {settings.passkeyEnabled ? (
-                <Tag color="green">Enabled</Tag>
+                <Tag color="green">{t('labelEnabled')}</Tag>
               ) : (
-                <Tag>Disabled</Tag>
+                <Tag>{t('labelDisabled')}</Tag>
               )}
             </div>
             {settings.passkeyEnabled && (
               <div>
-                <Text type="secondary">RP Config: </Text>
-                <Tag>ID: {settings.passkeyRpId || "(Auto-detect)"}</Tag>
-                <Tag>Name: {settings.passkeyRpName || "RabbitDocs"}</Tag>
+                <Text type="secondary">{t('labelRpConfig')}</Text>
+                <Tag>ID: {settings.passkeyRpId || t('rpIdPlaceholder')}</Tag>
+                <Tag>Name: {settings.passkeyRpName || t('rpNamePlaceholder')}</Tag>
               </div>
             )}
           </Space>
           <Text type="secondary" className="mt-3 text-xs block">
-            Changes take effect after clicking &quot;Save&quot;. The system super admin (first registered account) can always log in regardless of these settings. Configure email service in the &quot;Email&quot; menu.
+            {t('configNote')}
           </Text>
         </Card>
       </div>
@@ -283,6 +288,7 @@ function TextFieldRow(props: {
   description: string;
   value: string;
   current: string;
+  currentLabel?: string;
   placeholder?: string;
   onChange: (v: string) => void;
 }) {
@@ -302,7 +308,7 @@ function TextFieldRow(props: {
           onChange={(e) => props.onChange(e.target.value)}
         />
         <Text type="secondary" className="mt-1 block text-xs">
-          Current: {props.current}
+          {props.currentLabel || "Current: "}{props.current}
         </Text>
       </div>
     </div>

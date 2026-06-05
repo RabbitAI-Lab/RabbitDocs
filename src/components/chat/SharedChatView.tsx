@@ -1,6 +1,7 @@
 "use client";
 
 import { Bubble, XProvider } from "@ant-design/x";
+import { useTranslations } from "next-intl";
 import { Avatar } from "antd";
 import { RobotOutlined, UserOutlined } from "@ant-design/icons";
 import type { BubbleItemType } from "@ant-design/x";
@@ -42,6 +43,7 @@ export default function SharedChatView({
   messages,
   brandName,
 }: SharedChatViewProps) {
+  const t = useTranslations("chat");
   const bubbleItems: BubbleItemType[] = messages.map((msg) => ({
     key: msg.id.toString(),
     role: msg.role,
@@ -75,7 +77,7 @@ export default function SharedChatView({
         {/* Footer */}
         <div className="max-w-3xl mx-auto w-full px-6 py-4 border-t border-gray-100 bg-white shrink-0">
           <p className="text-xs text-gray-400 text-center">
-            Powered by {brandName}
+            {t("sharedView.poweredBy", { brandName })}
           </p>
         </div>
       </div>

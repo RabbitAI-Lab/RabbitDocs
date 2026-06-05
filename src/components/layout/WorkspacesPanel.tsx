@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./SidebarContext";
 import { useAuth } from "@/components/auth/useAuth";
@@ -16,8 +17,8 @@ interface WorkspaceMeta {
   sortOrder: number;
 }
 
-function computeDefaultName(existingWorkspaces: WorkspaceMeta[]): string {
-  const baseName = "New Workspace";
+function computeDefaultName(existingWorkspaces: WorkspaceMeta[], t: (key: string) => string): string {
+  const baseName = t('defaultWorkspaceName');
   const existingNames = new Set(existingWorkspaces.map((w) => w.name));
   if (!existingNames.has(baseName)) return baseName;
   let i = 1;
@@ -40,6 +41,8 @@ export default function WorkspacesPanel() {
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const [dropPosition, setDropPosition] = useState<"before" | "after">("before");
   const dragNodeRef = useRef<HTMLDivElement | null>(null);
+
+  const t = useTranslations("workspaces");
 
   const fetchWorkspaces = useCallback(async () => {
     if (!user) return;
@@ -83,7 +86,7 @@ export default function WorkspacesPanel() {
   };
 
   const handleCreateWorkspace = async () => {
-    const name = computeDefaultName(workspaces);
+    const name = computeDefaultName(workspaces, t);
     const res = await authFetch("/api/fs/workspaces", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -180,11 +183,11 @@ export default function WorkspacesPanel() {
     <div className="mb-1">
       {/* Header */}
       <div className="flex items-center gap-1.5 px-3 py-1.5">
-        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Workspaces</span>
+        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('header')}</span>
         <button
           onClick={handleCreateWorkspace}
           className="ml-auto p-0.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-          title="New Workspace"
+          title={t('newWorkspace')}
         >
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="12" y1="5" x2="12" y2="19" />

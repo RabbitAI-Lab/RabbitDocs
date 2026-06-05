@@ -4,8 +4,8 @@
  */
 import type { ProjectMeta, WorkspaceMeta, Repository, ProjectMember } from "../types";
 import {
-  readMetaFile,
-  writeMetaFile,
+  readMetaFromDb,
+  writeMetaToDb,
   createEntityCrud,
   createRepositoryCrud,
   createMemberCrud,
@@ -20,14 +20,16 @@ import type { EntityStrategy } from "./meta-crud";
 const WORKSPACE_STRATEGY: EntityStrategy = {
   entityName: "Workspace",
   entityDir: "workspace",
+  entityType: "workspace",
   metaFileName: ".workspace.json",
   defaultNamePrefix: "Workspace",
   createDocsDir: true,
   readMeta(dirSegments) {
-    return readMetaFile(dirSegments, ".workspace.json");
+    const entityId = dirSegments[dirSegments.length - 1];
+    return readMetaFromDb(entityId, "workspace");
   },
-  writeMeta(meta, dirSegments) {
-    writeMetaFile(meta, dirSegments, ".workspace.json");
+  writeMeta(meta, _dirSegments) {
+    writeMetaToDb(meta, "workspace");
   },
 };
 

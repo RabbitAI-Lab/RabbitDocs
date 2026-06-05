@@ -14,6 +14,7 @@ import {
   Row,
   Col,
 } from "antd";
+import { useTranslations } from "next-intl";
 import { PlusOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import {
   PROTOCOLS,
@@ -54,6 +55,7 @@ export default function ModelConfigModal({
   const [customProvider, setCustomProvider] = useState("");
   const userEditedRef = useRef<Set<string>>(new Set());
   const { message } = App.useApp();
+  const t = useTranslations('admin');
 
   // Set form values when modal opens
   useEffect(() => {
@@ -151,7 +153,7 @@ export default function ModelConfigModal({
       let realProvider = values.provider;
       if (realProvider === CUSTOM_PROVIDER_KEY) {
         if (!customProvider.trim()) {
-          message.error("Please enter custom provider name");
+          message.error(t('modelConfigModal.msgEnterCustomProvider'));
           return;
         }
         realProvider = customProvider.trim();
@@ -184,8 +186,8 @@ export default function ModelConfigModal({
     onCancel();
   }, [form, onCancel]);
 
-  const title = mode === "create" ? "New Model Config" : "Edit Model Config";
-  const okText = mode === "create" ? "Create" : "Save";
+  const title = mode === "create" ? t('modelConfigModal.titleCreate') : t('modelConfigModal.titleEdit');
+  const okText = mode === "create" ? t('modelConfigModal.btnCreate') : t('modelConfigModal.btnSave');
 
   return (
     <Modal
@@ -194,7 +196,7 @@ export default function ModelConfigModal({
       onOk={handleOk}
       onCancel={handleCancel}
       okText={okText}
-      cancelText="Cancel"
+      cancelText={t('modelConfigModal.btnCancel')}
       width={600}
       centered
       destroyOnHidden
@@ -210,22 +212,25 @@ export default function ModelConfigModal({
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
-              label="Provider"
+              label={t('modelConfigModal.labelProvider')}
               name="provider"
-              rules={[{ required: true, message: "Please select provider" }]}
+              rules={[{ required: true, message: t('modelConfigModal.ruleProvider') }]}
             >
               <Select
-                options={PROVIDER_SELECT_OPTIONS}
-                placeholder="Select provider"
+                options={[
+                  ...PROVIDER_SELECT_OPTIONS,
+                  { value: CUSTOM_PROVIDER_KEY, label: t('modelConfigShared.providerCustom') },
+                ]}
+                placeholder={t('modelConfigModal.placeholderProvider')}
                 onChange={handleProviderSelect}
               />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
-              label="Protocol"
+              label={t('modelConfigModal.labelProtocol')}
               name="protocol"
-              rules={[{ required: true, message: "Please select protocol" }]}
+              rules={[{ required: true, message: t('modelConfigModal.ruleProtocol') }]}
             >
               <Select onChange={handleProtocolChange}>
                 {PROTOCOLS.map((p) => (
@@ -239,44 +244,44 @@ export default function ModelConfigModal({
         </Row>
         {form.getFieldValue("provider") === CUSTOM_PROVIDER_KEY && (
           <Form.Item
-            label="Custom Provider Name"
+            label={t('modelConfigModal.labelCustomProviderName')}
             required
-            rules={[{ required: true, message: "Please enter custom provider name" }]}
+            rules={[{ required: true, message: t('modelConfigModal.ruleCustomProviderName') }]}
           >
             <Input
               value={customProvider}
               onChange={(e) => setCustomProvider(e.target.value)}
-              placeholder="e.g. Ollama, SiliconFlow..."
+              placeholder={t('modelConfigModal.placeholderCustomProvider')}
             />
           </Form.Item>
         )}
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
-              label="Config Name"
+              label={t('modelConfigModal.labelConfigName')}
               name="name"
-              rules={[{ required: true, message: "Please enter config name" }]}
+              rules={[{ required: true, message: t('modelConfigModal.ruleConfigName') }]}
             >
-              <Input placeholder="e.g. My GLM-4" />
+              <Input placeholder={t('modelConfigModal.placeholderConfigName')} />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
-              label="Model Name"
+              label={t('modelConfigModal.labelModelName')}
               name="modelName"
-              rules={[{ required: true, message: "Please enter Model Name" }]}
+              rules={[{ required: true, message: t('modelConfigModal.ruleModelName') }]}
             >
               <Input
-                placeholder="e.g. glm-5.1"
+                placeholder={t('modelConfigModal.placeholderModelName')}
                 onChange={() => markUserEdited("modelName")}
               />
             </Form.Item>
           </Col>
         </Row>
         <Form.Item
-          label="Base URL"
+          label={t('modelConfigModal.labelBaseUrl')}
           name="baseUrl"
-          rules={[{ required: true, message: "Please enter Base URL" }]}
+          rules={[{ required: true, message: t('modelConfigModal.ruleBaseUrl') }]}
         >
           <Input
             placeholder="https://open.bigmodel.cn/api/coding/paas/v4"
@@ -284,11 +289,11 @@ export default function ModelConfigModal({
           />
         </Form.Item>
         <Form.Item
-          label="API Key"
+          label={t('modelConfigModal.labelApiKey')}
           name="apiKey"
-          rules={[{ required: true, message: "Please enter API Key" }]}
+          rules={[{ required: true, message: t('modelConfigModal.ruleApiKey') }]}
         >
-          <Input.Password placeholder="Enter API Key" />
+          <Input.Password placeholder={t('modelConfigModal.placeholderApiKey')} />
         </Form.Item>
 
         {/* Environment Variables Section */}
@@ -302,12 +307,12 @@ export default function ModelConfigModal({
             color: "rgba(0, 0, 0, 0.88)",
           }}
         >
-          Environment Variables
+          {t('modelConfigModal.sectionEnvVars')}
         </div>
         <Form.Item
           label={
             <span>
-              Disable Adaptive
+              {t('modelConfigModal.labelDisableAdaptive')}
               <Text type="secondary" className="text-xs ml-1">
                 ({PREDEFINED_ENV_KEYS.DISABLE_ADAPTIVE})
               </Text>
@@ -315,7 +320,7 @@ export default function ModelConfigModal({
           }
           name="disableAdaptive"
           valuePropName="checked"
-          tooltip="Recommended for domestic models. Sets CLAUDE_CODE_DISABLE_ADAPTIVE=1 when on."
+          tooltip={t('modelConfigModal.tooltipDisableAdaptive')}
           style={{ marginBottom: 10 }}
         >
           <Switch />
@@ -323,14 +328,14 @@ export default function ModelConfigModal({
         <Form.Item
           label={
             <span>
-              Default Thinking
+              {t('modelConfigModal.labelDefaultThinking')}
               <Text type="secondary" className="text-xs ml-1">
                 ({PREDEFINED_ENV_KEYS.DEFAULT_THINKING})
               </Text>
             </span>
           }
           name="defaultThinking"
-          tooltip="JSON string passed to Claude Code SDK to enable extended thinking (budgetTokens: 4096 by default)."
+          tooltip={t('modelConfigModal.tooltipDefaultThinking')}
           style={{ marginBottom: 10 }}
         >
           <Input allowClear placeholder={DEFAULT_THINKING_VALUE} />
@@ -338,9 +343,9 @@ export default function ModelConfigModal({
         <Form.Item
           label={
             <span>
-              Custom Env
+              {t('modelConfigModal.labelCustomEnv')}
               <Text type="secondary" className="text-xs ml-1">
-                (hard-coded system envs always win)
+                ({t('modelConfigModal.customEnvNote')})
               </Text>
             </span>
           }
@@ -360,10 +365,10 @@ export default function ModelConfigModal({
                       {...restField}
                       name={[fieldName, "key"]}
                       rules={[
-                        { required: true, message: "Missing key" },
+                        { required: true, message: t('modelConfigModal.ruleEnvKeyRequired') },
                         {
                           pattern: /^[A-Za-z_][A-Za-z0-9_]*$/,
-                          message: "Invalid env var name",
+                          message: t('modelConfigModal.ruleEnvKeyInvalid'),
                         },
                       ]}
                       style={{ marginBottom: 0, width: 160 }}
@@ -373,7 +378,7 @@ export default function ModelConfigModal({
                     <Form.Item
                       {...restField}
                       name={[fieldName, "value"]}
-                      rules={[{ required: true, message: "Missing value" }]}
+                      rules={[{ required: true, message: t('modelConfigModal.ruleEnvValueRequired') }]}
                       style={{ marginBottom: 0, flex: 1, minWidth: 120 }}
                     >
                       <Input placeholder="value" allowClear />
@@ -391,7 +396,7 @@ export default function ModelConfigModal({
                   size="small"
                   icon={<PlusOutlined />}
                 >
-                  Add env
+                  {t('modelConfigModal.btnAddEnv')}
                 </Button>
               </>
             )}

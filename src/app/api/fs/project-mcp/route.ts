@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
 import { readProjectMcpConfig, writeProjectMcpConfig } from "@/lib/fs";
 import { logOperation, extractProjectId } from "@/lib/operation-log";
+import { getApiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +16,10 @@ export async function GET(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
   const { searchParams } = new URL(req.url);
   const dirSegmentsStr = searchParams.get("dirSegments");
+  const t = await getApiT();
 
   if (!dirSegmentsStr) {
-    return NextResponse.json({ error: "缺少 dirSegments 参数" }, { status: 400 });
+    return NextResponse.json({ error: t('api.dirSegmentsRequired') }, { status: 400 });
   }
 
   const dirSegments = dirSegmentsStr.split(",");
@@ -62,11 +64,12 @@ export async function GET(req: NextRequest) {
  */
 export async function PUT(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { dirSegments } = body as { dirSegments?: string[] };
 
   if (!Array.isArray(dirSegments) || dirSegments.length === 0) {
-    return NextResponse.json({ error: "缺少 dirSegments 参数" }, { status: 400 });
+    return NextResponse.json({ error: t('api.dirSegmentsRequired') }, { status: 400 });
   }
 
   // ----- 模式 1: 结构化模式 -----
@@ -80,11 +83,11 @@ export async function PUT(req: NextRequest) {
     };
 
     if (!mcpJson || typeof mcpJson !== "object") {
-      return NextResponse.json({ error: "mcpJson 必须是对象" }, { status: 400 });
+      return NextResponse.json({ error: t('api.mcp.mcpJsonMustBeObject') }, { status: 400 });
     }
     if (!mcpJson.mcpServers || typeof mcpJson.mcpServers !== "object") {
       return NextResponse.json(
-        { error: "mcpJson.mcpServers 必须是对象" },
+        { error: t('api.mcp.jsonMustBeObject') },
         { status: 400 }
       );
     }
@@ -95,7 +98,7 @@ export async function PUT(req: NextRequest) {
       (typeof mcpJson.disabled !== "object" || mcpJson.disabled === null)
     ) {
       return NextResponse.json(
-        { error: "mcpJson.disabled 必须是对象" },
+        { error: t('api.mcp.jsonMustBeObject') },
         { status: 400 }
       );
     }
@@ -106,7 +109,7 @@ export async function PUT(req: NextRequest) {
       (typeof mcpJson._apiKeys !== "object" || mcpJson._apiKeys === null)
     ) {
       return NextResponse.json(
-        { error: "mcpJson._apiKeys 必须是对象" },
+        { error: t('api.mcp.jsonMustBeObject') },
         { status: 400 }
       );
     }
@@ -118,12 +121,33 @@ export async function PUT(req: NextRequest) {
     };
 
     writeProjectMcpConfig(normalized, dirSegments);
-    logOperation({
-      projectId: extractProjectId(dirSegments),
-      category: "mcp",
-      action: "update",
-      detail: "更新了 MCP 配置",
-    });
+
+    // 解析操作元数据，打印精确日志
+    const _op = body._op as { serverName?: string; action?: string } | undefined;
+    if (_op?.serverName && (_op.action === "enable" || _op.action === "disable")) {
+      const label = _op.action === "enable" ? "启用" : "禁用";
+      logOperation({
+        projectId: extractProjectId(dirSegments),
+        category: "mcp",
+        action: _op.action as "enable" | "disable",
+        detail: `${label}了 MCP server: ${_op.serverName}`,
+      });
+      console.log(`[MCP] ${label} server "${_op.serverName}" in project [${dirSegments.join("/")}]`);
+    } else {
+      logOperation({
+        projectId: extractProjectId(dirSegments),
+        category: "mcp",
+        action: "update",
+        detail: "更新了 MCP 配置",
+      });
+    }
+
+    // 打印写入后的文件内容
+    console.log(`[MCP] .mcp.json after write:\n${JSON.stringify({ mcpServers: normalized.mcpServers }, null, 2)}`);
+    if (Object.keys(normalized.disabled || {}).length > 0 || Object.keys(normalized._apiKeys || {}).length > 0) {
+      console.log(`[MCP] .mcp-config.json after write:\n${JSON.stringify({ disabled: normalized.disabled, _apiKeys: normalized._apiKeys }, null, 2)}`);
+    }
+
     return NextResponse.json({ ok: true, mcpJson: normalized });
   }
 
@@ -131,11 +155,11 @@ export async function PUT(req: NextRequest) {
   if (body.rawJson !== undefined) {
     const raw = body.rawJson;
     if (typeof raw !== "object" || raw === null) {
-      return NextResponse.json({ error: "rawJson 必须是对象" }, { status: 400 });
+      return NextResponse.json({ error: t('api.mcp.mcpJsonMustBeObject') }, { status: 400 });
     }
     if (typeof (raw as Record<string, unknown>).mcpServers !== "object" || (raw as Record<string, unknown>).mcpServers === null) {
       return NextResponse.json(
-        { error: "rawJson.mcpServers 必须是对象" },
+        { error: t('api.mcp.jsonMustBeObject') },
         { status: 400 }
       );
     }
@@ -169,7 +193,7 @@ export async function PUT(req: NextRequest) {
   }
 
   return NextResponse.json(
-    { error: "请求体必须包含 mcpJson 或 rawJson" },
+    { error: t('api.mcp.bodyMustContainMcpOrRaw') },
     { status: 400 }
   );
 }

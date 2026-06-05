@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "./useAuth";
 import {
   Button,
@@ -35,6 +36,7 @@ interface PasskeyInfo {
 export default function PasskeySection() {
   const { authFetch } = useAuth();
   const { message } = App.useApp();
+  const t = useTranslations('settings');
   const [passkeys, setPasskeys] = useState<PasskeyInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [registering, setRegistering] = useState(false);
@@ -69,7 +71,7 @@ export default function PasskeySection() {
       });
       if (!startRes.ok) {
         const data = await startRes.json();
-        message.error(data.error || "Failed to start registration");
+        message.error(data.error || t('registrationFailed'));
         return;
       }
       const options = await startRes.json();
@@ -85,18 +87,18 @@ export default function PasskeySection() {
       });
 
       if (finishRes.ok) {
-        message.success("Passkey registered successfully");
+        message.success(t('passkeyRegistered'));
         loadPasskeys();
       } else {
         const data = await finishRes.json();
-        message.error(data.error || "Registration failed");
+        message.error(data.error || t('registrationFailed'));
       }
     } catch (err) {
       // 用户取消或浏览器不支持
       if (err instanceof Error && err.message.includes("cancelled")) {
-        message.info("Registration cancelled");
+        message.info(t('registrationCancelled'));
       } else {
-        message.error("Passkey registration failed, please check browser support");
+        message.error(t('passkeyRegFailed'));
       }
     } finally {
       setRegistering(false);
@@ -111,12 +113,12 @@ export default function PasskeySection() {
         body: JSON.stringify({ deviceName: editName }),
       });
       if (res.ok) {
-        message.success("Renamed");
+        message.success(t('renamed'));
         setEditingId(null);
         loadPasskeys();
       }
     } catch {
-      message.error("Failed to rename");
+      message.error(t('failedToRename'));
     }
   };
 
@@ -124,11 +126,11 @@ export default function PasskeySection() {
     try {
       const res = await authFetch(`/api/passkey/${id}`, { method: "DELETE" });
       if (res.ok) {
-        message.success("Deleted");
+        message.success(t('deleted'));
         loadPasskeys();
       }
     } catch {
-      message.error("Failed to delete");
+      message.error(t('failedToDelete'));
     }
   };
 
@@ -137,7 +139,7 @@ export default function PasskeySection() {
       <div className="flex justify-between items-center mb-4">
         <Space>
           <KeyOutlined />
-          <Text strong>Passkeys</Text>
+          <Text strong>{t('passkeys')}</Text>
         </Space>
         <Button
           type="primary"
@@ -145,12 +147,12 @@ export default function PasskeySection() {
           onClick={handleRegister}
           loading={registering}
         >
-          Register New Passkey
+          {t('registerNewPasskey')}
         </Button>
       </div>
 
       {passkeys.length === 0 ? (
-        <Empty description="No passkeys yet" />
+        <Empty description={t('noPasskeys')} />
       ) : (
         <Table
           dataSource={passkeys}
@@ -160,7 +162,7 @@ export default function PasskeySection() {
           size="small"
           columns={[
             {
-              title: "Device Name",
+              title: t('columnDeviceName'),
               dataIndex: "deviceName",
               render: (name: string | null, record: PasskeyInfo) =>
                 editingId === record.id ? (
@@ -173,26 +175,26 @@ export default function PasskeySection() {
                       style={{ width: 150 }}
                     />
                     <Button size="small" onClick={() => handleRename(record.id)}>
-                      Save
+                      {t('save')}
                     </Button>
                   </Space>
                 ) : (
-                  name || "Unnamed device"
+                  name || t('unnamedDevice')
                 ),
             },
             {
-              title: "Created At",
+              title: t('columnCreatedAt'),
               dataIndex: "createdAt",
               render: (v: string) => new Date(v).toLocaleString(),
             },
             {
-              title: "Last Used",
+              title: t('columnLastUsed'),
               dataIndex: "lastUsedAt",
               render: (v: string | null) =>
                 v ? new Date(v).toLocaleString() : "-",
             },
             {
-              title: "Actions",
+              title: t('columnActions'),
               render: (_: unknown, record: PasskeyInfo) => (
                 <Space>
                   <Button
@@ -205,7 +207,7 @@ export default function PasskeySection() {
                     }}
                   />
                   <Popconfirm
-                    title="Delete this passkey?"
+                    title={t('deletePasskey')}
                     onConfirm={() => handleDelete(record.id)}
                   >
                     <Button type="text" size="small" danger icon={<DeleteOutlined />} />

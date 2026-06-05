@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/components/auth/useAuth";
+import { useTranslations } from "next-intl";
 import { Button, Input, App, Typography, Space } from "antd";
 import { SaveOutlined, CloudDownloadOutlined } from "@ant-design/icons";
 
@@ -30,6 +31,7 @@ export default function McpPageClient({ initialConfig, brandName }: Props) {
     initialConfig?.configJson || "{}"
   );
   const { authFetch } = useAuth();
+  const t = useTranslations('admin');
   const [updatedAt, setUpdatedAt] = useState(initialConfig?.updatedAt || null);
   const [isSaving, setIsSaving] = useState(false);
   const { message } = App.useApp();
@@ -38,12 +40,12 @@ export default function McpPageClient({ initialConfig, brandName }: Props) {
     try {
       const parsed = JSON.parse(configJson);
       if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-        message.error("Current JSON is not a valid object, please fix first");
+        message.error(t('mcpPage.msgNotValidObject'));
         return;
       }
       parsed.rabbitdocs = { type: "http", url: "http://127.0.0.1:4001/mcp" };
       setConfigJson(JSON.stringify(parsed, null, 2));
-      message.success(`${brandName} MCP server config added, click Save to apply`);
+      message.success(t('mcpPage.msgMcpConfigAdded', { brandName }));
     } catch {
       setConfigJson(
         JSON.stringify(
@@ -52,7 +54,7 @@ export default function McpPageClient({ initialConfig, brandName }: Props) {
           2
         )
       );
-      message.success(`${brandName} MCP server config added, click Save to apply`);
+      message.success(t('mcpPage.msgMcpConfigAdded', { brandName }));
     }
   };
 
@@ -62,7 +64,7 @@ export default function McpPageClient({ initialConfig, brandName }: Props) {
     try {
       parsed = JSON.parse(configJson);
     } catch {
-      message.error("Invalid JSON format, please check input");
+      message.error(t('mcpPage.msgInvalidJson'));
       return;
     }
 
@@ -71,7 +73,7 @@ export default function McpPageClient({ initialConfig, brandName }: Props) {
       parsed === null ||
       Array.isArray(parsed)
     ) {
-      message.error("JSON must be an object {}");
+      message.error(t('mcpPage.msgMustBeObject'));
       return;
     }
 
@@ -85,14 +87,14 @@ export default function McpPageClient({ initialConfig, brandName }: Props) {
       const data = await res.json();
 
       if (!res.ok) {
-        message.error(data.error || "Save failed");
+        message.error(data.error || t('mcpPage.msgSaveFailed'));
         return;
       }
 
       setUpdatedAt(data.updatedAt);
-      message.success("Saved successfully");
+      message.success(t('mcpPage.msgSavedSuccess'));
     } catch {
-      message.error("Save failed, please check network connection");
+      message.error(t('mcpPage.msgSaveFailedNetwork'));
     } finally {
       setIsSaving(false);
     }
@@ -103,9 +105,9 @@ export default function McpPageClient({ initialConfig, brandName }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-700">
         <div>
-          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">MCP Config</h1>
+          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('mcpPage.title')}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Manage external MCP server connection configurations
+            {t('mcpPage.subtitle')}
           </p>
         </div>
         <Space>
@@ -113,14 +115,14 @@ export default function McpPageClient({ initialConfig, brandName }: Props) {
             icon={<CloudDownloadOutlined />}
             onClick={handleInstallRabbitDocs}
           >
-            Install {brandName} MCP
+            {t('mcpPage.btnInstallMcp', { brandName })}
           </Button>
           <Button
             icon={<SaveOutlined />}
             loading={isSaving}
             onClick={handleSave}
           >
-            Save
+            {t('mcpPage.btnSave')}
           </Button>
         </Space>
       </div>
@@ -131,7 +133,7 @@ export default function McpPageClient({ initialConfig, brandName }: Props) {
           {/* Tips */}
           <div className="mb-3">
             <Text type="secondary" className="text-xs">
-              Enter MCP server configuration JSON, format example:
+              {t('mcpPage.tipFormatExample')}
             </Text>
             <Paragraph className="!mb-0 !mt-1">
               <pre className="text-xs bg-gray-50 dark:bg-zinc-800 rounded p-2 overflow-x-auto font-mono text-gray-600 dark:text-gray-300">
@@ -139,7 +141,7 @@ export default function McpPageClient({ initialConfig, brandName }: Props) {
               </pre>
             </Paragraph>
             <Text type="secondary" className="text-xs">
-              Supported types: stdio, sse, streamable-http. See MCP protocol documentation for details.
+              {t('mcpPage.tipSupportedTypes')}
             </Text>
           </div>
 
@@ -149,7 +151,7 @@ export default function McpPageClient({ initialConfig, brandName }: Props) {
             onChange={(e) => setConfigJson(e.target.value)}
             rows={20}
             className="font-mono text-sm"
-            placeholder="Enter MCP server configuration JSON here..."
+            placeholder={t('mcpPage.placeholderJson')}
             spellCheck={false}
           />
 
@@ -157,7 +159,7 @@ export default function McpPageClient({ initialConfig, brandName }: Props) {
           {updatedAt && (
             <div className="mt-2">
               <Text type="secondary" className="text-xs">
-                Last saved: {new Date(updatedAt).toLocaleString()}
+                {t('mcpPage.lastSaved')}{new Date(updatedAt).toLocaleString()}
               </Text>
             </div>
           )}

@@ -3,9 +3,14 @@
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { ConfigProvider, App as AntApp, theme as antdTheme } from "antd";
 import { useTheme } from "next-themes";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
+import zhCN from "antd/locale/zh_CN";
+import enUS from "antd/locale/en_US";
 
-function AntdThemeSync({ children }: { children: ReactNode }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const antLocales: Record<string, any> = { zh: zhCN, en: enUS };
+
+function AntdThemeSync({ children, locale }: { children: ReactNode; locale: string }) {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -13,8 +18,11 @@ function AntdThemeSync({ children }: { children: ReactNode }) {
     setMounted(true);
   }, []);
 
+  const antdLocale = useMemo(() => antLocales[locale] || zhCN, [locale]);
+
   return (
     <ConfigProvider
+      locale={antdLocale}
       theme={{
         algorithm:
           mounted && resolvedTheme === "dark"
@@ -27,7 +35,7 @@ function AntdThemeSync({ children }: { children: ReactNode }) {
   );
 }
 
-export default function ThemeRegistry({ children }: { children: ReactNode }) {
+export default function ThemeRegistry({ children, locale }: { children: ReactNode; locale: string }) {
   return (
     <NextThemesProvider
       attribute="class"
@@ -35,7 +43,7 @@ export default function ThemeRegistry({ children }: { children: ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
-      <AntdThemeSync>{children}</AntdThemeSync>
+      <AntdThemeSync locale={locale}>{children}</AntdThemeSync>
     </NextThemesProvider>
   );
 }

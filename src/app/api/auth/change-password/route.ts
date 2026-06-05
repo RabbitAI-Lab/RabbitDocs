@@ -5,6 +5,7 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "@/lib/auth/session";
 import { verifyPassword, hashPassword } from "@/lib/auth/password";
+import { getApiT } from "@/lib/i18n-api";
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1),
@@ -12,6 +13,7 @@ const changePasswordSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const t = await getApiT();
   const authResult = await requireAuth(req);
   if (authResult instanceof NextResponse) return authResult;
 
@@ -36,14 +38,14 @@ export async function POST(req: NextRequest) {
       .get();
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: t('api.auth.userNotFound') }, { status: 404 });
     }
 
     // 验证旧密码
     const valid = await verifyPassword(currentPassword, user.passwordHash);
     if (!valid) {
       return NextResponse.json(
-        { error: "Current password is incorrect" },
+        { error: t('api.auth.currentPasswordIncorrect') },
         { status: 400 }
       );
     }
@@ -58,6 +60,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[auth] Change password error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: t('api.internalError') }, { status: 500 });
   }
 }

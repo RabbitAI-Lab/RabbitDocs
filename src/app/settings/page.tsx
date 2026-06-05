@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/useAuth";
 import {
   Card,
@@ -36,14 +37,11 @@ interface InviteCode {
 export default function AccountPage() {
   const { user, authFetch } = useAuth();
   const { message } = App.useApp();
+  const t = useTranslations('settings');
   const [passwordForm] = Form.useForm();
   const [inviteCodes, setInviteCodes] = useState<InviteCode[]>([]);
   const [loadingPassword, setLoadingPassword] = useState(false);
   const [loadingCodes, setLoadingCodes] = useState(false);
-
-  useEffect(() => {
-    loadInviteCodes();
-  }, []);
 
   const loadInviteCodes = async () => {
     if (!user) return;
@@ -63,6 +61,10 @@ export default function AccountPage() {
     }
   };
 
+  useEffect(() => {
+    loadInviteCodes();
+  }, [loadInviteCodes]);
+
   const handleChangePassword = async (values: {
     currentPassword: string;
     newPassword: string;
@@ -75,14 +77,14 @@ export default function AccountPage() {
         body: JSON.stringify(values),
       });
       if (res.ok) {
-        message.success("Password changed");
+        message.success(t('passwordChanged'));
         passwordForm.resetFields();
       } else {
         const data = await res.json();
-        message.error(data.error || "Failed to change password");
+        message.error(data.error || t('failedToChangePassword'));
       }
     } catch {
-      message.error("Failed to change password");
+      message.error(t('failedToChangePassword'));
     } finally {
       setLoadingPassword(false);
     }
@@ -94,11 +96,11 @@ export default function AccountPage() {
         method: "POST",
       });
       if (res.ok) {
-        message.success("Invite code created");
+        message.success(t('inviteCodeCreated'));
         loadInviteCodes();
       } else {
         const data = await res.json();
-        message.error(data.error || "Failed to create invite code");
+        message.error(data.error || t('failedToCreateCode'));
       }
     } catch {
       message.error("Failed to create invite code");
@@ -108,7 +110,7 @@ export default function AccountPage() {
   const copyInviteLink = (code: string) => {
     const link = `${window.location.origin}/register?code=${code}`;
     navigator.clipboard.writeText(link);
-    message.success("Invite link copied");
+    message.success(t('inviteLinkCopied'));
   };
 
   if (!user) return null;
@@ -117,9 +119,9 @@ export default function AccountPage() {
     <div className="max-w-4xl mx-auto p-6 sm:p-8">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Account</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('account')}</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Manage your account security, credentials and authentication methods
+          {t('accountDesc')}
         </p>
       </div>
 
@@ -127,10 +129,10 @@ export default function AccountPage() {
         {/* ─── Section 1: Password ─── */}
         <section>
           <SectionHeader
-            title="Security"
-            description="Manage your login methods and authentication devices"
+            title={t('security')}
+            description={t('securityDesc')}
           />
-          <Card className="shadow-sm" title="Change Password">
+          <Card className="shadow-sm" title={t('changePassword')}>
             <Form
               form={passwordForm}
               onFinish={handleChangePassword}
@@ -139,33 +141,33 @@ export default function AccountPage() {
             >
               <Form.Item
                 name="currentPassword"
-                label="Current Password"
-                rules={[{ required: true, message: "Please enter your current password" }]}
+                label={t('currentPassword')}
+                rules={[{ required: true, message: t('enterCurrentPassword') }]}
               >
                 <Input.Password prefix={<LockOutlined />} />
               </Form.Item>
               <Form.Item
                 name="newPassword"
-                label="New Password"
+                label={t('newPassword')}
                 rules={[
-                  { required: true, message: "Please enter a new password" },
-                  { min: 6, message: "Password must be at least 6 characters" },
+                  { required: true, message: t('enterNewPassword') },
+                  { min: 6, message: t('passwordMinLength') },
                 ]}
               >
                 <Input.Password prefix={<LockOutlined />} />
               </Form.Item>
               <Form.Item
                 name="confirmPassword"
-                label="Confirm New Password"
+                label={t('confirmNewPassword')}
                 dependencies={["newPassword"]}
                 rules={[
-                  { required: true, message: "Please confirm your new password" },
+                  { required: true, message: t('pleaseConfirmPassword') },
                   ({ getFieldValue }) => ({
                     validator(_, value) {
                       if (!value || getFieldValue("newPassword") === value) {
                         return Promise.resolve();
                       }
-                      return Promise.reject(new Error("Passwords do not match"));
+                      return Promise.reject(new Error(t('passwordsDoNotMatch')));
                     },
                   }),
                 ]}
@@ -174,7 +176,7 @@ export default function AccountPage() {
               </Form.Item>
               <Form.Item className="!mb-0">
                 <Button htmlType="submit" loading={loadingPassword}>
-                  Change Password
+                  {t('changePasswordBtn')}
                 </Button>
               </Form.Item>
             </Form>
@@ -184,8 +186,8 @@ export default function AccountPage() {
         {/* ─── Section 2: Passkey ─── */}
         <section>
           <SectionHeader
-            title="Passkeys"
-            description="Use biometrics or hardware keys for passwordless login"
+            title={t('passkeysSection')}
+            description={t('passkeysDesc')}
           />
           <Card className="shadow-sm">
             <PasskeySection />
@@ -195,24 +197,24 @@ export default function AccountPage() {
         {/* ─── Section 3: Invite Codes ─── */}
         <section>
           <SectionHeader
-            title="Invite Codes"
-            description="Invite new users to register (max 5 per user)"
+            title={t('inviteCodes')}
+            description={t('inviteCodesDesc')}
           />
           <Card
             className="shadow-sm"
-            title={`My Invite Codes (${inviteCodes.length}/5)`}
+            title={t('myInviteCodes', { count: inviteCodes.length })}
             extra={
               <Button
                 icon={<PlusOutlined />}
                 onClick={handleCreateInviteCode}
                 disabled={inviteCodes.length >= 5}
               >
-                Create Invite Code
+                {t('createInviteCode')}
               </Button>
             }
           >
             {inviteCodes.length === 0 ? (
-              <Empty description="No invite codes yet" />
+              <Empty description={t('noInviteCodes')} />
             ) : (
               <Table
                 dataSource={inviteCodes}
@@ -222,7 +224,7 @@ export default function AccountPage() {
                 size="middle"
                 columns={[
                   {
-                    title: "Code",
+                    title: t('code'),
                     dataIndex: "code",
                     render: (code: string) => (
                       <Space>
@@ -237,17 +239,17 @@ export default function AccountPage() {
                     ),
                   },
                   {
-                    title: "Status",
+                    title: t('status'),
                     dataIndex: "used",
                     render: (used: boolean) =>
                       used ? (
-                        <Tag color="red">Used</Tag>
+                        <Tag color="red">{t('used')}</Tag>
                       ) : (
-                        <Tag color="green">Unused</Tag>
+                        <Tag color="green">{t('unused')}</Tag>
                       ),
                   },
                   {
-                    title: "Created At",
+                    title: t('columnCreatedAt'),
                     dataIndex: "createdAt",
                     render: (v: string) => new Date(v).toLocaleString(),
                   },
@@ -260,8 +262,8 @@ export default function AccountPage() {
         {/* ─── Section 4: General Registration Key ─── */}
         <section>
           <SectionHeader
-            title="Registration Key"
-            description="Generate a reusable registration key for team members to self-register"
+            title={t('regKeySection')}
+            description={t('regKeyDesc')}
           />
           <Card className="shadow-sm">
             <GeneralRegistrationKeySection />
@@ -271,8 +273,8 @@ export default function AccountPage() {
         {/* ─── Section 5: CLI Tokens ─── */}
         <section>
           <SectionHeader
-            title="CLI Tokens"
-            description="Long-lived access tokens for CLI tools"
+            title={t('cliTokensSection')}
+            description={t('cliTokensDesc')}
           />
           <Card className="shadow-sm">
             <CliTokensSection />

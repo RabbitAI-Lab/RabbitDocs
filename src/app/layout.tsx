@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import localFont from "next/font/local";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import "./globals.css";
 import Sidebar from "@/components/layout/Sidebar";
 import ShareLayoutGuard from "@/components/layout/ShareLayoutGuard";
@@ -44,10 +46,11 @@ const geistMono = localFont({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata");
   const brandName = getBrandName();
   return {
-    title: `${brandName} - 文档管理与发布`,
-    description: "基于文件系统的文档管理与发布平台",
+    title: `${brandName} - ${t("title")}`,
+    description: t("description"),
   };
 }
 
@@ -60,23 +63,27 @@ export default async function RootLayout({
   const savedWidth = cookieStore.get("sidebar-width")?.value;
   const savedCollapsed = cookieStore.get("sidebar-collapsed")?.value;
   const brandName = getBrandName();
+  const locale = await getLocale();
+  const msgs = await getMessages();
 
   return (
-    <html lang="zh-CN" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang={locale} suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="h-full flex bg-white dark:bg-[var(--background)]">
-        <ThemeRegistry>
-          <AuthProvider>
-            <FloatingChatProvider>
-              <ShareLayoutGuard />
-              <div data-sidebar>
-                <Sidebar initialWidth={savedWidth} initialCollapsed={savedCollapsed} brandName={brandName} />
-              </div>
-              <main className="flex-1 h-full overflow-y-auto bg-gray-50 dark:bg-[var(--main-bg)]">
-                {children}
-              </main>
-            </FloatingChatProvider>
-          </AuthProvider>
-        </ThemeRegistry>
+        <NextIntlClientProvider locale={locale} messages={msgs}>
+          <ThemeRegistry locale={locale}>
+            <AuthProvider>
+              <FloatingChatProvider>
+                <ShareLayoutGuard />
+                <div data-sidebar>
+                  <Sidebar initialWidth={savedWidth} initialCollapsed={savedCollapsed} brandName={brandName} />
+                </div>
+                <main className="flex-1 h-full overflow-y-auto bg-gray-50 dark:bg-[var(--main-bg)]">
+                  {children}
+                </main>
+              </FloatingChatProvider>
+            </AuthProvider>
+          </ThemeRegistry>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

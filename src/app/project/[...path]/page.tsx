@@ -1,4 +1,4 @@
-import { listTree, readDocument, readProjectMeta, stripTreePrefix, TreeNode } from "@/lib/fs";
+import { listTree, readDocument, readProjectMeta, stripTreePrefix } from "@/lib/fs";
 import { db } from "@/db";
 import { chats, accounts, documentActivities } from "@/db/schema";
 import { gte, desc, eq, and } from "drizzle-orm";
@@ -28,6 +28,7 @@ export default async function ProjectPage({
       currentUserId = payload.sub;
     }
   }
+  void currentUserId; // reserved for future per-project access control
 
   // path = ["personal", "{accountId}", "projects", "{projectId}"]
   if (path.length < 4) notFound();
@@ -58,7 +59,8 @@ export default async function ProjectPage({
   const projectName = projectMeta?.name || projectId;
 
   // Resolve account info
-  const accountType = path[0]; // "personal" or "enterprise"
+  const _accountType = path[0]; // "personal" or "enterprise"
+  void _accountType;
   const accountId = path[1];
   let accountName = accountId;
   try {
@@ -76,6 +78,7 @@ export default async function ProjectPage({
 
   // Fetch recent chats for this project (last 20 days)
   // 跟着项目走：该项目下所有 chat 对所有访问者可见
+  // eslint-disable-next-line react-hooks/purity -- Server Component: Date.now() is stable per request
   const twentyDaysAgo = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString();
   const chatConditions = [
     gte(chats.updatedAt, twentyDaysAgo),

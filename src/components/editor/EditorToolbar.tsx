@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/useAuth";
 
@@ -20,9 +21,10 @@ export default function EditorToolbar({
 }: EditorToolbarProps) {
   const { authFetch } = useAuth();
   const router = useRouter();
+  const t = useTranslations('common');
 
   const handleDelete = async () => {
-    if (!confirm(`确认删除文档 "${title}"?`)) return;
+    if (!confirm(t('confirmDeleteDoc', { title }))) return;
     await authFetch("/api/fs/document", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -51,7 +53,7 @@ export default function EditorToolbar({
           {saving ? (
             <>
               <div className="animate-spin rounded-full h-3 w-3 border border-white border-t-transparent" />
-              保存中...
+              {t('saving')}
             </>
           ) : (
             <>
@@ -60,7 +62,7 @@ export default function EditorToolbar({
                 <polyline points="17 21 17 13 7 13 7 21" />
                 <polyline points="7 3 7 8 15 8" />
               </svg>
-              保存
+              {t('save')}
             </>
           )}
         </button>
@@ -74,7 +76,7 @@ export default function EditorToolbar({
             <polyline points="15 3 21 3 21 9" />
             <line x1="10" y1="14" x2="21" y2="3" />
           </svg>
-          发布
+          {t('publish')}
         </button>
       </div>
 
@@ -86,7 +88,7 @@ export default function EditorToolbar({
           <polyline points="3 6 5 6 21 6" />
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
         </svg>
-        删除
+        {t('delete')}
       </button>
     </div>
   );

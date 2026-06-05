@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef, ReactNode } from "react";
 import { MenuOutlined } from "@ant-design/icons";
+import { useTranslations } from "next-intl";
 import { SidebarContext } from "./SidebarContext";
 
 const MIN_WIDTH = 190;
@@ -32,6 +33,7 @@ interface SidebarShellProps {
 export default function SidebarShell({ children, initialWidth, initialCollapsed, brandName }: SidebarShellProps) {
   const initWidth = parseInitialWidth(initialWidth);
   const initCollapsed = parseInitialCollapsed(initialCollapsed);
+  const t = useTranslations("sidebar");
 
   const [collapsed, setCollapsed] = useState(initCollapsed);
   const [width, setWidth] = useState(initWidth);
@@ -95,14 +97,14 @@ export default function SidebarShell({ children, initialWidth, initialCollapsed,
           ) : (
             <div>
               <h1 className="text-lg font-bold text-gray-800 dark:text-gray-200">{brandName}</h1>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Document Management & Publishing</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{t('documentManagementPublishing')}</p>
             </div>
           )}
           {!collapsed && (
             <button
               onClick={toggleCollapsed}
               className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-800 transition-colors"
-              title="折叠侧边栏"
+              title={t('collapseSidebar')}
             >
               <MenuOutlined style={{ fontSize: 14 }} />
             </button>

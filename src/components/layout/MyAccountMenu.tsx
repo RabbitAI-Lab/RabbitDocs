@@ -2,10 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/useAuth";
 import { useSidebar } from "./SidebarContext";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "./ThemeToggle";
+import { useLocaleSwitch } from "@/hooks/useLocaleSwitch";
 
 export default function MyAccountMenu() {
   const [open, setOpen] = useState(false);
@@ -14,6 +16,8 @@ export default function MyAccountMenu() {
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
+  const t = useTranslations("sidebar");
+  const { currentLocale, switchLocale } = useLocaleSwitch();
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -33,7 +37,7 @@ export default function MyAccountMenu() {
   }, [open]);
 
   const email = user?.email ?? "user@example.com";
-  const name = user?.name ?? "My Account";
+  const name = user?.name ?? t('myAccount');
   const initials = name
     .split(" ")
     .map((w) => w[0])
@@ -42,10 +46,10 @@ export default function MyAccountMenu() {
     .slice(0, 2);
 
   const menuItems = [
-    { label: "Profile", href: "/profile" },
-    { label: "Billing", href: "/billing" },
-    { label: "Docs", href: "/docs" },
-    { label: "Account", href: "/settings" },
+    { label: t('profile'), href: "/profile" },
+    { label: t('billing'), href: "/billing" },
+    { label: t('docs'), href: "/docs" },
+    { label: t('account'), href: "/settings" },
   ];
 
   return (
@@ -74,7 +78,7 @@ export default function MyAccountMenu() {
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
           <circle cx="12" cy="7" r="4" />
         </svg>
-        {!collapsed && <span className="flex-1">My Account</span>}
+        {!collapsed && <span className="flex-1">{t('myAccount')}</span>}
       </div>
 
       {/* Popup Menu */}
@@ -101,8 +105,16 @@ export default function MyAccountMenu() {
 
           {/* Appearance Section */}
           <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-            <span className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">Appearance</span>
-            <ThemeToggle />
+            <span className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">{t('appearance')}</span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => switchLocale(currentLocale === 'zh' ? 'en' : 'zh')}
+                className="text-xs px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                {currentLocale === 'zh' ? 'EN' : '中'}
+              </button>
+              <ThemeToggle />
+            </div>
           </div>
 
           {/* Menu Items */}
@@ -130,7 +142,7 @@ export default function MyAccountMenu() {
               }}
               className="px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 cursor-pointer select-none transition-colors"
             >
-              Sign out
+              {t('signOut')}
             </div>
           </div>
         </div>

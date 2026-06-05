@@ -1,10 +1,12 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/useAuth";
 import NavLink from "./NavLink";
 
 export default function AdminNavLink() {
   const { user, isLoading } = useAuth();
+  const t = useTranslations("sidebar");
 
   if (isLoading || !user?.isAdmin) {
     return null;
@@ -20,7 +22,7 @@ export default function AdminNavLink() {
         </svg>
       }
     >
-      System Admin
+      {t('systemAdmin')}
     </NavLink>
   );
 }

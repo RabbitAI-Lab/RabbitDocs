@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 import { Avatar, Button, Typography, Space, Tooltip, Popover, Input } from "antd";
 import {
   RobotOutlined,
@@ -64,6 +65,7 @@ function clamp(val: number, min: number, max: number) {
 }
 
 export default function FloatingChatWindow() {
+  const t = useTranslations("chat");
   const { isOpen, isMinimized, close, minimize, open, projectId, workspaceId, windowKey, mentionFile, setMentionFile } = useFloatingChat();
   const containerRef = useRef<HTMLDivElement>(null);
   const workspaceRef = useRef<ChatWorkspaceRef>(null);
@@ -259,14 +261,14 @@ export default function FloatingChatWindow() {
       >
         <Avatar size={24} icon={<RobotOutlined />} style={{ backgroundColor: "#1677ff" }} />
         <Typography.Text strong className="text-sm flex-1">
-          Chat
+          {t("floatingChat.chat")}
         </Typography.Text>
         <Space
           size={2}
           onPointerDown={(e) => e.stopPropagation()}
         >
           {/* New chat */}
-          <Tooltip title="新会话">
+          <Tooltip title={t("header.newChat")}>
             <Button
               icon={<PlusOutlined />}
               size="small"
@@ -281,7 +283,7 @@ export default function FloatingChatWindow() {
               onOpenChange={(open) => ws.setShareOpen(open)}
               trigger="click"
               placement="bottomRight"
-              title="Share Chat"
+              title={t("header.shareChat")}
               content={
                 <div style={{ width: 280 }}>
                   <Input.TextArea
@@ -297,7 +299,7 @@ export default function FloatingChatWindow() {
                       onClick={() => ws.handleCopyLink()}
                       block
                     >
-                      复制链接
+                      {t("header.copyLink")}
                     </Button>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
@@ -309,7 +311,7 @@ export default function FloatingChatWindow() {
                       onClick={() => ws.handleRegenerateLink()}
                       block
                     >
-                      重新生成
+                      {t("header.regenerateLink")}
                     </Button>
                     <Button
                       icon={<StopOutlined />}
@@ -319,13 +321,13 @@ export default function FloatingChatWindow() {
                       onClick={() => ws.handleCancelShare()}
                       block
                     >
-                      取消分享
+                      {t("header.cancelShare")}
                     </Button>
                   </div>
                 </div>
               }
             >
-              <Tooltip title="分享">
+              <Tooltip title={t("header.share")}>
                 <Button
                   icon={<ShareAltOutlined />}
                   size="small"
@@ -342,7 +344,7 @@ export default function FloatingChatWindow() {
             onSelect={(chatId: number) => ws?.handleHistorySelect(chatId)}
           />
           {/* Clear */}
-          <Tooltip title="Clear">
+          <Tooltip title={t("header.clear")}>
             <Button
               icon={<ClearOutlined />}
               size="small"
@@ -379,7 +381,7 @@ export default function FloatingChatWindow() {
           ref={workspaceRef}
           key={windowKey}
           chatId={null}
-          chatTitle="New Conversation"
+          chatTitle={t("floatingChat.newConversation")}
           initialMessages={[]}
           embedded={false}
           floating={true}
@@ -461,7 +463,7 @@ export default function FloatingChatWindow() {
 
       {/* Minimized restore bubble */}
       {isMinimized && (
-        <Tooltip title="Restore Chat" placement="left">
+        <Tooltip title={t("floatingChat.restoreChat")} placement="left">
           <button
             onClick={() => open()}
             className="fixed flex items-center justify-center border-none cursor-pointer"

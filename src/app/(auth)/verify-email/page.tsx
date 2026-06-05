@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Card,
   Result,
@@ -15,14 +16,17 @@ import {
 import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import Link from "next/link";
 
-const { Text, Paragraph } = Typography;
+const { Paragraph } = Typography;
 
 type Status = "verifying" | "success" | "error" | "awaiting-code";
 
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
   const { message } = App.useApp();
-  const [status, setStatus] = useState<Status>("verifying");
+  const t = useTranslations("auth");
+  // 没有 token 时直接进入"输入验证码"模式；有 token 时默认 verifying，由 effect 处理
+  const hasToken = typeof window !== "undefined" ? searchParams.get("token") : null;
+  const [status, setStatus] = useState<Status>(hasToken ? "verifying" : "awaiting-code");
   const [errorMessage, setErrorMessage] = useState("");
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -33,11 +37,7 @@ export default function VerifyEmailPage() {
     calledRef.current = true;
 
     const token = searchParams.get("token");
-    if (!token) {
-      // 没有 token：进入"输入验证码"模式
-      setStatus("awaiting-code");
-      return;
-    }
+    if (!token) return;
 
     fetch(`/api/auth/verify-email?token=${token}`)
       .then((res) => res.json())
@@ -46,19 +46,19 @@ export default function VerifyEmailPage() {
           setStatus("success");
         } else {
           setStatus("error");
-          setErrorMessage(data.error || "验证失败");
+          setErrorMessage(data.error || t('verificationFailedGeneric'));
         }
       })
       .catch(() => {
         setStatus("error");
-        setErrorMessage("网络错误，请稍后重试");
+        setErrorMessage(t('networkError'));
       });
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   const handleSubmitCode = async () => {
     const trimmed = code.trim();
     if (!/^\d{6}$/.test(trimmed)) {
-      message.warning("请输入 6 位数字验证码");
+      message.warning(t('pleaseEnterSixDigitCode'));
       return;
     }
     setSubmitting(true);
@@ -72,11 +72,11 @@ export default function VerifyEmailPage() {
       if (data.success) {
         setStatus("success");
       } else {
-        setErrorMessage(data.error || "验证失败");
+        setErrorMessage(data.error || t('verificationFailedGeneric'));
         setStatus("error");
       }
     } catch {
-      setErrorMessage("网络错误，请稍后重试");
+      setErrorMessage(t('networkError'));
       setStatus("error");
     } finally {
       setSubmitting(false);
@@ -88,7 +88,7 @@ export default function VerifyEmailPage() {
       <Card className="shadow-lg">
         <div className="text-center py-8">
           <Spin size="large" />
-          <p className="mt-4 text-gray-500">正在验证您的邮箱...</p>
+          <p className="mt-4 text-gray-500">{t('verifying')}</p>
         </div>
       </Card>
     );
@@ -99,11 +99,11 @@ export default function VerifyEmailPage() {
       <Card className="shadow-lg">
         <Result
           icon={<CheckCircleOutlined style={{ color: "#52c41a" }} />}
-          title="邮箱验证成功"
-          subTitle="您的邮箱已成功验证，现在可以登录了。"
+          title={t('verificationSuccess')}
+          subTitle={t('verificationSuccessDesc')}
           extra={
             <Link href="/login">
-              <Button type="primary">前往登录</Button>
+              <Button type="primary">{t('goToLogin')}</Button>
             </Link>
           }
         />
@@ -116,7 +116,7 @@ export default function VerifyEmailPage() {
       <Card className="shadow-lg">
         <Result
           icon={<CloseCircleOutlined style={{ color: "#ff4d4f" }} />}
-          title="验证失败"
+          title={t('verificationFailed')}
           subTitle={errorMessage}
           extra={
             <div className="flex flex-col gap-2 items-center">
@@ -127,10 +127,10 @@ export default function VerifyEmailPage() {
                   setErrorMessage("");
                 }}
               >
-                重新输入验证码
+                {t('reEnterCode')}
               </Button>
               <Link href="/login">
-                <Button type="link">返回登录</Button>
+                <Button type="link">{t('backToLogin')}</Button>
               </Link>
             </div>
           }
@@ -141,15 +141,15 @@ export default function VerifyEmailPage() {
 
   // awaiting-code
   return (
-    <Card title="输入邮箱验证码" className="shadow-lg">
+    <Card title={t('enterEmailCode')} className="shadow-lg">
       <Paragraph type="secondary" className="!mb-4">
-        请输入您收到的 6 位数字验证码以验证邮箱。验证码 24 小时内有效。
+        {t('enterCodeDesc')}
       </Paragraph>
       <div className="space-y-3">
         <Input
           size="large"
           maxLength={6}
-          placeholder="例如 123456"
+          placeholder={t('codePlaceholder')}
           value={code}
           onChange={(e) =>
             setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
@@ -171,12 +171,12 @@ export default function VerifyEmailPage() {
           disabled={code.length !== 6}
           onClick={handleSubmitCode}
         >
-          验证
+          {t('verify')}
         </Button>
       </div>
       <Divider />
       <div className="text-center text-sm text-gray-500">
-        <Link href="/login">返回登录</Link>
+        <Link href="/login">{t('backToLogin')}</Link>
       </div>
     </Card>
   );

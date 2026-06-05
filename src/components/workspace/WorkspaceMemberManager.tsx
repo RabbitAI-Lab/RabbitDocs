@@ -1,5 +1,6 @@
 "use client";
 import { useAuth } from "@/components/auth/useAuth";
+import { useTranslations } from "next-intl";
 
 import { useState } from "react";
 import { Input, Button, Modal } from "antd";
@@ -25,6 +26,7 @@ export default function WorkspaceMemberManager({
   members,
   onMembersChange,
 }: WorkspaceMemberManagerProps) {
+  const t = useTranslations('workspace');
   const [showAddForm, setShowAddForm] = useState(false);
   const { authFetch } = useAuth();
   const [submitting, setSubmitting] = useState(false);
@@ -69,7 +71,7 @@ export default function WorkspaceMemberManager({
   };
 
   const handleDelete = async (memberId: string) => {
-    if (!confirm("Are you sure you want to remove this member?")) return;
+    if (!confirm(t('members.confirmRemove'))) return;
 
     const res = await authFetch("/api/fs/workspace-members", {
       method: "DELETE",
@@ -120,7 +122,7 @@ export default function WorkspaceMemberManager({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500 dark:text-gray-400">{members.length} members</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{t('members.memberCount', { count: members.length })}</p>
         <button
           onClick={() => setShowAddForm(true)}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors"
@@ -135,7 +137,7 @@ export default function WorkspaceMemberManager({
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          Add Member
+          {t('members.addMember')}
         </button>
       </div>
 
@@ -163,7 +165,7 @@ export default function WorkspaceMemberManager({
                       size="small"
                       value={editAccountName}
                       onChange={(e) => setEditAccountName(e.target.value)}
-                      placeholder="Account name"
+                      placeholder={t('members.accountNamePlaceholder')}
                       onPressEnter={handleUpdate}
                     />
                     <Button
@@ -172,10 +174,10 @@ export default function WorkspaceMemberManager({
                       disabled={!editAccountName.trim()}
                       onClick={handleUpdate}
                     >
-                      Save
+                      {t('members.save')}
                     </Button>
                     <Button size="small" onClick={cancelEdit}>
-                      Cancel
+                      {t('members.cancel')}
                     </Button>
                   </div>
                 ) : (
@@ -184,7 +186,7 @@ export default function WorkspaceMemberManager({
                       {member.accountName}
                     </span>
                     <p className="text-xs text-gray-400 dark:text-gray-500">
-                      Added {formatDate(member.addedAt)}
+                      {t('members.added', { date: formatDate(member.addedAt) })}
                     </p>
                   </>
                 )}
@@ -194,7 +196,7 @@ export default function WorkspaceMemberManager({
                   <button
                     onClick={() => startEdit(member)}
                     className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 dark:text-gray-600 hover:text-blue-500 transition-all"
-                    title="Edit"
+                    title={t('members.edit')}
                   >
                     <svg
                       className="w-3.5 h-3.5"
@@ -210,7 +212,7 @@ export default function WorkspaceMemberManager({
                   <button
                     onClick={() => handleDelete(member.id)}
                     className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 dark:text-gray-600 hover:text-red-500 transition-all"
-                    title="Delete"
+                    title={t('members.delete')}
                   >
                     <svg
                       className="w-4 h-4"
@@ -231,21 +233,21 @@ export default function WorkspaceMemberManager({
       )}
 
       <Modal
-        title="Add Member"
+        title={t('members.addMemberTitle')}
         open={showAddForm}
         onOk={handleAdd}
-        okText="Add"
+        okText={t('members.addBtn')}
         onCancel={() => {
           setShowAddForm(false);
           resetForm();
         }}
-        cancelText="Cancel"
+        cancelText={t('members.cancel')}
         confirmLoading={submitting}
         okButtonProps={{ disabled: !formAccountName.trim() }}
       >
         <div className="py-2">
           <Input
-            placeholder="Enter account name"
+            placeholder={t('members.enterAccountName')}
             value={formAccountName}
             onChange={(e) => setFormAccountName(e.target.value)}
             onPressEnter={handleAdd}
@@ -265,7 +267,7 @@ export default function WorkspaceMemberManager({
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
-          <p className="text-sm">No members</p>
+          <p className="text-sm">{t('members.noMembers')}</p>
         </div>
       )}
     </div>

@@ -5,6 +5,7 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth/session";
 import { getAdminUserId } from "@/lib/auth/settings";
+import { getApiT } from "@/lib/i18n-api";
 
 const updateUserSchema = z.object({
   name: z.string().max(50).optional(),
@@ -19,6 +20,7 @@ export async function PATCH(
 ) {
   const authResult = await requireAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+  const t = await getApiT();
 
   try {
     const { id: userId } = await params;
@@ -35,14 +37,14 @@ export async function PATCH(
 
     const target = db.select().from(users).where(eq(users.id, userId)).get();
     if (!target) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: t('api.auth.userNotFound') }, { status: 404 });
     }
 
     // 禁止禁用系统超级管理员
     const adminId = getAdminUserId();
     if (adminId && adminId === userId && parsed.data.disabled === true) {
       return NextResponse.json(
-        { error: "Cannot disable the system admin" },
+        { error: t('api.auth.admin.cannotDisableSystemAdmin') },
         { status: 400 }
       );
     }
@@ -50,7 +52,7 @@ export async function PATCH(
     // 禁止管理员移除自己的管理员角色
     if (parsed.data.role && authResult.id === userId) {
       return NextResponse.json(
-        { error: "Cannot change your own role" },
+        { error: t('api.auth.admin.cannotChangeOwnRole') },
         { status: 400 }
       );
     }
@@ -72,7 +74,7 @@ export async function PATCH(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[auth] Admin update user error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: t('api.internalError') }, { status: 500 });
   }
 }
 
@@ -82,19 +84,20 @@ export async function DELETE(
 ) {
   const authResult = await requireAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+  const t = await getApiT();
 
   try {
     const { id: userId } = await params;
 
     const target = db.select().from(users).where(eq(users.id, userId)).get();
     if (!target) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: t('api.auth.userNotFound') }, { status: 404 });
     }
 
     const adminId = getAdminUserId();
     if (adminId && adminId === userId) {
       return NextResponse.json(
-        { error: "Cannot disable the system admin" },
+        { error: t('api.auth.admin.cannotDisableSystemAdmin') },
         { status: 400 }
       );
     }
@@ -104,9 +107,9 @@ export async function DELETE(
       .where(eq(users.id, userId))
       .run();
 
-    return NextResponse.json({ success: true, message: "User disabled" });
+    return NextResponse.json({ success: true, message: t('api.auth.admin.userDisabled') });
   } catch (error) {
     console.error("[auth] Admin disable user error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: t('api.internalError') }, { status: 500 });
   }
 }

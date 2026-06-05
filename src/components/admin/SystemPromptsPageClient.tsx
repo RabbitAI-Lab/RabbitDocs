@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useAuth } from "@/components/auth/useAuth";
+import { useTranslations } from "next-intl";
 import {
   Button,
   Form,
@@ -42,6 +43,7 @@ interface Props {
 export default function SystemPromptsPageClient({ initialPrompts }: Props) {
   const [prompts, setPrompts] = useState<SystemPrompt[]>(initialPrompts);
   const { authFetch } = useAuth();
+  const t = useTranslations('admin');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingPrompt, setEditingPrompt] = useState<SystemPrompt | null>(null);
   const [form] = Form.useForm();
@@ -82,14 +84,14 @@ export default function SystemPromptsPageClient({ initialPrompts }: Props) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(values),
         });
-        message.success("System prompt updated");
+        message.success(t('systemPromptsPage.msgUpdated'));
       } else {
         await authFetch("/api/system-prompts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(values),
         });
-        message.success("System prompt created");
+        message.success(t('systemPromptsPage.msgCreated'));
       }
       setModalOpen(false);
       setEditingPrompt(null);
@@ -109,7 +111,7 @@ export default function SystemPromptsPageClient({ initialPrompts }: Props) {
         body: JSON.stringify({ enabled: newEnabled }),
       }).then(() => {
         refreshList();
-        message.success(newEnabled ? `"${record.name}" enabled` : `"${record.name}" disabled`);
+        message.success(newEnabled ? t('systemPromptsPage.msgEnabled', { name: record.name }) : t('systemPromptsPage.msgDisabled', { name: record.name }));
       });
     },
     [refreshList, message]
@@ -118,15 +120,15 @@ export default function SystemPromptsPageClient({ initialPrompts }: Props) {
   const handleDelete = useCallback(
     (id: number, name: string) => {
       modal.confirm({
-        title: "Confirm Delete",
-        content: `Confirm delete system prompt "${name}"?`,
-        okText: "Delete",
-        cancelText: "Cancel",
+        title: t('systemPromptsPage.confirmDeleteTitle'),
+        content: t('systemPromptsPage.confirmDeleteContent', { name }),
+        okText: t('systemPromptsPage.btnDelete'),
+        cancelText: t('modelConfigModal.btnCancel'),
         okButtonProps: { danger: true },
         onOk: async () => {
           await authFetch(`/api/system-prompts/${id}`, { method: "DELETE" });
           await refreshList();
-          message.success("Deleted");
+          message.success(t('systemPromptsPage.msgDeleted'));
         },
       });
     },
@@ -135,13 +137,13 @@ export default function SystemPromptsPageClient({ initialPrompts }: Props) {
 
   const columns: ColumnsType<SystemPrompt> = [
     {
-      title: "Name",
+      title: t('systemPromptsPage.columnName'),
       dataIndex: "name",
       width: 180,
       render: (name: string) => <Text strong>{name}</Text>,
     },
     {
-      title: "Status",
+      title: t('systemPromptsPage.columnStatus'),
       dataIndex: "enabled",
       width: 80,
       render: (enabled: number, record: SystemPrompt) => (
@@ -153,18 +155,18 @@ export default function SystemPromptsPageClient({ initialPrompts }: Props) {
       ),
     },
     {
-      title: "Sort",
+      title: t('systemPromptsPage.columnSort'),
       dataIndex: "sortOrder",
       width: 80,
     },
     {
-      title: "Updated",
+      title: t('systemPromptsPage.columnUpdated'),
       dataIndex: "updatedAt",
       width: 180,
       render: (v: string) => new Date(v).toLocaleString(),
     },
     {
-      title: "Actions",
+      title: t('systemPromptsPage.columnActions'),
       width: 100,
       render: (_, record) => (
         <Space>
@@ -193,13 +195,13 @@ export default function SystemPromptsPageClient({ initialPrompts }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-700">
         <div>
-          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">System Prompts</h1>
+          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('systemPromptsPage.title')}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Manage global system prompts. Enabled prompts will be automatically injected into all chats.
+            {t('systemPromptsPage.subtitle')}
           </p>
         </div>
         <Button icon={<PlusOutlined />} onClick={handleCreate}>
-          Add Prompt
+          {t('systemPromptsPage.btnAddPrompt')}
         </Button>
       </div>
 
@@ -216,7 +218,7 @@ export default function SystemPromptsPageClient({ initialPrompts }: Props) {
 
       {/* Create/Edit Modal */}
       <Modal
-        title={editingPrompt ? "Edit System Prompt" : "New System Prompt"}
+        title={editingPrompt ? t('systemPromptsPage.modalTitleEdit') : t('systemPromptsPage.modalTitleCreate')}
         open={modalOpen}
         onOk={handleSubmit}
         onCancel={() => {
@@ -224,8 +226,8 @@ export default function SystemPromptsPageClient({ initialPrompts }: Props) {
           setEditingPrompt(null);
           form.resetFields();
         }}
-        okText={editingPrompt ? "Save" : "Create"}
-        cancelText="Cancel"
+        okText={editingPrompt ? t('systemPromptsPage.btnSave') : t('systemPromptsPage.btnCreate')}
+        cancelText={t('modelConfigModal.btnCancel')}
         width={600}
       >
         <Form
@@ -235,29 +237,29 @@ export default function SystemPromptsPageClient({ initialPrompts }: Props) {
           className="mt-4"
         >
           <Form.Item
-            label="Name"
+            label={t('systemPromptsPage.formName')}
             name="name"
-            rules={[{ required: true, message: "Please enter name" }]}
+            rules={[{ required: true, message: t('systemPromptsPage.formNameRule') }]}
           >
-            <Input placeholder="e.g. Security Rules" />
+            <Input placeholder={t('systemPromptsPage.formNamePlaceholder')} />
           </Form.Item>
           <Form.Item
-            label="Prompt Content"
+            label={t('systemPromptsPage.formContent')}
             name="content"
-            rules={[{ required: true, message: "Please enter prompt content" }]}
+            rules={[{ required: true, message: t('systemPromptsPage.formContentRule') }]}
           >
-            <Input.TextArea rows={6} placeholder="Enter system prompt content" />
+            <Input.TextArea rows={6} placeholder={t('systemPromptsPage.formContentPlaceholder')} />
           </Form.Item>
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item label="Status" name="enabled">
+            <Form.Item label={t('systemPromptsPage.formStatus')} name="enabled">
               <Select
                 options={[
-                  { value: 1, label: "Enabled" },
-                  { value: 0, label: "Disabled" },
+                  { value: 1, label: t('systemPromptsPage.formStatusEnabled') },
+                  { value: 0, label: t('systemPromptsPage.formStatusDisabled') },
                 ]}
               />
             </Form.Item>
-            <Form.Item label="Sort" name="sortOrder">
+            <Form.Item label={t('systemPromptsPage.formSort')} name="sortOrder">
               <InputNumber min={0} className="w-full" />
             </Form.Item>
           </div>

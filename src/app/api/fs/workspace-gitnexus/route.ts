@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
 import { readWorkspaceMeta, writeWorkspaceMeta } from "@/lib/fs";
 import { refreshIndexExists, isGitNexusRunning } from "@/lib/gitnexus-service";
+import { getApiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
@@ -14,15 +15,16 @@ export async function GET(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
   const { searchParams } = new URL(req.url);
   const dirSegmentsStr = searchParams.get("dirSegments");
+  const t = await getApiT();
   if (!dirSegmentsStr) {
-    return NextResponse.json({ error: "dirSegments is required" }, { status: 400 });
+    return NextResponse.json({ error: t('api.dirSegmentsRequired') }, { status: 400 });
   }
   const dirSegments = dirSegmentsStr.split(",");
 
   try {
     const meta = readWorkspaceMeta(dirSegments);
     if (!meta) {
-      return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
+      return NextResponse.json({ error: t('api.workspaceNotFound') }, { status: 404 });
     }
 
     const indexExists = refreshIndexExists("workspace", dirSegments);

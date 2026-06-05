@@ -1,13 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { App } from "antd";
+import { useAuth } from "@/components/auth/useAuth";
 
 interface UseChatShareOptions {
   effectiveChatId: number | null;
 }
 
 export function useChatShare({ effectiveChatId }: UseChatShareOptions) {
+  const t = useTranslations("chat");
+  const { authFetch } = useAuth();
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
@@ -19,7 +23,7 @@ export function useChatShare({ effectiveChatId }: UseChatShareOptions) {
       setShareToken(null);
       return;
     }
-    fetch(`/api/chats/${effectiveChatId}/share`)
+    authFetch(`/api/chats/${effectiveChatId}/share`)
       .then((r) => r.json())
       .then((data) => {
         setShareToken(data.token);
@@ -31,7 +35,7 @@ export function useChatShare({ effectiveChatId }: UseChatShareOptions) {
     setShareLoading(true);
     try {
       if (!shareToken) {
-        const res = await fetch(`/api/chats/${effectiveChatId}/share`, { method: "POST" });
+        const res = await authFetch(`/api/chats/${effectiveChatId}/share`, { method: "POST" });
         if (res.ok) {
           const data = await res.json();
           setShareToken(data.token);
@@ -47,7 +51,7 @@ export function useChatShare({ effectiveChatId }: UseChatShareOptions) {
     const url = shareToken ? `${window.location.origin}/share/${shareToken}` : "";
     if (url) {
       navigator.clipboard.writeText(url);
-      message.success("分享链接已复制到剪贴板");
+      message.success(t("share.linkCopied"));
     }
   };
 
@@ -55,11 +59,11 @@ export function useChatShare({ effectiveChatId }: UseChatShareOptions) {
     if (!effectiveChatId) return;
     setShareLoading(true);
     try {
-      const res = await fetch(`/api/chats/${effectiveChatId}/share`, { method: "PATCH" });
+      const res = await authFetch(`/api/chats/${effectiveChatId}/share`, { method: "PATCH" });
       if (res.ok) {
         const data = await res.json();
         setShareToken(data.token);
-        message.success("已重新生成分享链接");
+        message.success(t("share.linkRegenerated"));
       }
     } finally {
       setShareLoading(false);
@@ -70,11 +74,11 @@ export function useChatShare({ effectiveChatId }: UseChatShareOptions) {
     if (!effectiveChatId) return;
     setShareLoading(true);
     try {
-      const res = await fetch(`/api/chats/${effectiveChatId}/share`, { method: "DELETE" });
+      const res = await authFetch(`/api/chats/${effectiveChatId}/share`, { method: "DELETE" });
       if (res.ok) {
         setShareToken(null);
         setShareOpen(false);
-        message.success("已取消分享");
+        message.success(t("share.shareCancelled"));
       }
     } finally {
       setShareLoading(false);

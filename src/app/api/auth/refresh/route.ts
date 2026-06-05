@@ -5,19 +5,21 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { isAdmin } from "@/lib/auth/settings";
+import { getApiT } from "@/lib/i18n-api";
 
 const refreshSchema = z.object({
   refreshToken: z.string().min(1),
 });
 
 export async function POST(req: NextRequest) {
+  const t = await getApiT();
   try {
     const body = await req.json();
     const parsed = refreshSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Refresh token is required" },
+        { error: t('api.auth.refreshTokenRequired') },
         { status: 400 }
       );
     }
@@ -28,7 +30,7 @@ export async function POST(req: NextRequest) {
     const payload = await verifyToken(refreshToken);
     if (!payload || payload.type !== "refresh") {
       return NextResponse.json(
-        { error: "Invalid refresh token" },
+        { error: t('api.auth.invalidRefreshToken') },
         { status: 401 }
       );
     }
@@ -42,7 +44,7 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { error: "User not found" },
+        { error: t('api.auth.userNotFound') },
         { status: 401 }
       );
     }
@@ -76,7 +78,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("[auth] Refresh error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: t('api.internalError') },
       { status: 500 }
     );
   }

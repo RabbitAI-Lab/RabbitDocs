@@ -1,6 +1,6 @@
-import { db } from "@/db";
-import { chats } from "@/db/schema";
-import { desc } from "drizzle-orm";
+"use client";
+
+import { useTranslations } from "next-intl";
 import SidebarShell from "./SidebarShell";
 import NewChatButton from "./NewChatButton";
 import NavLink from "./NavLink";
@@ -19,13 +19,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ initialWidth, initialCollapsed, brandName }: SidebarProps) {
-  let recentChats: Array<typeof chats.$inferSelect> = [];
-  try {
-    recentChats = db.select().from(chats).orderBy(desc(chats.updatedAt)).all();
-  } catch (err) {
-    console.error("[sidebar] Failed to load chats:", err);
-  }
-
+  const t = useTranslations("sidebar");
   return (
     <SidebarShell initialWidth={initialWidth} initialCollapsed={initialCollapsed} brandName={brandName}>
       {/* New Chat Button */}
@@ -48,7 +42,7 @@ export default function Sidebar({ initialWidth, initialCollapsed, brandName }: S
             </svg>
           }
         >
-          Chats
+          {t('chats')}
         </NavLink>
       </div>
 
@@ -66,7 +60,7 @@ export default function Sidebar({ initialWidth, initialCollapsed, brandName }: S
             </svg>
           }
         >
-          Templates
+          {t('templates')}
         </NavLink>
       </div>
 
@@ -80,7 +74,9 @@ export default function Sidebar({ initialWidth, initialCollapsed, brandName }: S
 
       {/* Chats History - resizable */}
       <div className="border-t border-gray-100 dark:border-zinc-700 shrink-0">
-        <ResizableChatsHistory chats={recentChats} />
+        <AuthGate>
+          <ResizableChatsHistory />
+        </AuthGate>
       </div>
 
       {/* Sandbox & Admin menu buttons */}
@@ -95,7 +91,7 @@ export default function Sidebar({ initialWidth, initialCollapsed, brandName }: S
             </svg>
           }
         >
-          Project Sandbox
+          {t('projectSandbox')}
         </NavLink>
         <AdminNavLink />
         <MyAccountMenu />

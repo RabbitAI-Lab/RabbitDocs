@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ClearOutlined } from "@ant-design/icons";
 import { useAuth } from "@/components/auth/useAuth";
 
@@ -32,6 +33,8 @@ interface ProjectMeta {
 export default function ChatsPageClient() {
   const router = useRouter();
   const { user, isLoading: authLoading, authFetch } = useAuth();
+  const t = useTranslations('chatsPage');
+  const ts = useTranslations('settings');
   const [data, setData] = useState<ChatsData | null>(null);
   const [projectMap, setProjectMap] = useState<Map<string, string>>(new Map());
   const [workspaceMap, setWorkspaceMap] = useState<Map<string, string>>(new Map());
@@ -63,6 +66,7 @@ export default function ChatsPageClient() {
       });
   }, [authLoading, user, authFetch]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- setLoading is necessary before async fetch; cascading render is intentional to show loading state
   useEffect(() => {
     if (authLoading || !user) return;
     setLoading(true);
@@ -105,31 +109,31 @@ export default function ChatsPageClient() {
   return (
     <div className="h-full flex flex-col p-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Chats</h1>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{t('title')}</h1>
         <span className="flex items-center gap-3">
           <span className="text-sm text-gray-400 dark:text-gray-500">
-            {data ? `Total ${data.total} chats` : ""}
+            {data ? t('totalChats', { count: data.total }) : ""}
           </span>
           {data && data.total > 0 && (
             <span className="relative">
               <button
                 onClick={() => setShowClearConfirm(true)}
                 className="flex items-center justify-center p-1.5 rounded hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
-                title="Clear All"
+                title={t('clearAll')}
               >
                 <ClearOutlined className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" style={{ fontSize: '14px' }} />
               </button>
               {showClearConfirm && (
                 <span className="absolute right-0 top-full mt-1 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50">
-                  <span className="text-gray-500">Confirm clearing all chats?</span>
+                  <span className="text-gray-500">{t('confirmClearAll')}</span>
                   <button
                     onClick={handleClearAll}
                     className="px-1.5 py-0.5 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                  >Clear</button>
+                  >{t('clear')}</button>
                   <button
                     onClick={() => setShowClearConfirm(false)}
                     className="px-1.5 py-0.5 text-gray-500 hover:text-gray-700 transition-colors"
-                  >Cancel</button>
+                  >{t('cancel')}</button>
                 </span>
               )}
             </span>
@@ -139,7 +143,7 @@ export default function ChatsPageClient() {
 
       {loading ? (
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-gray-400 dark:text-gray-500">Loading...</div>
+          <div className="text-gray-400 dark:text-gray-500">{t('loading')}</div>
         </div>
       ) : data && data.chats.length > 0 ? (
         <>
@@ -148,25 +152,25 @@ export default function ChatsPageClient() {
               <thead>
                 <tr className="border-b border-gray-200 dark:border-zinc-700">
                   <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Title
+                    {ts('columnTitle')}
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-56">
-                    Project
+                    {ts('columnProject')}
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-48">
-                    Workspace
+                    {ts('columnWorkspace')}
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-36">
-                    Model
+                    {ts('columnModel')}
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-36">
-                    Template
+                    {ts('columnTemplate')}
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-44">
-                    Created
+                    {ts('columnCreated')}
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-44">
-                    Updated
+                    {ts('columnUpdated')}
                   </th>
                   <th className="w-12"></th>
                 </tr>
@@ -223,15 +227,15 @@ export default function ChatsPageClient() {
                             onClick={(e) => e.stopPropagation()}
                             className="absolute right-0 bottom-full mb-1 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50"
                           >
-                            <span className="text-gray-500">Confirm delete?</span>
+                            <span className="text-gray-500">{t('confirmDelete')}</span>
                             <button
                               onClick={() => handleDelete(chat.id)}
                               className="px-1.5 py-0.5 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                            >Delete</button>
+                            >{t('delete')}</button>
                             <button
                               onClick={() => setConfirmDeleteId(null)}
                               className="px-1.5 py-0.5 text-gray-500 hover:text-gray-700 transition-colors"
-                            >Cancel</button>
+                            >{t('cancel')}</button>
                           </span>
                         )}
                       </span>
@@ -250,17 +254,17 @@ export default function ChatsPageClient() {
                 disabled={page <= 1}
                 className="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                Previous
+                {t('previous')}
               </button>
               <span className="text-sm text-gray-500 dark:text-gray-400">
-                Page {page} / {data.totalPages}
+                {t('pageInfo', { page, totalPages: data.totalPages })}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
                 disabled={page >= data.totalPages}
                 className="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                Next
+                {t('next')}
               </button>
             </div>
           )}
@@ -268,12 +272,12 @@ export default function ChatsPageClient() {
       ) : (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-gray-400 dark:text-gray-500 mb-2">No chat records</p>
+            <p className="text-gray-400 dark:text-gray-500 mb-2">{t('noChatRecords')}</p>
             <button
               onClick={() => router.push("/chat/new")}
               className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
             >
-              Start new chat
+              {t('startNewChat')}
             </button>
           </div>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/useAuth";
 import {
   Card,
@@ -11,7 +12,6 @@ import {
   Typography,
   Segmented,
   App,
-  Descriptions,
 } from "antd";
 import {
   CheckOutlined,
@@ -136,6 +136,7 @@ function getYearlySaving(plan: Plan): string | null {
 export default function BillingPage() {
   const { user, authFetch } = useAuth();
   const { message, modal } = App.useApp();
+  const t = useTranslations('billingPage');
   const [plans, setPlans] = useState<Plan[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
@@ -164,23 +165,24 @@ export default function BillingPage() {
     }
   }, [user, authFetch]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- loadData is a stable callback; state updates happen inside async fetch, not synchronously in the effect body
   useEffect(() => {
     loadData();
   }, [loadData]);
 
   const handleSubscribe = (plan: Plan) => {
     const isUpgrade = subscription && subscription.planId !== plan.id;
-    const cycleLabel = billingCycle === "monthly" ? "Monthly" : "Yearly";
+    const cycleLabel = billingCycle === "monthly" ? t('monthly') : t('yearly');
 
     modal.confirm({
       title: isUpgrade
-        ? `Upgrade to ${plan.title}?`
-        : `Subscribe to ${plan.title}?`,
+        ? t('upgradeTo', { title: plan.title })
+        : t('subscribeTo', { title: plan.title }),
       content: isUpgrade
-        ? `You are upgrading from "${subscription!.planTitle}" to "${plan.title}" (${cycleLabel}). Your current subscription will be cancelled.`
-        : `You are subscribing to "${plan.title}" (${cycleLabel}).`,
-      okText: isUpgrade ? "Upgrade" : "Subscribe",
-      cancelText: "Cancel",
+        ? t('upgradeContent', { current: subscription!.planTitle, title: plan.title, cycle: cycleLabel })
+        : t('subscribeContent', { title: plan.title, cycle: cycleLabel }),
+      okText: isUpgrade ? t('upgrade') : t('subscribe'),
+      cancelText: t('cancel'),
       onOk: async () => {
         setSubscribing(plan.id);
         try {
@@ -190,14 +192,14 @@ export default function BillingPage() {
             body: JSON.stringify({ planId: plan.id, billingCycle }),
           });
           if (res.ok) {
-            message.success(isUpgrade ? "Upgraded successfully!" : "Subscribed successfully!");
+            message.success(isUpgrade ? t('upgradeSuccess') : t('subscribeSuccess'));
             await loadData();
           } else {
             const data = await res.json();
-            message.error(data.error || "Failed to subscribe");
+            message.error(data.error || t('failedToSubscribe'));
           }
         } catch {
-          message.error("Failed to subscribe");
+          message.error(t('failedToSubscribe'));
         } finally {
           setSubscribing(null);
         }
@@ -227,24 +229,24 @@ export default function BillingPage() {
 
   const getButtonConfig = (plan: Plan) => {
     if (isCurrentPlan(plan)) {
-      return { text: "Current Plan", disabled: true, type: "default" as const };
+      return { text: t('currentPlan'), disabled: true, type: "default" as const };
     }
     if (subscription) {
       if (!canUpgrade(plan)) {
-        return { text: "Included in current plan", disabled: true, type: "default" as const };
+        return { text: t('includedInPlan'), disabled: true, type: "default" as const };
       }
-      return { text: "Upgrade", disabled: false, type: "primary" as const };
+      return { text: t('upgrade'), disabled: false, type: "primary" as const };
     }
-    return { text: "Subscribe", disabled: false, type: "primary" as const };
+    return { text: t('subscribe'), disabled: false, type: "primary" as const };
   };
 
   return (
     <div className="max-w-5xl mx-auto p-6 sm:p-8">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Billing</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Manage your subscription plan and billing
+          {t('subtitle')}
         </p>
       </div>
 
@@ -263,11 +265,11 @@ export default function BillingPage() {
                     <Text strong className="text-gray-900 dark:text-gray-100">
                       {subscription.planTitle}
                     </Text>
-                    <Tag color="green">Active</Tag>
-                    <Tag>{subscription.billingCycle === "monthly" ? "Monthly" : "Yearly"}</Tag>
+                    <Tag color="green">{t('active')}</Tag>
+                    <Tag>{subscription.billingCycle === "monthly" ? t('monthly') : t('yearly')}</Tag>
                   </div>
                   <Text type="secondary" className="text-xs">
-                    Expires {new Date(subscription.expiresAt).toLocaleDateString()}
+                    {t('expires', { date: new Date(subscription.expiresAt).toLocaleDateString() })}
                   </Text>
                 </div>
               </div>
@@ -283,13 +285,13 @@ export default function BillingPage() {
             value={billingCycle}
             onChange={(v) => setBillingCycle(v as "monthly" | "yearly")}
             options={[
-              { label: "Monthly", value: "monthly" },
-              { label: "Yearly", value: "yearly" },
+              { label: t('monthly'), value: "monthly" },
+              { label: t('yearly'), value: "yearly" },
             ]}
           />
           {billingCycle === "yearly" && plans.some((p) => getYearlySaving(p)) && (
             <Tag color="blue" className="text-xs">
-              Save with yearly billing
+              {t('saveYearly')}
             </Tag>
           )}
         </div>
@@ -297,7 +299,7 @@ export default function BillingPage() {
 
       {/* Plans Grid */}
       {plans.length === 0 ? (
-        <Empty description="No plans available" />
+        <Empty description={t('noPlans')} />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {plans.map((plan) => {
@@ -321,7 +323,7 @@ export default function BillingPage() {
                 {isCurrent && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                     <Tag color="blue" className="text-xs font-medium">
-                      Current Plan
+                      {t('currentPlan')}
                     </Tag>
                   </div>
                 )}
@@ -364,7 +366,7 @@ export default function BillingPage() {
                     </div>
                     {saving && (
                       <Text type="success" className="text-xs">
-                        Save {saving}/yr
+                        {t('savePerYear', { amount: saving })}
                       </Text>
                     )}
                   </div>
@@ -395,7 +397,7 @@ export default function BillingPage() {
                   {isCurrent ? (
                     <div className="flex items-center justify-center gap-1.5 py-1.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium cursor-default">
                       <CrownOutlined className="text-xs" />
-                      Current Plan
+                      {t('currentPlan')}
                     </div>
                   ) : (
                     <Button

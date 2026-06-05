@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/useAuth";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -18,17 +19,24 @@ import type { DocumentActivity } from "@/lib/types";
 import type { TreeNode } from "@/lib/tree";
 import { stripTreePrefix } from "@/lib/tree";
 
-const CherryEditor = dynamic(() => import("@/components/editor/CherryEditor"), {
-  ssr: false,
-  loading: () => (
+function EditorLoadingSpinner() {
+  const tc = useTranslations("common");
+  return (
     <div className="flex items-center justify-center h-64 text-gray-400 dark:text-gray-500">
       <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 dark:border-zinc-600 border-t-blue-600 dark:border-t-blue-400 mr-2" />
-      加载编辑器中...
+      {tc("loadingEditor")}
     </div>
-  ),
+  );
+}
+
+const CherryEditor = dynamic(() => import("@/components/editor/CherryEditor"), {
+  ssr: false,
+  loading: () => <EditorLoadingSpinner />,
 });
 
 export default function NewChatWorkspace() {
+  const t = useTranslations("chat");
+  const tc = useTranslations("common");
   const searchParams = useSearchParams();
   const { message } = App.useApp();
   const { open: openFloatingChat, isOpen: floatingChatOpen, isMinimized: floatingChatMinimized, setMentionFile: setFloatingMentionFile } = useFloatingChat();
@@ -162,7 +170,7 @@ export default function NewChatWorkspace() {
     try {
       const res = await authFetch(`/api/fs/document?path=${projectPath}/${documentPath}`);
       if (res.status === 404) {
-        alert("该文档已被删除");
+        alert(t("newChatWorkspace.documentDeleted"));
         return;
       }
       if (!res.ok) return;
@@ -186,13 +194,13 @@ export default function NewChatWorkspace() {
               <button
                 onClick={handleBack}
                 className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                title="返回项目列表"
+                title={t("newChatWorkspace.backToProjectList")}
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="15 18 9 12 15 6" />
                 </svg>
               </button>
-              <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{selectedProjectName} Documents</h3>
+              <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{selectedProjectName} {t("tabs.documents")}</h3>
             </div>
 
             {/* File tree toolbar */}
@@ -207,7 +215,7 @@ export default function NewChatWorkspace() {
                   <line x1="12" y1="11" x2="12" y2="17" />
                   <line x1="9" y1="14" x2="15" y2="14" />
                 </svg>
-                Document
+                {t('document')}
               </button>
               <button
                 onClick={() => fileTree.handleCreateDir("")}
@@ -219,7 +227,7 @@ export default function NewChatWorkspace() {
                   <line x1="12" y1="11" x2="12" y2="17" />
                   <line x1="9" y1="14" x2="15" y2="14" />
                 </svg>
-                Folder
+                {t('folder')}
               </button>
             </div>
 
@@ -227,7 +235,7 @@ export default function NewChatWorkspace() {
             {fileTree.treeLoading ? (
               <div className="flex-1 flex items-center justify-center py-8 text-gray-400 dark:text-gray-500">
                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 dark:border-zinc-600 border-t-blue-600 dark:border-t-blue-400 mr-2" />
-                <span className="text-xs">加载中...</span>
+                <span className="text-xs">{tc("loading")}</span>
               </div>
             ) : (
               <FileTree
@@ -261,13 +269,13 @@ export default function NewChatWorkspace() {
           <div className="flex-1 flex flex-col m-2 animate-blue-breathing overflow-hidden bg-white dark:bg-zinc-800">
             {/* Project selection header */}
             <div className="px-3 h-[41px] border-b border-gray-200 dark:border-zinc-700 flex items-center">
-              <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Select Project</h3>
+              <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">{t("newChatWorkspace.selectProject")}</h3>
             </div>
 
             {/* Project list */}
             <div className="flex-1 overflow-y-auto py-1">
               {projects.length === 0 ? (
-                <p className="px-3 py-4 text-xs text-gray-400 dark:text-gray-500 text-center">暂无项目，请先在侧边栏创建</p>
+                <p className="px-3 py-4 text-xs text-gray-400 dark:text-gray-500 text-center">{t("newChatWorkspace.noProjects")}</p>
               ) : (
                 projects.map((project) => (
                   <button
@@ -307,7 +315,7 @@ export default function NewChatWorkspace() {
                   <line x1="12" y1="16" x2="12" y2="12" />
                   <line x1="12" y1="8" x2="12.01" y2="8" />
                 </svg>
-                Project Info
+                {t("tabs.projectInfo")}
               </button>
 
               {/* Chat tab */}
@@ -322,7 +330,7 @@ export default function NewChatWorkspace() {
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
-                Chat
+                {t("tabs.chat")}
                 <span
                   role="button"
                   onClick={(e) => { e.stopPropagation(); openFloatingChat(selectedProjectId ?? undefined); }}
@@ -432,7 +440,7 @@ export default function NewChatWorkspace() {
                   ) : (
                     <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500">
                       <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 dark:border-zinc-600 border-t-blue-600 dark:border-t-blue-400 mr-2" />
-                      <span className="text-sm">加载中...</span>
+                      <span className="text-sm">{tc("loading")}</span>
                     </div>
                   )}
                 </div>
@@ -453,7 +461,7 @@ export default function NewChatWorkspace() {
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
               {/* 提示文字 */}
-              <p className="text-lg text-blue-700 dark:text-blue-300 font-medium">Please select a project on the left first</p>
+              <p className="text-lg text-blue-700 dark:text-blue-300 font-medium">{t("newChatWorkspace.pleaseSelectProject")}</p>
             </div>
           </div>
         )}

@@ -5,8 +5,10 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "@/lib/auth/session";
 import { isAdmin } from "@/lib/auth/settings";
+import { getApiT } from "@/lib/i18n-api";
 
 export async function GET(req: NextRequest) {
+  const t = await getApiT();
   const authResult = await requireAuth(req);
   if (authResult instanceof NextResponse) return authResult;
 
@@ -18,7 +20,7 @@ export async function GET(req: NextRequest) {
     .get();
 
   if (!row) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+    return NextResponse.json({ error: t('api.auth.userNotFound') }, { status: 404 });
   }
 
   return NextResponse.json({
@@ -45,6 +47,7 @@ const updateProfileSchema = z.object({
 });
 
 export async function PATCH(req: NextRequest) {
+  const t = await getApiT();
   const authResult = await requireAuth(req);
   if (authResult instanceof NextResponse) return authResult;
 
@@ -70,7 +73,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (Object.keys(updates).length === 0) {
-      return NextResponse.json({ error: "No fields to update" }, { status: 400 });
+      return NextResponse.json({ error: t('api.auth.noFieldsToUpdate') }, { status: 400 });
     }
 
     db.update(users)
@@ -81,6 +84,6 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[auth] Update profile error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: t('api.internalError') }, { status: 500 });
   }
 }

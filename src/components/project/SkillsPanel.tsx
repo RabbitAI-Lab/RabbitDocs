@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/useAuth";
 import { Switch, App } from "antd";
 
@@ -9,6 +10,7 @@ interface SkillsPanelProps {
 }
 
 export default function SkillsPanel({ projectPath }: SkillsPanelProps) {
+  const t = useTranslations('project');
   const [loading, setLoading] = useState(true);
   const { authFetch } = useAuth();
   const [saving, setSaving] = useState<string | null>(null);
@@ -20,7 +22,7 @@ export default function SkillsPanel({ projectPath }: SkillsPanelProps) {
   const [huashuError, setHuashuError] = useState<string | null>(null);
   const { message } = App.useApp();
 
-  const dirSegments = projectPath.split(",");
+  const dirSegments = projectPath.split("/");
 
   useEffect(() => {
     let cancelled = false;
@@ -69,19 +71,19 @@ export default function SkillsPanel({ projectPath }: SkillsPanelProps) {
           setHuashuEnabled(huashu?.enabled ?? false);
           setHuashuVersion(huashu?.version ?? null);
         }
-        message.success(checked ? `${skillId === "ecc" ? "ECC" : "Huashu Design"} enabled` : `${skillId === "ecc" ? "ECC" : "Huashu Design"} disabled`);
+        message.success(checked ? t('skills.enabledMsg', { name: skillId === "ecc" ? t('skills.ecc') : t('skills.huashuDesign') }) : t('skills.disabledMsg', { name: skillId === "ecc" ? t('skills.ecc') : t('skills.huashuDesign') }));
       } else {
         const data = await res.json();
-        const errorMsg = data.details || data.error || "Operation failed";
+        const errorMsg = data.details || data.error || t('skills.operationFailed');
         if (skillId === "ecc") setEccError(errorMsg);
         else setHuashuError(errorMsg);
-        message.error(data.error || "Operation failed");
+        message.error(data.error || t('skills.operationFailed'));
       }
     } catch {
-      const errorMsg = "Network error";
+      const errorMsg = t('skills.networkError');
       if (skillId === "ecc") setEccError(errorMsg);
       else setHuashuError(errorMsg);
-      message.error("Network error");
+      message.error(t('skills.networkError'));
     } finally {
       setSaving(null);
     }
@@ -120,7 +122,7 @@ export default function SkillsPanel({ projectPath }: SkillsPanelProps) {
           <path d="M2 12l10 5 10-5" />
         </svg>
         <p className="text-sm text-blue-700 dark:text-blue-300">
-          Skills are project-level AI capability extensions. When enabled, AI chats will gain corresponding enhanced capabilities.
+          {t('skills.description')}
         </p>
       </div>
 
@@ -132,11 +134,11 @@ export default function SkillsPanel({ projectPath }: SkillsPanelProps) {
           loading={saving === "ecc"}
           onChange={(checked) => handleToggle("ecc", checked)}
         />
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">ECC</span>
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{t('skills.ecc')}</span>
         <span
           className={`text-xs ${eccEnabled ? "text-green-600" : "text-gray-400 dark:text-gray-500"}`}
         >
-          {eccEnabled ? "Enabled" : "Disabled"}
+          {eccEnabled ? t('skills.enabled') : t('skills.disabled')}
         </span>
         {eccVersion && (
           <span className="text-xs text-gray-400 dark:text-gray-500">v{eccVersion}</span>
@@ -151,11 +153,11 @@ export default function SkillsPanel({ projectPath }: SkillsPanelProps) {
           loading={saving === "huashu"}
           onChange={(checked) => handleToggle("huashu", checked)}
         />
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Huashu Design</span>
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{t('skills.huashuDesign')}</span>
         <span
           className={`text-xs ${huashuEnabled ? "text-green-600" : "text-gray-400 dark:text-gray-500"}`}
         >
-          {huashuEnabled ? "Enabled" : "Disabled"}
+          {huashuEnabled ? t('skills.enabled') : t('skills.disabled')}
         </span>
         {huashuVersion && (
           <span className="text-xs text-gray-400 dark:text-gray-500">v{huashuVersion}</span>

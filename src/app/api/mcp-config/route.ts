@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { mcpConfig } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth/session";
+import { getApiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
@@ -19,13 +20,14 @@ export async function GET() {
 export async function PUT(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
 
   const body = await req.json();
   const { configJson } = body;
 
   if (typeof configJson !== "string") {
     return NextResponse.json(
-      { error: "configJson 必须是字符串" },
+      { error: t('api.mcp.mcpJsonMustBeObject') },
       { status: 400 }
     );
   }
@@ -35,14 +37,14 @@ export async function PUT(req: NextRequest) {
     parsed = JSON.parse(configJson);
   } catch {
     return NextResponse.json(
-      { error: "JSON 格式无效，请检查输入" },
+      { error: t('api.mcp.jsonFormatInvalid') },
       { status: 400 }
     );
   }
 
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
     return NextResponse.json(
-      { error: "JSON 必须是一个对象 {}" },
+      { error: t('api.mcp.jsonMustBeObject') },
       { status: 400 }
     );
   }

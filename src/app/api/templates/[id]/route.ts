@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/db";
 import { templates } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { getApiT } from "@/lib/i18n-api";
 
 // GET /api/templates/[id]
 export async function GET(
@@ -11,7 +12,7 @@ export async function GET(
 ) {
   const { id } = await params;
   const t = db.select().from(templates).where(eq(templates.id, parseInt(id))).get();
-  if (!t) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!t) return NextResponse.json({ error: "Not found" }, { status: 404 }); // non-authed GET
   return NextResponse.json(t);
 }
 
@@ -21,15 +22,16 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const { id } = await params;
   const body = await req.json();
   const { name, description, content, icon, agentPrompt } = body;
 
   // 检查是否为系统模板
   const existing = db.select().from(templates).where(eq(templates.id, parseInt(id))).get();
-  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!existing) return NextResponse.json({ error: t('api.notFound') }, { status: 404 });
   if (existing.isSystem === 1) {
-    return NextResponse.json({ error: "系统模板不可修改" }, { status: 403 });
+    return NextResponse.json({ error: t('api.templates.systemTemplateCannotModify') }, { status: 403 });
   }
 
   const updateData: Record<string, unknown> = { updatedAt: new Date().toISOString() };
@@ -52,9 +54,10 @@ export async function DELETE(
 
   // 检查是否为系统模板
   const existing = db.select().from(templates).where(eq(templates.id, parseInt(id))).get();
-  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const t = await getApiT();
+  if (!existing) return NextResponse.json({ error: t('api.notFound') }, { status: 404 });
   if (existing.isSystem === 1) {
-    return NextResponse.json({ error: "系统模板不可删除" }, { status: 403 });
+    return NextResponse.json({ error: t('api.templates.systemTemplateCannotDelete') }, { status: 403 });
   }
 
   db.delete(templates).where(eq(templates.id, parseInt(id))).run();

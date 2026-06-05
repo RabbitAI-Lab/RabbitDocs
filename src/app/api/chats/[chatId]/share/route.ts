@@ -5,13 +5,15 @@ import { db } from "@/db";
 import { sharedChats, chats } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { canAccessChat } from "@/lib/auth/chat-access";
+import { getApiT } from "@/lib/i18n-api";
 
 /** 校验 chat 访问权限 */
 async function verifyChatAccess(req: NextRequest, chatId: string): Promise<{ ok: true } | NextResponse> {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
   const chat = db.select().from(chats).where(eq(chats.id, parseInt(chatId))).get();
-  if (!chat) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (!canAccessChat(auth, chat)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const t = await getApiT();
+  if (!chat) return NextResponse.json({ error: t('api.notFound') }, { status: 404 });
+  if (!canAccessChat(auth, chat)) return NextResponse.json({ error: t('api.forbidden') }, { status: 403 });
   return { ok: true };
 }
 

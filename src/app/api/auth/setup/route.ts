@@ -6,6 +6,7 @@ import { hashPassword } from "@/lib/auth/password";
 import { generateTokenPair } from "@/lib/auth/tokens";
 import { isInitialized, setSetting } from "@/lib/auth/settings";
 import crypto from "crypto";
+import { getApiT } from "@/lib/i18n-api";
 
 const setupSchema = z.object({
   email: z.string().email(),
@@ -13,11 +14,12 @@ const setupSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const t = await getApiT();
   try {
     // 检查是否已初始化
     if (isInitialized()) {
       return NextResponse.json(
-        { error: "System already initialized" },
+        { error: t('api.auth.systemAlreadyInitialized') },
         { status: 400 }
       );
     }
@@ -115,7 +117,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("[auth] Setup error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: t('api.internalError') },
       { status: 500 }
     );
   }

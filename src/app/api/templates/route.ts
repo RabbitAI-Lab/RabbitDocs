@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/db";
 import { templates } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { getApiT } from "@/lib/i18n-api";
 
 // GET /api/templates
 export async function GET() {
@@ -15,11 +16,12 @@ export async function GET() {
 // POST /api/templates
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { name, description, content, icon, agentPrompt } = body;
 
   if (!name) {
-    return NextResponse.json({ error: "name is required" }, { status: 400 });
+    return NextResponse.json({ error: t('api.nameRequired') }, { status: 400 });
   }
 
   const now = new Date().toISOString();

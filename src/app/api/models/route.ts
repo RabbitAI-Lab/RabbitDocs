@@ -8,6 +8,7 @@ import {
   serializeExtraEnv,
   defaultExtraEnvForCreate,
 } from "@/lib/model-env";
+import { getApiT } from "@/lib/i18n-api";
 
 // GET /api/models
 export async function GET() {
@@ -20,12 +21,13 @@ export async function GET() {
 // POST /api/models
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { provider, name, baseUrl, apiKey, modelName, protocol, extraEnvJson } = body;
 
   if (!provider || !name || !baseUrl || !apiKey || !modelName) {
     return NextResponse.json(
-      { error: "provider, name, baseUrl, apiKey, modelName are required" },
+      { error: t('api.models.requiredFields') },
       { status: 400 }
     );
   }
@@ -34,7 +36,7 @@ export async function POST(req: NextRequest) {
   const validProtocols = PROTOCOLS as readonly string[];
   if (!validProtocols.includes(resolvedProtocol)) {
     return NextResponse.json(
-      { error: `protocol must be one of: ${validProtocols.join(", ")}` },
+      { error: t('api.models.protocolMustBeOneOf') + ': ' + validProtocols.join(", ") },
       { status: 400 }
     );
   }

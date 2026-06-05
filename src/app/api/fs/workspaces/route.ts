@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
 import { listWorkspaces, createWorkspace, deleteWorkspace, readWorkspaceMeta, writeWorkspaceMeta } from "@/lib/fs";
+import { getApiT } from "@/lib/i18n-api";
 
 // GET /api/fs/workspaces?type=personal&accountId=default
 export async function GET(req: NextRequest) {
@@ -17,9 +18,10 @@ export async function GET(req: NextRequest) {
 // POST /api/fs/workspaces - create workspace
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { type = "personal", accountId = auth.id, name, orgId } = body;
-  if (!name) return NextResponse.json({ error: "name is required" }, { status: 400 });
+  if (!name) return NextResponse.json({ error: t('api.nameRequired') }, { status: 400 });
 
   const meta = createWorkspace(type, accountId, name, orgId);
   return NextResponse.json(meta);
@@ -28,9 +30,10 @@ export async function POST(req: NextRequest) {
 // DELETE /api/fs/workspaces - delete workspace
 export async function DELETE(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { type = "personal", accountId = auth.id, id, orgId } = body;
-  if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: t('api.idRequired') }, { status: 400 });
 
   deleteWorkspace(type, accountId, id, orgId);
   return NextResponse.json({ success: true });
@@ -39,9 +42,10 @@ export async function DELETE(req: NextRequest) {
 // PATCH /api/fs/workspaces - update workspace (rename / sortOrder)
 export async function PATCH(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { type = "personal", accountId = auth.id, id, name, sortOrder, orgId } = body;
-  if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: t('api.idRequired') }, { status: 400 });
 
   const accountSegments = type === "personal"
     ? ["personal", accountId]
@@ -51,7 +55,7 @@ export async function PATCH(req: NextRequest) {
   const dirSegments = [...accountSegments, "workspace", id];
 
   const meta = readWorkspaceMeta(dirSegments);
-  if (!meta) return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
+  if (!meta) return NextResponse.json({ error: t('api.workspaceNotFound') }, { status: 404 });
 
   if (name !== undefined) meta.name = name;
   if (sortOrder !== undefined) meta.sortOrder = sortOrder;
@@ -63,9 +67,10 @@ export async function PATCH(req: NextRequest) {
 // Body: { type, accountId, orgId?, orders: [{ id, sortOrder }] }
 export async function PUT(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { type = "personal", accountId = auth.id, orders, orgId } = body;
-  if (!Array.isArray(orders)) return NextResponse.json({ error: "orders array is required" }, { status: 400 });
+  if (!Array.isArray(orders)) return NextResponse.json({ error: t('api.missingRequiredParams') }, { status: 400 });
 
   const accountSegments = type === "personal"
     ? ["personal", accountId]

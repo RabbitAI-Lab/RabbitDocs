@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { requireAuth } from "@/lib/auth/session";
 import { saTokenLogout } from "@/lib/auth/sa-token";
 import { db } from "@/db";

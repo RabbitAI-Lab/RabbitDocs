@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import ChatWorkspace from "@/components/chat/ChatWorkspace";
 import WorkspaceInfoTab from "./WorkspaceInfoTab";
 import type { FileTab } from "./types";
@@ -10,23 +11,23 @@ import type { WorkspaceMeta, ProjectMeta } from "@/lib/fs";
 
 const CherryEditor = dynamic(() => import("@/components/editor/CherryEditor"), {
   ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-64 text-gray-400 dark:text-gray-500">
-      <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 dark:border-zinc-600 border-t-blue-600 dark:border-t-blue-400 mr-2" />
-      Loading editor...
-    </div>
-  ),
+  loading: () => <EditorLoading />,
 });
 
 const HtmlEditor = dynamic(() => import("@/components/editor/HtmlEditor"), {
   ssr: false,
-  loading: () => (
+  loading: () => <EditorLoading />,
+});
+
+function EditorLoading() {
+  const t = useTranslations('common');
+  return (
     <div className="flex items-center justify-center h-64 text-gray-400 dark:text-gray-500">
       <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 dark:border-zinc-600 border-t-blue-600 dark:border-t-blue-400 mr-2" />
-      Loading editor...
+      {t('loadingEditor')}
     </div>
-  ),
-});
+  );
+}
 
 interface WorkspaceEditorAreaProps {
   /** 当前激活的标签 ID */
@@ -101,6 +102,7 @@ export default function WorkspaceEditorArea({
   onToolCall,
   getCachedContent,
 }: WorkspaceEditorAreaProps) {
+  const t = useTranslations('workspace');
   return (
     <div className="flex-1 min-h-0 relative">
       {/* Workspace Info tab content */}
@@ -129,7 +131,7 @@ export default function WorkspaceEditorArea({
                   {workspaceMeta.name}
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {workspaceMeta.description || "No description"}
+                  {workspaceMeta.description || t('noDescription')}
                 </p>
               </div>
             </div>
@@ -205,7 +207,7 @@ export default function WorkspaceEditorArea({
           ) : (
             <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500">
               <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 dark:border-zinc-600 border-t-blue-600 dark:border-t-blue-400 mr-2" />
-              <span className="text-sm">Loading...</span>
+              <span className="text-sm">{t('log.loading')}</span>
             </div>
           )}
         </div>

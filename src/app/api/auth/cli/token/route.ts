@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { cliAuthorizationCodes, cliTokens } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
+import { getApiT } from "@/lib/i18n-api";
 
 const tokenSchema = z.object({
   grant_type: z.literal("authorization_code"),
@@ -13,6 +14,7 @@ const tokenSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const t = await getApiT();
   try {
     const body = await req.json();
     const parsed = tokenSchema.safeParse(body);
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
 
     if (!authCode) {
       return NextResponse.json(
-        { error: "invalid_grant", error_description: "Invalid authorization code" },
+        { error: "invalid_grant", error_description: t('api.auth.cli.invalidAuthCode') },
         { status: 400 }
       );
     }
@@ -43,7 +45,7 @@ export async function POST(req: NextRequest) {
     // 检查过期
     if (new Date(authCode.expiresAt) < new Date()) {
       return NextResponse.json(
-        { error: "invalid_grant", error_description: "Authorization code expired" },
+        { error: "invalid_grant", error_description: t('api.auth.cli.authCodeExpired') },
         { status: 400 }
       );
     }
@@ -51,7 +53,7 @@ export async function POST(req: NextRequest) {
     // 检查 redirect_uri 匹配
     if (authCode.redirectUri !== redirect_uri) {
       return NextResponse.json(
-        { error: "invalid_grant", error_description: "redirect_uri mismatch" },
+        { error: "invalid_grant", error_description: t('api.auth.cli.redirectUriMismatch') },
         { status: 400 }
       );
     }
@@ -64,7 +66,7 @@ export async function POST(req: NextRequest) {
 
     if (computedChallenge !== authCode.codeChallenge) {
       return NextResponse.json(
-        { error: "invalid_grant", error_description: "PKCE verification failed" },
+        { error: "invalid_grant", error_description: t('api.auth.cli.pkceVerificationFailed') },
         { status: 400 }
       );
     }
@@ -96,7 +98,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("[auth] CLI token exchange error:", error);
     return NextResponse.json(
-      { error: "server_error", error_description: "Internal server error" },
+      { error: "server_error", error_description: t('api.internalError') },
       { status: 500 }
     );
   }

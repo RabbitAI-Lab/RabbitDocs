@@ -7,12 +7,14 @@ import {
   sendVerificationEmail,
   generateVerificationCode,
 } from "@/lib/auth/mail";
+import { getApiT } from "@/lib/i18n-api";
 
 const resendSchema = z.object({
   email: z.string().email(),
 });
 
 export async function POST(req: NextRequest) {
+  const t = await getApiT();
   try {
     const body = await req.json();
     const parsed = resendSchema.safeParse(body);
@@ -20,7 +22,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       // 防止邮箱枚举，始终返回成功
       return NextResponse.json({
-        message: "If an account exists with this email, a verification email has been sent.",
+        message: t('api.auth.resendVerificationMessage'),
       });
     }
 
@@ -36,7 +38,7 @@ export async function POST(req: NextRequest) {
     // 防止枚举：无论用户是否存在，都返回相同消息
     if (!user || user.emailVerified === 1) {
       return NextResponse.json({
-        message: "If an account exists with this email, a verification email has been sent.",
+        message: t('api.auth.resendVerificationMessage'),
       });
     }
 
@@ -73,13 +75,13 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      message: "If an account exists with this email, a verification email has been sent.",
+      message: t('api.auth.resendVerificationMessage'),
     });
   } catch (error) {
     console.error("[auth] Resend verification error:", error);
     // 即使出错也返回成功，防止信息泄露
     return NextResponse.json({
-      message: "If an account exists with this email, a verification email has been sent.",
+      message: t('api.auth.resendVerificationMessage'),
     });
   }
 }

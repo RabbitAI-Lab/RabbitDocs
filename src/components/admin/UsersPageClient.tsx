@@ -28,6 +28,7 @@ import {
   SafetyCertificateOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "@/components/auth/useAuth";
+import { useTranslations } from "next-intl";
 
 const { Text } = Typography;
 
@@ -49,17 +50,18 @@ interface Pagination {
   totalPages: number;
 }
 
-const STATUS_OPTIONS = [
-  { value: "all", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "disabled", label: "Disabled" },
-  { value: "verified", label: "Email Verified" },
-  { value: "unverified", label: "Email Unverified" },
-];
-
 export default function UsersPageClient() {
   const { user: currentUser, authFetch } = useAuth();
   const { message, modal } = App.useApp();
+  const t = useTranslations('admin');
+
+  const STATUS_OPTIONS = [
+    { value: "all", label: t('usersPage.statusAll') },
+    { value: "active", label: t('usersPage.statusActive') },
+    { value: "disabled", label: t('usersPage.statusDisabled') },
+    { value: "verified", label: t('usersPage.statusVerified') },
+    { value: "unverified", label: t('usersPage.statusUnverified') },
+  ];
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -85,13 +87,13 @@ export default function UsersPageClient() {
         const res = await authFetch(`/api/auth/admin/users?${params.toString()}`);
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          throw new Error(err.error || "Failed to load");
+          throw new Error(err.error || t('usersPage.msgFailedToLoad'));
         }
         const data = await res.json();
         setUsers(data.users);
         setPagination(data.pagination);
       } catch (error: unknown) {
-        const msg = error instanceof Error ? error.message : "Failed to load";
+        const msg = error instanceof Error ? error.message : t('usersPage.msgFailedToLoad');
         message.error(msg);
       } finally {
         setLoading(false);
@@ -116,19 +118,19 @@ export default function UsersPageClient() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Update failed");
+        throw new Error(err.error || t('usersPage.msgUpdateFailed'));
       }
-      message.success(value ? "Marked as verified" : "Verification removed");
+      message.success(value ? t('usersPage.msgMarkedVerified') : t('usersPage.msgVerificationRemoved'));
       loadUsers(pagination.page);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Update failed";
+      const msg = error instanceof Error ? error.message : t('usersPage.msgUpdateFailed');
       message.error(msg);
     }
   };
 
   const handleToggleDisabled = async (record: AdminUser, value: boolean) => {
     if (isSelf(record.id)) {
-      message.warning("Cannot disable your own account");
+      message.warning(t('usersPage.msgCannotDisableSelf'));
       return;
     }
     try {
@@ -139,27 +141,27 @@ export default function UsersPageClient() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Operation failed");
+        throw new Error(err.error || t('usersPage.msgOperationFailed'));
       }
-      message.success(value ? "Account disabled" : "Account enabled");
+      message.success(value ? t('usersPage.msgAccountDisabled') : t('usersPage.msgAccountEnabled'));
       loadUsers(pagination.page);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Operation failed";
+      const msg = error instanceof Error ? error.message : t('usersPage.msgOperationFailed');
       message.error(msg);
     }
   };
 
   const handleDelete = (record: AdminUser) => {
     if (isSelf(record.id)) {
-      message.warning("Cannot disable your own account");
+      message.warning(t('usersPage.msgCannotDisableSelf'));
       return;
     }
     modal.confirm({
-      title: "Disable this user?",
-      content: `Account ${record.email} will be disabled and the user will not be able to log in.`,
-      okText: "Disable",
+      title: t('usersPage.modalDisableTitle'),
+      content: t('usersPage.modalDisableContent', { email: record.email }),
+      okText: t('usersPage.btnDisable'),
       okButtonProps: { danger: true },
-      cancelText: "Cancel",
+      cancelText: t('usersPage.modalCancel'),
       onOk: async () => {
         try {
           const res = await authFetch(`/api/auth/admin/users/${record.id}`, {
@@ -167,12 +169,12 @@ export default function UsersPageClient() {
           });
           if (!res.ok) {
             const err = await res.json().catch(() => ({}));
-            throw new Error(err.error || "Operation failed");
+            throw new Error(err.error || t('usersPage.msgOperationFailed'));
           }
-          message.success("Disabled");
+          message.success(t('usersPage.msgDisabled'));
           loadUsers(pagination.page);
         } catch (error: unknown) {
-          const msg = error instanceof Error ? error.message : "Operation failed";
+          const msg = error instanceof Error ? error.message : t('usersPage.msgOperationFailed');
           message.error(msg);
         }
       },
@@ -189,20 +191,20 @@ export default function UsersPageClient() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to save");
+        throw new Error(err.error || t('usersPage.msgFailedToSave'));
       }
-      message.success("Saved");
+      message.success(t('usersPage.msgSaved'));
       setEditing(null);
       loadUsers(pagination.page);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Failed to save";
+      const msg = error instanceof Error ? error.message : t('usersPage.msgFailedToSave');
       message.error(msg);
     }
   };
 
   const handleRoleChange = async (record: AdminUser, role: "admin" | "user") => {
     if (isSelf(record.id)) {
-      message.warning("Cannot change your own role");
+      message.warning(t('usersPage.msgCannotChangeOwnRole'));
       return;
     }
     try {
@@ -213,12 +215,12 @@ export default function UsersPageClient() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Operation failed");
+        throw new Error(err.error || t('usersPage.msgOperationFailed'));
       }
-      message.success(role === "admin" ? "Set as admin" : "Set as user");
+      message.success(role === "admin" ? t('usersPage.msgSetAsAdmin') : t('usersPage.msgSetAsUser'));
       loadUsers(pagination.page);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Operation failed";
+      const msg = error instanceof Error ? error.message : t('usersPage.msgOperationFailed');
       message.error(msg);
     }
   };
@@ -226,9 +228,9 @@ export default function UsersPageClient() {
   return (
     <div className="h-full flex flex-col p-6 gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">User Management</h1>
+        <h1 className="text-lg font-semibold">{t('usersPage.title')}</h1>
         <Button icon={<ReloadOutlined />} onClick={() => loadUsers(pagination.page)}>
-          Refresh
+          {t('usersPage.btnRefresh')}
         </Button>
       </div>
 
@@ -236,7 +238,7 @@ export default function UsersPageClient() {
         <Input
           allowClear
           prefix={<SearchOutlined />}
-          placeholder="Search email / name"
+          placeholder={t('usersPage.placeholderSearch')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onPressEnter={() => loadUsers(1)}
@@ -249,7 +251,7 @@ export default function UsersPageClient() {
           style={{ width: 180 }}
         />
         <Button onClick={() => loadUsers(1)}>
-          Search
+          {t('usersPage.btnSearch')}
         </Button>
       </div>
 
@@ -269,10 +271,10 @@ export default function UsersPageClient() {
               setTimeout(() => loadUsers(1), 0);
             },
           }}
-          locale={{ emptyText: <Empty description="No users found" /> }}
+          locale={{ emptyText: <Empty description={t('usersPage.emptyText')} /> }}
           columns={[
             {
-              title: "User",
+              title: t('usersPage.columnUser'),
               dataIndex: "email",
               render: (_: string, record: AdminUser) => (
                 <Space>
@@ -287,7 +289,7 @@ export default function UsersPageClient() {
               ),
             },
             {
-              title: "Account Type",
+              title: t('usersPage.columnAccountType'),
               dataIndex: "accountType",
               width: 110,
               render: (v: string) => (
@@ -295,7 +297,7 @@ export default function UsersPageClient() {
               ),
             },
             {
-              title: "Role",
+              title: t('usersPage.columnRole'),
               dataIndex: "role",
               width: 140,
               render: (v: "admin" | "user", record: AdminUser) => {
@@ -303,20 +305,20 @@ export default function UsersPageClient() {
                 return (
                   <Space size="small">
                     {isAdmin ? (
-                      <Tag icon={<SafetyCertificateOutlined />} color="orange">Admin</Tag>
+                      <Tag icon={<SafetyCertificateOutlined />} color="orange">{t('usersPage.tagAdmin')}</Tag>
                     ) : (
-                      <Tag>User</Tag>
+                      <Tag>{t('usersPage.tagUser')}</Tag>
                     )}
                     {!isSelf(record.id) && (
                       <Popconfirm
-                        title={isAdmin ? "Revoke admin role?" : "Grant admin role?"}
-                        description={isAdmin ? "This user will lose admin access." : "This user will gain full admin access."}
+                        title={isAdmin ? t('usersPage.popconfirmRevokeTitle') : t('usersPage.popconfirmGrantTitle')}
+                        description={isAdmin ? t('usersPage.popconfirmRevokeDesc') : t('usersPage.popconfirmGrantDesc')}
                         onConfirm={() => handleRoleChange(record, isAdmin ? "user" : "admin")}
-                        okText={isAdmin ? "Revoke" : "Grant"}
-                        cancelText="Cancel"
+                        okText={isAdmin ? t('usersPage.popconfirmRevoke') : t('usersPage.popconfirmGrant')}
+                        cancelText={t('usersPage.modalCancel')}
                       >
                         <Button type="text" size="small">
-                          {isAdmin ? "Revoke" : "Grant"}
+                          {isAdmin ? t('usersPage.popconfirmRevoke') : t('usersPage.popconfirmGrant')}
                         </Button>
                       </Popconfirm>
                     )}
@@ -325,11 +327,11 @@ export default function UsersPageClient() {
               },
             },
             {
-              title: "Email Verified",
+              title: t('usersPage.columnEmailVerified'),
               dataIndex: "emailVerified",
               width: 130,
               render: (v: boolean, record: AdminUser) => (
-                <Tooltip title={v ? "Click to unverify" : "Click to mark as verified"}>
+                <Tooltip title={v ? t('usersPage.tooltipClickToUnverify') : t('usersPage.tooltipClickToVerify')}>
                   <Switch
                     size="small"
                     checked={v}
@@ -339,28 +341,28 @@ export default function UsersPageClient() {
               ),
             },
             {
-              title: "Status",
+              title: t('usersPage.columnStatus'),
               dataIndex: "disabled",
               width: 110,
               render: (v: boolean, record: AdminUser) =>
                 v ? (
                   <Tag color="red" icon={<StopOutlined />}>
-                    Disabled
+                    {t('usersPage.tagDisabled')}
                   </Tag>
                 ) : (
                   <Tag color="green" icon={<CheckCircleOutlined />}>
-                    Active
+                    {t('usersPage.tagActive')}
                   </Tag>
                 ),
             },
             {
-              title: "Registered",
+              title: t('usersPage.columnRegistered'),
               dataIndex: "createdAt",
               width: 170,
               render: (v: string) => new Date(v).toLocaleString(),
             },
             {
-              title: "Actions",
+              title: t('usersPage.columnActions'),
               width: 220,
               fixed: "right",
               render: (_: unknown, record: AdminUser) => (
@@ -371,7 +373,7 @@ export default function UsersPageClient() {
                     icon={<EditOutlined />}
                     onClick={() => setEditing(record)}
                   >
-                    Edit
+                    {t('usersPage.btnEdit')}
                   </Button>
                   {!isSelf(record.id) &&
                     (record.disabled ? (
@@ -380,15 +382,15 @@ export default function UsersPageClient() {
                         size="small"
                         onClick={() => handleToggleDisabled(record, false)}
                       >
-                        Enable
+                        {t('usersPage.btnEnable')}
                       </Button>
                     ) : (
                       <Popconfirm
-                        title="Disable this user?"
+                        title={t('usersPage.popconfirmDisableTitle')}
                         onConfirm={() => handleToggleDisabled(record, true)}
                       >
                         <Button type="text" size="small" danger>
-                          Disable
+                          {t('usersPage.btnDisable')}
                         </Button>
                       </Popconfirm>
                     ))}
@@ -400,15 +402,15 @@ export default function UsersPageClient() {
       </div>
 
       <Modal
-        title="Edit User"
+        title={t('usersPage.modalEditTitle')}
         open={!!editing}
         onCancel={() => setEditing(null)}
         onOk={() => {
           const formEl = document.getElementById("edit-user-form") as HTMLFormElement | null;
           formEl?.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
         }}
-        okText="Save"
-        cancelText="Cancel"
+        okText={t('usersPage.modalSave')}
+        cancelText={t('usersPage.modalCancel')}
         destroyOnHidden
       >
         {editing && (
@@ -418,25 +420,25 @@ export default function UsersPageClient() {
             initialValues={{ name: editing.name || "", role: editing.role }}
             onFinish={handleSaveEdit}
           >
-            <Form.Item label="Email">
+            <Form.Item label={t('usersPage.formEmail')}>
               <Input value={editing.email} disabled />
             </Form.Item>
-            <Form.Item label="Account ID">
+            <Form.Item label={t('usersPage.formAccountId')}>
               <Input value={editing.id} disabled />
             </Form.Item>
             <Form.Item
               name="name"
-              label="Name"
-              rules={[{ max: 50, message: "Name must be at most 50 characters" }]}
+              label={t('usersPage.formName')}
+              rules={[{ max: 50, message: t('usersPage.formNameMaxMessage') }]}
             >
-              <Input placeholder="User name" maxLength={50} />
+              <Input placeholder={t('usersPage.formNamePlaceholder')} maxLength={50} />
             </Form.Item>
-            <Form.Item name="role" label="Role">
+            <Form.Item name="role" label={t('usersPage.formRole')}>
               <Select
                 disabled={isSelf(editing.id)}
                 options={[
-                  { value: "admin", label: "Admin" },
-                  { value: "user", label: "User" },
+                  { value: "admin", label: t('usersPage.tagAdmin') },
+                  { value: "user", label: t('usersPage.tagUser') },
                 ]}
               />
             </Form.Item>

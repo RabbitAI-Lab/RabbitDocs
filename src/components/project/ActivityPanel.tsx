@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { ReactElement } from "react";
 import type { DocumentActivity } from "@/lib/types";
 
@@ -27,9 +28,9 @@ function formatDate(dateStr: string) {
   });
 }
 
-const ACTION_CONFIG: Record<string, { label: string; color: string; icon: ReactElement }> = {
+const ACTION_CONFIG: Record<string, { labelKey: string; color: string; icon: ReactElement }> = {
   create: {
-    label: "Added",
+    labelKey: "activity.actionAdded",
     color: "text-green-500",
     icon: (
       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -40,7 +41,7 @@ const ACTION_CONFIG: Record<string, { label: string; color: string; icon: ReactE
     ),
   },
   update: {
-    label: "Modified",
+    labelKey: "activity.actionModified",
     color: "text-blue-500",
     icon: (
       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -50,7 +51,7 @@ const ACTION_CONFIG: Record<string, { label: string; color: string; icon: ReactE
     ),
   },
   delete: {
-    label: "Deleted",
+    labelKey: "activity.actionDeleted",
     color: "text-red-400",
     icon: (
       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -60,7 +61,7 @@ const ACTION_CONFIG: Record<string, { label: string; color: string; icon: ReactE
     ),
   },
   rename: {
-    label: "Renamed",
+    labelKey: "activity.actionRenamed",
     color: "text-amber-500",
     icon: (
       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -77,12 +78,13 @@ export default function ActivityPanel({
   onNewChat,
   onNavigateToDocument,
 }: ActivityPanelProps) {
+  const t = useTranslations('project');
   return (
     <div className="space-y-6">
       {/* Section 1: Recent Chats */}
       <div className="space-y-3">
         <p className="text-sm text-gray-500 dark:text-gray-300">
-          Recent Chats (Last 20 Days)
+          {t('activity.recentChats')}
         </p>
 
         {recentChats.length === 0 ? (
@@ -90,7 +92,7 @@ export default function ActivityPanel({
             <svg className="w-10 h-10 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-            <p className="text-sm">No chat history</p>
+            <p className="text-sm">{t('activity.noChatHistory')}</p>
           </div>
         ) : (
           <div className="space-y-1">
@@ -104,7 +106,7 @@ export default function ActivityPanel({
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
                 <span className="flex-1 text-sm text-gray-700 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                  {chat.title || "New Chat"}
+                  {chat.title || t('activity.newChat')}
                 </span>
                 <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">
                   {formatDate(chat.updatedAt)}
@@ -120,7 +122,7 @@ export default function ActivityPanel({
       {/* Section 2: Recent Document Activities */}
       <div className="space-y-3">
         <p className="text-sm text-gray-500 dark:text-gray-300">
-          Recent Document Changes
+          {t('activity.recentDocuments')}
         </p>
 
         {recentDocuments.length === 0 ? (
@@ -129,7 +131,7 @@ export default function ActivityPanel({
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
             </svg>
-            <p className="text-sm">No document changes</p>
+            <p className="text-sm">{t('activity.noDocumentChanges')}</p>
           </div>
         ) : (
           <div className="space-y-1">
@@ -146,7 +148,7 @@ export default function ActivityPanel({
                     {doc.documentTitle}
                   </span>
                   <span className={`text-xs shrink-0 ${config.color}`}>
-                    {config.label}
+                    {t(config.labelKey)}
                   </span>
                   <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">
                     {formatDate(doc.createdAt)}
@@ -159,7 +161,7 @@ export default function ActivityPanel({
                   <div
                     key={doc.id}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg opacity-60"
-                    title="Deleted"
+                    title={t('activity.actionDeleted')}
                   >
                     {content}
                   </div>

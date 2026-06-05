@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/auth/useAuth";
+import { useTranslations } from "next-intl";
 import {
   Switch,
   Input,
@@ -76,6 +77,7 @@ export default function WorkspaceMcpPanel({
     _apiKeys: {},
   });
   const { authFetch } = useAuth();
+  const t = useTranslations('workspace');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -143,7 +145,7 @@ export default function WorkspaceMcpPanel({
       }
       if (successMsg) message.success(successMsg);
     } catch (err) {
-      message.error(`保存失败: ${(err as Error).message}`);
+      message.error(t('mcp.saveFailed', { error: (err as Error).message }));
       await fetchConfig();
     } finally {
       setSaving(false);
@@ -163,11 +165,11 @@ export default function WorkspaceMcpPanel({
         };
         await writeBack(
           { mcpServers: nextServers, _apiKeys: mcpJson._apiKeys },
-          "Enabled",
+          t('mcp.enabled'),
         );
         return;
       }
-      message.warning("Please configure API Key first");
+      message.warning(t('mcp.pleaseConfigureApiKey'));
       setKeyTarget(name);
       return;
     }
@@ -176,7 +178,7 @@ export default function WorkspaceMcpPanel({
     delete nextServers[name];
     await writeBack(
       { mcpServers: nextServers, _apiKeys: mcpJson._apiKeys },
-      "Disabled",
+      t('mcp.disabled'),
     );
   };
 
@@ -184,7 +186,7 @@ export default function WorkspaceMcpPanel({
     if (!keyTarget) return;
     const trimmed = keyInput.trim();
     if (!trimmed) {
-      message.error("Please enter API Key");
+      message.error(t('mcp.pleaseEnterApiKey'));
       return;
     }
     const entry = mcpJson.mcpServers[keyTarget] || {};
@@ -195,7 +197,7 @@ export default function WorkspaceMcpPanel({
     const nextKeys = { ...mcpJson._apiKeys, [keyTarget]: trimmed };
     await writeBack(
       { mcpServers: nextServers, _apiKeys: nextKeys },
-      "API Key saved",
+      t('mcp.apiKeySaved'),
     );
     setKeyTarget(null);
     setKeyInput("");
@@ -215,13 +217,13 @@ export default function WorkspaceMcpPanel({
         throw new Error("not an object");
       }
     } catch {
-      message.error("Invalid JSON format");
+      message.error(t('mcp.invalidJson'));
       return;
     }
     const nextServers = { ...mcpJson.mcpServers, [editTarget]: parsed };
     await writeBack(
       { mcpServers: nextServers, _apiKeys: mcpJson._apiKeys },
-      "Saved",
+      t('mcp.saved'),
     );
     setEditTarget(null);
   };
@@ -233,7 +235,7 @@ export default function WorkspaceMcpPanel({
     delete nextKeys[name];
     await writeBack(
       { mcpServers: nextServers, _apiKeys: nextKeys },
-      "Deleted",
+      t('mcp.deleted'),
     );
   };
 
@@ -248,7 +250,7 @@ export default function WorkspaceMcpPanel({
       const values = await addForm.validateFields();
       const name = values.name as string;
       if (mcpJson.mcpServers[name]) {
-        message.error(`MCP "${name}" already exists`);
+        message.error(t('mcp.mcpAlreadyExists', { name }));
         return;
       }
       const entry: McpServerEntry = { type: values.type };
@@ -298,7 +300,7 @@ export default function WorkspaceMcpPanel({
       const nextServers = { ...mcpJson.mcpServers, [name]: entry };
       await writeBack(
         { mcpServers: nextServers, _apiKeys: mcpJson._apiKeys },
-        "MCP added",
+        t('mcp.mcpAdded'),
       );
       setAddOpen(false);
     } catch {
@@ -339,29 +341,26 @@ export default function WorkspaceMcpPanel({
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
         <p className="text-sm text-indigo-700 dark:text-indigo-300">
-          Configure MCP servers at the workspace level. Each entry is available
-          to AI chats in all projects of this workspace as{" "}
-          <code className="px-1 bg-white/60 dark:bg-zinc-800/60 rounded">mcp__{"<name>"}__*</code>{" "}
-          tools.
+          {t('mcp.description')}
         </p>
       </div>
 
       <div className="flex items-center justify-between">
         <span className="text-xs text-gray-500 dark:text-gray-400">
-          {entries.length} server{entries.length === 1 ? "" : "s"} configured
+          {t('mcp.serversConfigured', { count: entries.length })}
         </span>
         <button
           onClick={openAdd}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
         >
           <PlusOutlined />
-          Add MCP
+          {t('mcp.addMcp')}
         </button>
       </div>
 
       {entries.length === 0 ? (
         <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500 border border-dashed border-gray-200 dark:border-zinc-700 rounded-lg">
-          No MCP servers yet. Click &quot;Add MCP&quot; to create one.
+          {t('mcp.noServers')}
         </div>
       ) : (
         <div className="space-y-2">
@@ -410,7 +409,7 @@ export default function WorkspaceMcpPanel({
                   {hasAuth && (
                     <KeyOutlined
                       className="text-gray-400 dark:text-gray-500 hover:text-blue-500 cursor-pointer text-base p-1"
-                      title="Edit API Key"
+                      title={t('mcp.editApiKey')}
                       onClick={() => {
                         setKeyTarget(name);
                         setKeyInput(mcpJson._apiKeys[name] || "");
@@ -419,20 +418,20 @@ export default function WorkspaceMcpPanel({
                   )}
                   <EditOutlined
                     className="text-gray-400 dark:text-gray-500 hover:text-blue-500 cursor-pointer text-base p-1"
-                    title="Edit JSON"
+                    title={t('mcp.editJson')}
                     onClick={() => openEdit(name)}
                   />
                   <Popconfirm
-                    title={`Delete "${name}"?`}
-                    description="This will also remove its saved API Key."
-                    okText="Delete"
-                    cancelText="Cancel"
+                    title={t('mcp.deleteConfirm', { name })}
+                    description={t('mcp.deleteDescription')}
+                    okText={t('mcp.delete')}
+                    cancelText={t('mcp.cancel')}
                     okButtonProps={{ danger: true }}
                     onConfirm={() => handleDelete(name)}
                   >
                     <DeleteOutlined
                       className="text-gray-400 dark:text-gray-500 hover:text-red-500 cursor-pointer text-base p-1"
-                      title="Delete"
+                      title={t('mcp.delete')}
                     />
                   </Popconfirm>
                 </div>
@@ -443,12 +442,12 @@ export default function WorkspaceMcpPanel({
       )}
 
       <Modal
-        title={editTarget ? `Edit "${editTarget}"` : "Edit MCP"}
+        title={editTarget ? t('mcp.editTitle', { name: editTarget }) : "Edit MCP"}
         open={!!editTarget}
         onOk={handleSaveEdit}
         onCancel={() => setEditTarget(null)}
-        okText="Save"
-        cancelText="Cancel"
+        okText={t('mcp.save')}
+        cancelText={t('mcp.cancel')}
         confirmLoading={saving}
         width={560}
       >
@@ -461,23 +460,22 @@ export default function WorkspaceMcpPanel({
       </Modal>
 
       <Modal
-        title={keyTarget ? `API Key for "${keyTarget}"` : "API Key"}
+        title={keyTarget ? t('mcp.apiKeyTitle', { name: keyTarget }) : t('mcp.apiKey')}
         open={!!keyTarget}
         onOk={handleSaveKey}
         onCancel={() => {
           setKeyTarget(null);
           setKeyInput("");
         }}
-        okText="Save"
-        cancelText="Cancel"
+        okText={t('mcp.save')}
+        cancelText={t('mcp.cancel')}
         confirmLoading={saving}
       >
         <p className="text-xs text-gray-500 mb-2">
-          The key will be stored in <code>_apiKeys</code> and prepended to the
-          server URL as <code>?Authorization=&lt;key&gt;</code>.
+          {t('mcp.apiKeyDescription')}
         </p>
         <Input.Password
-          placeholder="Enter API Key"
+          placeholder={t('mcp.apiKeyPlaceholder')}
           value={keyInput}
           onChange={(e) => setKeyInput(e.target.value)}
           autoFocus
@@ -485,12 +483,12 @@ export default function WorkspaceMcpPanel({
       </Modal>
 
       <Modal
-        title="Add MCP Server"
+        title={t('mcp.addServer')}
         open={addOpen}
         onOk={handleAdd}
         onCancel={() => setAddOpen(false)}
-        okText="Add"
-        cancelText="Cancel"
+        okText={t('mcp.add')}
+        cancelText={t('mcp.cancel')}
         confirmLoading={saving}
         width={560}
         destroyOnHidden
@@ -498,29 +496,28 @@ export default function WorkspaceMcpPanel({
         <Form form={addForm} layout="vertical" className="mt-2">
           <Form.Item
             name="name"
-            label="Name"
+            label={t('mcp.formName')}
             rules={[
-              { required: true, message: "Please input a name" },
+              { required: true, message: t('mcp.formNameRequired') },
               {
                 pattern: NAME_PATTERN,
-                message:
-                  "Only letters, digits, underscore and dash are allowed",
+                message: t('mcp.formNamePattern'),
               },
             ]}
           >
-            <Input placeholder="e.g. gitnexus" />
+            <Input placeholder={t('mcp.formNamePlaceholder')} />
           </Form.Item>
 
           <Form.Item
             name="type"
-            label="Type"
+            label={t('mcp.formType')}
             rules={[{ required: true }]}
           >
             <Select
               options={[
-                { value: "stdio", label: "stdio (local command)" },
-                { value: "http", label: "http (remote endpoint)" },
-                { value: "sse", label: "sse (server-sent events)" },
+                { value: "stdio", label: t('mcp.formTypeStdio') },
+                { value: "http", label: t('mcp.formTypeHttp') },
+                { value: "sse", label: t('mcp.formTypeSse') },
               ]}
               onChange={(val) => {
                 if (val === "stdio") {
@@ -544,19 +541,19 @@ export default function WorkspaceMcpPanel({
                   <>
                     <Form.Item
                       name="command"
-                      label="Command"
+                      label={t('mcp.formCommand')}
                       rules={[
-                        { required: true, message: "Please input command" },
+                        { required: true, message: t('mcp.formCommandRequired') },
                       ]}
                     >
-                      <Input placeholder="e.g. npx" />
+                      <Input placeholder={t('mcp.formCommandPlaceholder')} />
                     </Form.Item>
-                    <Form.Item name="args" label="Args (space-separated)">
-                      <Input placeholder="e.g. -y gitnexus@latest mcp" />
+                    <Form.Item name="args" label={t('mcp.formArgs')}>
+                      <Input placeholder={t('mcp.formArgsPlaceholder')} />
                     </Form.Item>
                     <Form.Item
                       name="env"
-                      label="Environment variables (one KEY=VALUE per line, optional)"
+                      label={t('mcp.formEnv')}
                     >
                       <Input.TextArea
                         rows={3}
@@ -571,17 +568,17 @@ export default function WorkspaceMcpPanel({
                 <>
                   <Form.Item
                     name="url"
-                    label="URL"
+                    label={t('mcp.formUrl')}
                     rules={[
-                      { required: true, message: "Please input URL" },
-                      { type: "url", message: "Please input a valid URL" },
+                      { required: true, message: t('mcp.formUrlRequired') },
+                      { type: "url", message: t('mcp.formUrlInvalid') },
                     ]}
                   >
-                    <Input placeholder="https://example.com/mcp" />
+                    <Input placeholder={t('mcp.formUrlPlaceholder')} />
                   </Form.Item>
                   <Form.Item
                     name="headers"
-                    label="Headers (one Key: Value per line, optional)"
+                    label={t('mcp.formHeaders')}
                   >
                     <Input.TextArea
                       rows={3}

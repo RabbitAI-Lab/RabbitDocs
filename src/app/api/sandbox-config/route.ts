@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/db";
 import { sandboxConfig } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { getApiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
@@ -20,12 +21,13 @@ export async function GET() {
 // PUT /api/sandbox-config
 export async function PUT(req: NextRequest) {
   const auth = await requireAdmin(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { sandboxUrl } = body;
 
   if (typeof sandboxUrl !== "string" || !sandboxUrl.trim()) {
     return NextResponse.json(
-      { error: "sandboxUrl 不能为空" },
+      { error: t('api.sandbox.sandboxUrlCannotBeEmpty') },
       { status: 400 }
     );
   }

@@ -1,5 +1,6 @@
 "use client";
 import { useAuth } from "@/components/auth/useAuth";
+import { useTranslations } from "next-intl";
 
 import { useState } from "react";
 import { Modal } from "antd";
@@ -16,6 +17,7 @@ export default function WorkspaceSandboxManager({
   sandbox,
   onSandboxChange,
 }: WorkspaceSandboxManagerProps) {
+  const t = useTranslations('workspace');
   const [loading, setLoading] = useState(false);
   const { authFetch } = useAuth();
 
@@ -70,11 +72,10 @@ export default function WorkspaceSandboxManager({
 
   const handleRelease = () => {
     Modal.confirm({
-      title: "Confirm Release Sandbox",
-      content:
-        "After release, code analysis will not be available. Are you sure you want to release the sandbox?",
-      okText: "Confirm Release",
-      cancelText: "Cancel",
+      title: t('sandbox.confirmRelease'),
+      content: t('sandbox.confirmReleaseContent'),
+      okText: t('sandbox.confirmBtn'),
+      cancelText: t('sandbox.cancel'),
       okButtonProps: { danger: true },
       onOk: doRelease,
     });
@@ -97,8 +98,7 @@ export default function WorkspaceSandboxManager({
           <line x1="12" y1="16" x2="12.01" y2="16" />
         </svg>
         <p className="text-sm text-amber-700">
-          Sandbox is shared across all projects in this workspace. It provides a
-          secure execution environment for running and analyzing code snippets.
+          {t('sandbox.description')}
         </p>
       </div>
 
@@ -110,18 +110,16 @@ export default function WorkspaceSandboxManager({
         />
         <div className="flex-1">
           <span className="text-sm font-medium text-gray-700">
-            {isEnabled ? "Sandbox Requested" : "Sandbox Not Requested"}
+            {isEnabled ? t('sandbox.requested') : t('sandbox.notRequested')}
           </span>
           {isEnabled && sandbox?.requestedAt && (
             <p className="text-xs text-gray-400">
-              Requested at:{" "}
-              {new Date(sandbox.requestedAt).toLocaleString()}
+              {t('sandbox.requestedAt', { time: new Date(sandbox.requestedAt).toLocaleString() })}
             </p>
           )}
           {!isEnabled && sandbox?.releasedAt && (
             <p className="text-xs text-gray-400">
-              Released at:{" "}
-              {new Date(sandbox.releasedAt).toLocaleString()}
+              {t('sandbox.releasedAt', { time: new Date(sandbox.releasedAt).toLocaleString() })}
             </p>
           )}
         </div>
@@ -156,7 +154,7 @@ export default function WorkspaceSandboxManager({
                 <path d="M12 5v14M5 12h14" />
               </svg>
             )}
-            Request Sandbox
+            {t('sandbox.requestSandbox')}
           </button>
         ) : (
           <button
@@ -186,7 +184,7 @@ export default function WorkspaceSandboxManager({
                 <path d="M18 6L6 18M6 6l12 12" />
               </svg>
             )}
-            Release Sandbox
+            {t('sandbox.releaseSandbox')}
           </button>
         )}
       </div>

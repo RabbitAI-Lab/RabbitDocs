@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { requireAuth } from "@/lib/auth/session";
 import type { AuthUser } from "@/lib/auth/session";
 import crypto from "crypto";
+import { getApiT } from "@/lib/i18n-api";
 
 const MAX_CODES_PER_USER = 5;
 
@@ -43,8 +44,9 @@ export async function POST(req: NextRequest) {
     .all();
 
   if (existing.length >= MAX_CODES_PER_USER) {
+    const t = await getApiT();
     return NextResponse.json(
-      { error: `Maximum ${MAX_CODES_PER_USER} invite codes allowed` },
+      { error: t('api.auth.maxInviteCodes', { count: MAX_CODES_PER_USER }) },
       { status: 400 }
     );
   }

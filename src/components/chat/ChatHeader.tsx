@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import { Button, Space, Tooltip, Popover, Input } from "antd";
 import {
   ArrowLeftOutlined,
@@ -48,6 +49,7 @@ export default function ChatHeader({
   onHistorySelect,
   onClear,
 }: ChatHeaderProps) {
+  const t = useTranslations("chat");
   return (
     <div className="flex items-center justify-between px-3 h-[41px] bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-700">
       <div className="flex items-center gap-2 min-w-0">
@@ -64,7 +66,7 @@ export default function ChatHeader({
         </h2>
       </div>
       <Space size="small">
-        <Tooltip title="新会话">
+        <Tooltip title={t("header.newChat")}>
           <Button
             type="text"
             icon={<PlusOutlined />}
@@ -78,7 +80,7 @@ export default function ChatHeader({
             onOpenChange={setShareOpen}
             trigger="click"
             placement="bottomRight"
-            title="Share Chat"
+            title={t("header.shareChat")}
             content={
               <div style={{ width: 280 }}>
                 <Input.TextArea
@@ -94,7 +96,7 @@ export default function ChatHeader({
                     onClick={onCopyLink}
                     block
                   >
-                    复制链接
+                    {t("header.copyLink")}
                   </Button>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
@@ -106,7 +108,7 @@ export default function ChatHeader({
                     onClick={onRegenerateLink}
                     block
                   >
-                    重新生成
+                    {t("header.regenerateLink")}
                   </Button>
                   <Button
                     icon={<StopOutlined />}
@@ -116,13 +118,13 @@ export default function ChatHeader({
                     onClick={onCancelShare}
                     block
                   >
-                    取消分享
+                    {t("header.cancelShare")}
                   </Button>
                 </div>
               </div>
             }
           >
-            <Tooltip title="分享">
+            <Tooltip title={t("header.share")}>
               <Button
                 type="text"
                 icon={<ShareAltOutlined />}
@@ -137,7 +139,7 @@ export default function ChatHeader({
           currentChatId={effectiveChatId}
           onSelect={onHistorySelect}
         />
-        <Tooltip title="Clear">
+        <Tooltip title={t("header.clear")}>
           <Button
             type="text"
             icon={<ClearOutlined />}

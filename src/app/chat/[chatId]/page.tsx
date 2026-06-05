@@ -4,7 +4,7 @@ import { gte, desc, eq, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/auth/tokens";
-import { listTree, readProjectMeta, stripTreePrefix, TreeNode, type ProjectMeta } from "@/lib/fs";
+import { listTree, readProjectMeta, stripTreePrefix, type TreeNode, type ProjectMeta } from "@/lib/fs";
 import ChatPageContent from "@/components/chat/ChatPageContent";
 import { canAccessChat } from "@/lib/auth/chat-access";
 
@@ -80,6 +80,7 @@ export default async function ChatPage({
     }
 
     // recentChats: 跟着项目走，该项目下所有 chat 对所有人可见
+    // eslint-disable-next-line react-hooks/purity -- Server Component: Date.now() is stable per request
     const twentyDaysAgo = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString();
     const chatFilterConditions = [
       gte(chats.updatedAt, twentyDaysAgo),

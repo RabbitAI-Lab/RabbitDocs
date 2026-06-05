@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
 import { listApiKeys, createApiKey } from "@/lib/auth/api-key";
 import { z } from "zod";
+import { getApiT } from "@/lib/i18n-api";
 
 export async function GET(req: NextRequest) {
   const authResult = await requireAuth(req);
@@ -23,6 +24,7 @@ const createSchema = z.object({
 export async function POST(req: NextRequest) {
   const authResult = await requireAuth(req);
   if (authResult instanceof NextResponse) return authResult;
+  const t = await getApiT();
 
   try {
     const body = await req.json().catch(() => ({}));
@@ -32,7 +34,7 @@ export async function POST(req: NextRequest) {
     const result = createApiKey(authResult.id, name);
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : "Failed to create API key";
+    const msg = error instanceof Error ? error.message : t('api.apiKeys.failedToCreate');
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 }

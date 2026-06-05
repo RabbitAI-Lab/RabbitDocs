@@ -33,7 +33,6 @@ export const CUSTOM_PROVIDER_KEY = "__custom__";
 
 export const PROVIDER_SELECT_OPTIONS = [
   ...PROVIDERS.map((p) => ({ value: p, label: p })),
-  { value: CUSTOM_PROVIDER_KEY, label: "Custom..." },
 ];
 
 export function maskApiKey(key: string): string {

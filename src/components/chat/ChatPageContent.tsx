@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { App } from "antd";
 import { useAuth } from "@/components/auth/useAuth";
 import { useFloatingChat } from "./FloatingChatContext";
@@ -77,6 +78,8 @@ export default function ChatPageContent({
 }: ChatPageContentProps) {
   const router = useRouter();
   const { message } = App.useApp();
+  const t = useTranslations("chat");
+  const tc = useTranslations("common");
   const { authFetch, user } = useAuth();
   const { open: openFloatingChat, isOpen: floatingChatOpen, isMinimized: floatingChatMinimized, setMentionFile: setFloatingMentionFile } = useFloatingChat();
 
@@ -136,7 +139,7 @@ export default function ChatPageContent({
     try {
       const res = await authFetch(`/api/fs/document?path=${projectPath}/${documentPath}`);
       if (res.status === 404) {
-        message.warning("Document has been deleted");
+        message.warning(t("newChatWorkspace.documentDeleted"));
         return;
       }
       if (!res.ok) return;
@@ -175,7 +178,7 @@ export default function ChatPageContent({
             active={tabSystem.activeTabId === CHAT_TAB}
             onClick={() => tabSystem.setActiveTabId(CHAT_TAB)}
             icon={CHAT_ICON}
-            label="Chat"
+            label={t("tabs.chat")}
             suffix={renderChatTabSuffix()}
           />
         </div>
@@ -214,7 +217,7 @@ export default function ChatPageContent({
       <div className="w-[240px] h-full flex flex-col border-r border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900 shrink-0">
         <div className="px-3 h-[41px] border-b border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 flex items-center gap-2">
           <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
-            {projectName || projectId} Documents
+            {projectName || projectId} {t("tabs.documents")}
           </h3>
         </div>
 
@@ -227,7 +230,7 @@ export default function ChatPageContent({
         {fileTree.treeLoading ? (
           <div className="flex-1 flex items-center justify-center py-8 text-gray-400 dark:text-gray-500">
             <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 dark:border-zinc-600 border-t-blue-600 dark:border-t-blue-400 mr-2" />
-            <span className="text-xs">Loading...</span>
+            <span className="text-xs">{tc("loading")}</span>
           </div>
         ) : (
           <FileTree
@@ -266,14 +269,14 @@ export default function ChatPageContent({
             active={tabSystem.activeTabId === PROJECT_INFO_TAB}
             onClick={() => tabSystem.setActiveTabId(PROJECT_INFO_TAB)}
             icon={INFO_ICON}
-            label="Project Info"
+            label={t("tabs.projectInfo")}
           />
 
           <TabButton
             active={tabSystem.activeTabId === CHAT_TAB}
             onClick={() => tabSystem.setActiveTabId(CHAT_TAB)}
             icon={CHAT_ICON}
-            label="Chat"
+            label={t("tabs.chat")}
             suffix={renderChatTabSuffix(projectId)}
           />
 

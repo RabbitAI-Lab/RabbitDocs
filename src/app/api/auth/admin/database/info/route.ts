@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/session";
 import { getDatabaseInfo } from "@/lib/db-dump";
+import { getApiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   const authResult = await requireAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+  const t = await getApiT();
 
   try {
     const info = getDatabaseInfo();
@@ -14,7 +16,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("[database] info error:", error);
     return NextResponse.json(
-      { error: "Failed to get database info" },
+      { error: t('api.auth.database.failedToGetInfo') },
       { status: 500 }
     );
   }

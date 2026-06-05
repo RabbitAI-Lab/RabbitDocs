@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { Conversations } from "@ant-design/x";
 import { Button, Spin, Empty, Tooltip } from "antd";
 import { HistoryOutlined } from "@ant-design/icons";
@@ -33,6 +34,7 @@ export default function ChatHistoryPopover({
   currentChatId,
   onSelect,
 }: ChatHistoryPopoverProps) {
+  const t = useTranslations("chat");
   const [open, setOpen] = useState(false);
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(false);
@@ -106,7 +108,7 @@ export default function ChatHistoryPopover({
 
   return (
     <div ref={wrapperRef} style={{ position: "relative" }}>
-      <Tooltip title="History">
+      <Tooltip title={t("header.history")}>
         <Button
           type="text"
           icon={<HistoryOutlined />}
@@ -124,7 +126,7 @@ export default function ChatHistoryPopover({
             </div>
           ) : chats.length === 0 ? (
             <Empty
-              description="No chat history"
+              description={t("history.noHistory")}
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             />
           ) : (
@@ -137,12 +139,13 @@ export default function ChatHistoryPopover({
                   items: [
                     {
                       key: "delete",
-                      label: "Delete",
+                      label: t("history.delete"),
                       danger: true,
                       onClick: async () => {
                         await authFetch(`/api/chats/${conversation.key}`, {
                           method: "DELETE",
                         });
+                        window.dispatchEvent(new Event("chats-changed"));
                         setPage(1);
                         fetchChats(1);
                       },
@@ -153,7 +156,7 @@ export default function ChatHistoryPopover({
               {hasMore && (
                 <div className="text-center py-2 border-t border-gray-200 dark:border-zinc-700">
                   <Button type="link" size="small" onClick={loadMore} loading={loadingMore}>
-                    Load more
+                    {t("history.loadMore")}
                   </Button>
                 </div>
               )}

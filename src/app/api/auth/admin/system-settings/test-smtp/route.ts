@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/session";
 import { testSmtpConnection } from "@/lib/auth/mail";
+import { getApiT } from "@/lib/i18n-api";
 
 const testSmtpSchema = z.object({
   toEmail: z.string().email().max(254),
@@ -19,6 +20,7 @@ const testSmtpSchema = z.object({
 export async function POST(req: NextRequest) {
   const authResult = await requireAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+  const t = await getApiT();
 
   try {
     const body = await req.json().catch(() => ({}));
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("[auth] test-smtp error:", error);
     return NextResponse.json(
-      { success: false, message: "Internal server error" },
+      { success: false, message: t('api.internalError') },
       { status: 500 }
     );
   }

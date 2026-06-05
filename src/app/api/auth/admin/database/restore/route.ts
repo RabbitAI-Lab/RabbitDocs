@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/session";
 import { restoreFromJson } from "@/lib/db-dump";
 import type { DatabaseDump } from "@/lib/db-dump";
+import { getApiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
@@ -15,27 +16,28 @@ interface RestoreRequest {
 export async function POST(req: NextRequest) {
   const authResult = await requireAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+  const t = await getApiT();
 
   try {
     const body = (await req.json()) as RestoreRequest;
 
     if (!body.data || typeof body.data !== "object") {
       return NextResponse.json(
-        { error: "Invalid request: 'data' field is required" },
+        { error: t('api.auth.database.dataFieldRequired') },
         { status: 400 }
       );
     }
 
     if (!body.data.version || !body.data.tables) {
       return NextResponse.json(
-        { error: "Invalid dump format: missing 'version' or 'tables' field" },
+        { error: t('api.auth.database.invalidDumpFormat') },
         { status: 400 }
       );
     }
 
     if (body.data.version !== 1) {
       return NextResponse.json(
-        { error: `Unsupported dump version: ${body.data.version}` },
+        { error: t('api.auth.database.unsupportedVersion') },
         { status: 400 }
       );
     }
@@ -50,7 +52,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("[database] restore error:", error);
     return NextResponse.json(
-      { error: "Restore failed: " + (error instanceof Error ? error.message : String(error)) },
+      { error: t('api.auth.database.restoreFailed') + ": " + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     );
   }

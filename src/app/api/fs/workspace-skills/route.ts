@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
 import { readWorkspaceMeta, writeWorkspaceMeta, type ProjectSkills } from "@/lib/fs";
 import { logOperation, extractProjectId } from "@/lib/operation-log";
+import { getApiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +14,11 @@ export async function GET(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
   const { searchParams } = new URL(req.url);
   const dirSegments = searchParams.get("dirSegments");
+  const t = await getApiT();
 
   if (!dirSegments) {
     return NextResponse.json(
-      { error: "缺少 dirSegments 参数" },
+      { error: t('api.dirSegmentsRequired') },
       { status: 400 }
     );
   }
@@ -25,7 +27,7 @@ export async function GET(req: NextRequest) {
   const meta = readWorkspaceMeta(segments);
 
   if (!meta) {
-    return NextResponse.json({ error: "工作区不存在" }, { status: 404 });
+    return NextResponse.json({ error: t('api.workspaceNotFound') }, { status: 404 });
   }
 
   const skills = meta.skills
@@ -53,6 +55,7 @@ export async function GET(req: NextRequest) {
 // 注意：工作区级别的 skills 仅修改 meta，不执行 CLI 副作用（计划中明确说明）
 export async function PUT(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { dirSegments, skillId, enabled } = body as {
     dirSegments: string[];
@@ -62,14 +65,14 @@ export async function PUT(req: NextRequest) {
 
   if (!dirSegments || !skillId) {
     return NextResponse.json(
-      { error: "缺少必要参数" },
+      { error: t('api.missingRequiredParams') },
       { status: 400 }
     );
   }
 
   const meta = readWorkspaceMeta(dirSegments);
   if (!meta) {
-    return NextResponse.json({ error: "工作区不存在" }, { status: 404 });
+    return NextResponse.json({ error: t('api.workspaceNotFound') }, { status: 404 });
   }
 
   if (!meta.skills) meta.skills = {} as ProjectSkills;

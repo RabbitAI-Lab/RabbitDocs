@@ -4,11 +4,13 @@ import { db } from "@/db";
 import { passkeys, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getSetting, setSetting } from "@/lib/auth/settings";
+import { getApiT } from "@/lib/i18n-api";
 
 export async function POST(req: NextRequest) {
   const enabled = getSetting("passkey_enabled") === "true";
   if (!enabled) {
-    return NextResponse.json({ error: "Passkey authentication is disabled" }, { status: 400 });
+    const t = await getApiT();
+    return NextResponse.json({ error: t('api.passkey.authenticationDisabled') }, { status: 400 });
   }
 
   const body = await req.json().catch(() => ({}));

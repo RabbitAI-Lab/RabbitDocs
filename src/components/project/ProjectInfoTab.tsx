@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/useAuth";
 import type {
   Repository,
@@ -32,13 +33,13 @@ interface ProjectInfoTabProps {
   onNavigateToDocument?: (documentPath: string) => void;
 }
 
-const SUB_TABS: { key: SubTab; label: string }[] = [
-  { key: "activity", label: "Activity" },
-  { key: "integration", label: "Integration" },
-  { key: "skills", label: "Skills" },
-  { key: "mcp", label: "MCP" },
-  { key: "members", label: "Members" },
-  { key: "log", label: "Log" },
+const SUB_TAB_KEYS: SubTab[] = [
+  "activity",
+  "integration",
+  "skills",
+  "mcp",
+  "members",
+  "log",
 ];
 
 function formatDate(dateStr: string) {
@@ -60,6 +61,7 @@ export default function ProjectInfoTab({
   onNewChat,
   onNavigateToDocument,
 }: ProjectInfoTabProps) {
+  const t = useTranslations('project');
   const [activeSubTab, setActiveSubTab] = useState<SubTab>("activity");
   const { authFetch } = useAuth();
   const [repositories, setRepositories] = useState<Repository[]>(
@@ -72,11 +74,25 @@ export default function ProjectInfoTab({
   const [members, setMembers] = useState<ProjectMember[]>(
     projectMeta?.members || []
   );
+  const [ownerId, setOwnerId] = useState<string>(projectMeta?.ownerId || "");
   const [gitnexusStatus, setGitnexusStatus] = useState<GitNexusStatus | null>(
     projectMeta?.gitnexusStatus || null
   );
 
-  const dirSegments = projectPath.split(",");
+  const dirSegments = projectPath.split("/");
+
+  // 计算 Owner 显示名称：优先从 members 中找，否则查 API 或 fallback
+  const ownerName = (() => {
+    const inMembers = members.find((m) => m.userId === ownerId);
+    if (inMembers) return inMembers.accountName;
+    // fallback: 用 UUID 的前 8 位
+    return ownerId.length > 8 ? `${ownerId.slice(0, 8)}...` : ownerId;
+  })();
+
+  const handleOwnerTransfer = (newOwnerId: string, newMembers: ProjectMember[]) => {
+    setOwnerId(newOwnerId);
+    setMembers(newMembers);
+  };
 
   // 检查同步状态
   useEffect(() => {
@@ -149,7 +165,7 @@ export default function ProjectInfoTab({
           <div className="flex-1 min-w-0">
             <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">{projectName}</h2>
             <p className="text-xs text-gray-400 dark:text-gray-400">
-              {projectMeta?.description || "No description"}
+              {projectMeta?.description || t('noDescription')}
             </p>
           </div>
           <button
@@ -159,30 +175,30 @@ export default function ProjectInfoTab({
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-            Start Chat
+            {t('startChat')}
           </button>
         </div>
         {projectMeta?.createdAt && (
           <div className="text-xs text-gray-400 dark:text-gray-500 ml-12">
-            Created {formatDate(projectMeta.createdAt)}
+            {t('created', { date: formatDate(projectMeta.createdAt) })}
           </div>
         )}
       </div>
 
       {/* Sub-tab bar */}
       <div className="flex items-center px-6 border-b border-gray-200 dark:border-zinc-700 shrink-0">
-        {SUB_TABS.map((tab) => (
+        {SUB_TAB_KEYS.map((key) => (
           <button
-            key={tab.key}
-            onClick={() => handleTabChange(tab.key)}
+            key={key}
+            onClick={() => handleTabChange(key)}
             className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-              activeSubTab === tab.key
+              activeSubTab === key
                 ? "text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400"
                 : "text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-zinc-500"
             }`}
           >
-            {tab.label}
-            {tab.key === "integration" && hasUnsynced && (
+            {t(`tabs.${key}`)}
+            {key === "integration" && hasUnsynced && (
               <Badge variant="dot" className="ml-1.5" />
             )}
           </button>
@@ -222,6 +238,9 @@ export default function ProjectInfoTab({
             projectPath={projectPath}
             members={members}
             onMembersChange={setMembers}
+            ownerId={ownerId}
+            ownerName={ownerName}
+            onOwnerTransfer={handleOwnerTransfer}
           />
         )}
         {activeSubTab === "log" && (

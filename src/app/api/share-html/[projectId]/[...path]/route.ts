@@ -4,6 +4,7 @@ import { sharedHtmlFiles } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { readHtmlDocument } from "@/lib/fs";
+import { getApiT } from "@/lib/i18n-api";
 
 /**
  * 解析 /api/share-html/[projectId]/[...path] 路由参数。
@@ -13,8 +14,9 @@ async function resolveParams(
   params: Promise<{ projectId: string; path: string[] }>
 ): Promise<{ projectId: string; htmlPath: string } | { error: string }> {
   const { projectId, path } = await params;
-  if (!projectId) return { error: "projectId is required" };
-  if (!path || path.length === 0) return { error: "path is required" };
+  const t = await getApiT();
+  if (!projectId) return { error: t('api.projectIdRequired') };
+  if (!path || path.length === 0) return { error: t('api.pathRequired') };
   const htmlPath = path.join("/");
   if (!htmlPath.endsWith(".html")) {
     return { error: "htmlPath must end with .html" };
@@ -22,7 +24,7 @@ async function resolveParams(
   // 简单防 `..` 段
   for (const seg of path) {
     if (seg === ".." || seg.includes("\0")) {
-      return { error: "invalid path segment" };
+      return { error: t('api.notFound') };
     }
   }
   return { projectId, htmlPath };
@@ -48,7 +50,7 @@ export async function POST(
   const content = readHtmlDocument(...htmlPath.split("/").filter(Boolean));
   if (content === null) {
     return NextResponse.json(
-      { error: "HTML file not found; cannot share" },
+      { error: "HTML file not found; cannot share" }, // file-system error, keep as-is
       { status: 404 }
     );
   }

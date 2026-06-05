@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getApiT } from "@/lib/i18n-api";
 
 export async function GET(req: NextRequest) {
+  const t = await getApiT();
   const codeChallenge = req.nextUrl.searchParams.get("code_challenge");
   const codeChallengeMethod = req.nextUrl.searchParams.get("code_challenge_method") || "S256";
   const redirectUri = req.nextUrl.searchParams.get("redirect_uri");
@@ -8,7 +10,7 @@ export async function GET(req: NextRequest) {
 
   if (!codeChallenge || !redirectUri || !state) {
     return NextResponse.json(
-      { error: "Missing required parameters: code_challenge, redirect_uri, state" },
+      { error: t('api.auth.cli.missingRequiredParams') },
       { status: 400 }
     );
   }
@@ -18,13 +20,13 @@ export async function GET(req: NextRequest) {
     const url = new URL(redirectUri);
     if (url.hostname !== "localhost" && url.hostname !== "127.0.0.1") {
       return NextResponse.json(
-        { error: "redirect_uri must be localhost" },
+        { error: t('api.auth.cli.redirectUriMustBeLocalhost') },
         { status: 400 }
       );
     }
   } catch {
     return NextResponse.json(
-      { error: "Invalid redirect_uri" },
+      { error: t('api.auth.cli.invalidRedirectUri') },
       { status: 400 }
     );
   }

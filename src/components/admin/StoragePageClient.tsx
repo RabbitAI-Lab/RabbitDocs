@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/components/auth/useAuth";
+import { useTranslations } from "next-intl";
 import { Button, Input, App, Typography, Space, Alert } from "antd";
 import { SaveOutlined } from "@ant-design/icons";
 
@@ -16,13 +17,13 @@ interface Props {
   initialConfig?: StorageConfigData;
 }
 
-function validatePath(value: string): string | null {
+function validatePath(value: string, t: (key: string) => string): string | null {
   if (value.trim() === "") return null; // Allow clearing to restore default
   if (!value.startsWith("/")) {
-    return "Storage path must be an absolute path starting with /";
+    return t('storagePage.validationMustBeAbsolute');
   }
   if (value.startsWith("/.") || value.includes("/..")) {
-    return "Storage path cannot contain . or .. directory segments";
+    return t('storagePage.validationNoDotSegments');
   }
   return null;
 }
@@ -32,14 +33,15 @@ export default function StoragePageClient({ initialConfig }: Props) {
     initialConfig?.storagePath || ""
   );
   const { authFetch } = useAuth();
+  const t = useTranslations('admin');
   const [updatedAt, setUpdatedAt] = useState(initialConfig?.updatedAt || null);
   const [isSaving, setIsSaving] = useState(false);
   const { message } = App.useApp();
 
-  const validationError = validatePath(storagePath);
+  const validationError = validatePath(storagePath, t);
 
   const handleSave = async () => {
-    const error = validatePath(storagePath);
+    const error = validatePath(storagePath, t);
     if (error) {
       message.error(error);
       return;
@@ -55,18 +57,18 @@ export default function StoragePageClient({ initialConfig }: Props) {
       const data = await res.json();
 
       if (!res.ok) {
-        message.error(data.error || "Save failed");
+        message.error(data.error || t('storagePage.msgSaveFailed'));
         return;
       }
 
       setUpdatedAt(data.updatedAt);
       message.success(
         storagePath.trim()
-          ? "Saved successfully, file storage path updated"
-          : "Saved successfully, restored default storage path"
+          ? t('storagePage.msgSavedUpdated')
+          : t('storagePage.msgSavedRestored')
       );
     } catch {
-      message.error("Save failed, please check network connection");
+      message.error(t('storagePage.msgSaveFailedNetwork'));
     } finally {
       setIsSaving(false);
     }
@@ -77,9 +79,9 @@ export default function StoragePageClient({ initialConfig }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-700">
         <div>
-          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">File Storage</h1>
+          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('storagePage.title')}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Configure file storage data directory, all project documents will be stored in this directory
+            {t('storagePage.subtitle')}
           </p>
         </div>
         <Space>
@@ -88,7 +90,7 @@ export default function StoragePageClient({ initialConfig }: Props) {
             loading={isSaving}
             onClick={handleSave}
           >
-            Save
+            {t('storagePage.btnSave')}
           </Button>
         </Space>
       </div>
@@ -98,19 +100,18 @@ export default function StoragePageClient({ initialConfig }: Props) {
         <div className="bg-white dark:bg-zinc-800 rounded-lg border border-gray-200 dark:border-zinc-700 p-4">
           <div className="mb-3">
             <Text type="secondary" className="text-xs">
-              Configure the root directory for file storage. Leave empty to use the default path (data folder under project directory).
-              Path must be an absolute path starting with /.
+              {t('storagePage.tipDescription')}
             </Text>
           </div>
 
           <div className="mb-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Storage Directory
+              {t('storagePage.labelStorageDir')}
             </label>
             <Input
               value={storagePath}
               onChange={(e) => setStoragePath(e.target.value)}
-              placeholder="/path/to/storage"
+              placeholder={t('storagePage.placeholderStoragePath')}
               className="max-w-xl"
               status={validationError ? "error" : undefined}
             />
@@ -125,7 +126,7 @@ export default function StoragePageClient({ initialConfig }: Props) {
             <Alert
               className="max-w-xl mt-3"
               type="info"
-              title="Currently using default storage path: data folder under project directory"
+              title={t('storagePage.alertUsingDefault')}
               showIcon
             />
           )}
@@ -133,7 +134,7 @@ export default function StoragePageClient({ initialConfig }: Props) {
           {updatedAt && (
             <div className="mt-4">
               <Text type="secondary" className="text-xs">
-                Last saved: {new Date(updatedAt).toLocaleString()}
+                {t('storagePage.lastSaved')}{new Date(updatedAt).toLocaleString()}
               </Text>
             </div>
           )}

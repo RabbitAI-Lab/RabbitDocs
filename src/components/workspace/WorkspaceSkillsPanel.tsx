@@ -1,5 +1,6 @@
 "use client";
 import { useAuth } from "@/components/auth/useAuth";
+import { useTranslations } from "next-intl";
 
 import { useState, useEffect } from "react";
 import { Switch, App } from "antd";
@@ -11,6 +12,7 @@ interface WorkspaceSkillsPanelProps {
 export default function WorkspaceSkillsPanel({
   workspacePath,
 }: WorkspaceSkillsPanelProps) {
+  const t = useTranslations('workspace');
   const [loading, setLoading] = useState(true);
   const { authFetch } = useAuth();
   const [saving, setSaving] = useState<string | null>(null);
@@ -77,21 +79,21 @@ export default function WorkspaceSkillsPanel({
         }
         message.success(
           checked
-            ? `${skillId === "ecc" ? "ECC" : "Huashu Design"} enabled`
-            : `${skillId === "ecc" ? "ECC" : "Huashu Design"} disabled`,
+            ? t('skills.enabledMsg', { name: skillId === "ecc" ? t('skills.ecc') : t('skills.huashuDesign') })
+            : t('skills.disabledMsg', { name: skillId === "ecc" ? t('skills.ecc') : t('skills.huashuDesign') }),
         );
       } else {
         const data = await res.json();
-        const errorMsg = data.details || data.error || "Operation failed";
+        const errorMsg = data.details || data.error || t('skills.operationFailed');
         if (skillId === "ecc") setEccError(errorMsg);
         else setHuashuError(errorMsg);
-        message.error(data.error || "Operation failed");
+        message.error(data.error || t('skills.operationFailed'));
       }
     } catch {
-      const errorMsg = "Network error";
+      const errorMsg = t('skills.networkError');
       if (skillId === "ecc") setEccError(errorMsg);
       else setHuashuError(errorMsg);
-      message.error("Network error");
+      message.error(t('skills.networkError'));
     } finally {
       setSaving(null);
     }
@@ -129,9 +131,7 @@ export default function WorkspaceSkillsPanel({
           <path d="M2 12l10 5 10-5" />
         </svg>
         <p className="text-sm text-indigo-700 dark:text-indigo-300">
-          Workspace-level AI capability extensions. When enabled, AI chats in
-          all projects of this workspace will gain the corresponding enhanced
-          capabilities.
+          {t('skills.description')}
         </p>
       </div>
 
@@ -142,13 +142,13 @@ export default function WorkspaceSkillsPanel({
           loading={saving === "ecc"}
           onChange={(checked) => handleToggle("ecc", checked)}
         />
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">ECC</span>
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{t('skills.ecc')}</span>
         <span
           className={`text-xs ${
             eccEnabled ? "text-green-600" : "text-gray-400 dark:text-gray-500"
           }`}
         >
-          {eccEnabled ? "Enabled" : "Disabled"}
+          {eccEnabled ? t('skills.enabled') : t('skills.disabled')}
         </span>
         {eccVersion && (
           <span className="text-xs text-gray-400 dark:text-gray-500">v{eccVersion}</span>
@@ -163,14 +163,14 @@ export default function WorkspaceSkillsPanel({
           onChange={(checked) => handleToggle("huashu", checked)}
         />
         <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-          Huashu Design
+          {t('skills.huashuDesign')}
         </span>
         <span
           className={`text-xs ${
             huashuEnabled ? "text-green-600" : "text-gray-400 dark:text-gray-500"
           }`}
         >
-          {huashuEnabled ? "Enabled" : "Disabled"}
+          {huashuEnabled ? t('skills.enabled') : t('skills.disabled')}
         </span>
         {huashuVersion && (
           <span className="text-xs text-gray-400 dark:text-gray-500">v{huashuVersion}</span>

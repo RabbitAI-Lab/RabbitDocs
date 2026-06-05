@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import NavLink from "./NavLink";
 import { useAuth } from "@/components/auth/useAuth";
 
 export default function TodoNavLink() {
   const { user, isLoading, authFetch } = useAuth();
   const [pendingCount, setPendingCount] = useState<number>(0);
+  const t = useTranslations("sidebar");
 
   const fetchPendingCount = () => {
     if (!user) return;
@@ -52,7 +54,7 @@ export default function TodoNavLink() {
         </svg>
       }
     >
-      Todo
+      {t('todo')}
     </NavLink>
   );
 }

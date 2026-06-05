@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import CollapsibleGroup from "@/components/ui/CollapsibleGroup";
 import { useAuth } from "@/components/auth/useAuth";
 
@@ -17,6 +18,7 @@ interface TemplatesPanelProps {
 export default function TemplatesPanel({ templates }: TemplatesPanelProps) {
   const router = useRouter();
   const { user, authFetch } = useAuth();
+  const t = useTranslations("sidebar");
 
   const handleCreate = async (template: Template) => {
     if (!user) return;
@@ -51,7 +53,7 @@ export default function TemplatesPanel({ templates }: TemplatesPanelProps) {
   };
 
   return (
-    <CollapsibleGroup title="Templates" defaultOpen={false}>
+    <CollapsibleGroup title={t('templates')} defaultOpen={false}>
       <div className="space-y-0.5">
         {templates.map((t) => (
           <button

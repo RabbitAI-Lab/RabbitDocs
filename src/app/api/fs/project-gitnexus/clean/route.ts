@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth/session";
 import { readProjectMeta } from "@/lib/fs";
 import { cancelGitNexus, runGitNexus } from "@/lib/gitnexus-service";
 import { logOperation, extractProjectId } from "@/lib/operation-log";
+import { getApiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
@@ -11,19 +12,20 @@ export const dynamic = "force-dynamic";
 // 行为：清理或取消项目根目录的 GitNexus 任务。不再针对单个仓库。
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { dirSegments, action } = body;
 
   if (!dirSegments || !action) {
     return NextResponse.json(
-      { error: "dirSegments and action are required" },
+      { error: t('api.missingRequiredParams') },
       { status: 400 }
     );
   }
 
   if (action !== "clean" && action !== "cancel") {
     return NextResponse.json(
-      { error: "action must be 'clean' or 'cancel'" },
+      { error: t('api.gitnexus.actionMustBeCleanOrCancel') },
       { status: 400 }
     );
   }
@@ -31,7 +33,7 @@ export async function POST(req: NextRequest) {
   try {
     const meta = readProjectMeta(dirSegments);
     if (!meta) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+      return NextResponse.json({ error: t('api.projectNotFound') }, { status: 404 });
     }
 
     // Cancel 分支：终止正在运行的任务
@@ -39,7 +41,7 @@ export async function POST(req: NextRequest) {
       const cancelled = cancelGitNexus("project", dirSegments);
       if (!cancelled) {
         return NextResponse.json(
-          { error: "No running task to cancel" },
+          { error: t('api.gitnexus.noRunningTaskToCancel') },
           { status: 409 }
         );
       }
@@ -62,17 +64,17 @@ export async function POST(req: NextRequest) {
     if (!result.started) {
       if (result.reason === "already_running") {
         return NextResponse.json(
-          { error: "Another task is already running" },
+          { error: t('api.gitnexus.anotherTaskRunning') },
           { status: 409 }
         );
       }
       if (result.reason === "path_not_found") {
         return NextResponse.json(
-          { error: "Project root directory not found" },
+          { error: t('api.gitnexus.projectRootNotFound') },
           { status: 400 }
         );
       }
-      return NextResponse.json({ error: "Failed to start clean" }, { status: 500 });
+      return NextResponse.json({ error: t('api.gitnexus.failedToStartClean') }, { status: 500 });
     }
 
     logOperation({

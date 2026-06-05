@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { FileTab } from "./types";
 import { PROJECT_INFO_TAB, CHAT_TAB } from "./types";
 
@@ -25,6 +26,8 @@ export default function ProjectTabBar({
   onTabClose,
   onOpenFloatingChat,
 }: ProjectTabBarProps) {
+  const t = useTranslations('project');
+
   return (
     <div className="flex items-center h-[41px] bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-700 overflow-x-auto shrink-0">
       {/* Project Info tab (fixed, first) */}
@@ -41,7 +44,7 @@ export default function ProjectTabBar({
           <line x1="12" y1="16" x2="12" y2="12" />
           <line x1="12" y1="8" x2="12.01" y2="8" />
         </svg>
-        Project Info
+        {t('tabs.projectInfo')}
       </button>
 
       {/* Chat tab */}
@@ -56,7 +59,7 @@ export default function ProjectTabBar({
         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
-        Chat
+        {t('tabs.chat')}
         <span
           role="button"
           onClick={(e) => { e.stopPropagation(); onOpenFloatingChat(projectId); }}

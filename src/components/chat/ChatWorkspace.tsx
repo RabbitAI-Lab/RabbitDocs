@@ -2,7 +2,7 @@
 
 import { useState, forwardRef, useImperativeHandle } from "react";
 import { useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
+import { useTranslations } from "next-intl";
 import { Bubble, Sender, XProvider } from "@ant-design/x";
 import { Tag } from "antd";
 import type { Message, ChatWorkspaceProps, ChatWorkspaceRef } from "./chat-workspace-ref";
@@ -39,8 +39,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
   workspaceId,
 }, ref) {
   const router = useRouter();
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
+  const t = useTranslations("chat");
   const [effectiveChatId, setEffectiveChatId] = useState<number | null>(chatId ?? null);
   const [effectiveChatTitle, setEffectiveChatTitle] = useState<string>(chatTitle);
 
@@ -103,14 +102,14 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
 
   const handleSaveToDocument = () => {
     const content = messagesApi.messages
-      .map((m) => `### ${m.role === "user" ? "用户" : "助手"}\n\n${m.content}`)
+      .map((m) => `### ${m.role === "user" ? t("roleLabels.user") : t("roleLabels.assistant")}\n\n${m.content}`)
       .join("\n\n");
     setSaveModalContent(content);
     setSaveModalOpen(true);
   };
 
   const handleSaveSingleMessage = (msg: Message) => {
-    const roleLabel = msg.role === "user" ? "用户" : "助手";
+    const roleLabel = msg.role === "user" ? t("roleLabels.user") : t("roleLabels.assistant");
     const content = `### ${roleLabel}\n\n${msg.content}`;
     setSaveModalContent(content);
     setSaveModalOpen(true);
@@ -162,6 +161,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
     loading: messagesApi.loading,
     onRegenerate: messagesApi.handleRegenerate,
     onSaveSingleMessage: handleSaveSingleMessage,
+    t,
   });
 
   return (
@@ -225,7 +225,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
               onSubmit={messagesApi.handleSend}
               loading={messagesApi.loading}
               onCancel={messagesApi.handleCancel}
-              placeholder="输入消息..."
+              placeholder={t('input.placeholder')}
               autoSize={
                 messagesApi.messages.length === 0 && !floating
                   ? { minRows: 2, maxRows: 6 }
@@ -255,7 +255,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
                   </div>
                 ) : false
               }
-              styles={{ root: { backgroundColor: isDark ? '#18181b' : '#fff' } }}
+              styles={{ root: { backgroundColor: 'var(--sender-bg)' } }}
               footer={renderFooter}
             />
           </div>

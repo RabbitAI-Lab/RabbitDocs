@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Actions } from "@ant-design/x";
 import { Typography } from "antd";
 import { SaveOutlined, RedoOutlined, ThunderboltOutlined, DownOutlined } from "@ant-design/icons";
@@ -14,6 +15,7 @@ import type { Message } from "./chat-workspace-ref";
  */
 function ThinkingBlock({ text }: { text: string }) {
   const [open, setOpen] = useState(true);
+  const t = useTranslations("chat");
   if (!text) return null;
   return (
     <div className="mb-2 rounded border border-amber-200 dark:border-amber-700 bg-amber-50/40 dark:bg-amber-900/20">
@@ -23,8 +25,8 @@ function ThinkingBlock({ text }: { text: string }) {
         className="flex items-center gap-1 px-2 py-1 text-xs text-amber-700 dark:text-amber-300 w-full text-left hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-colors"
       >
         <ThunderboltOutlined />
-        <span className="font-medium">思考过程</span>
-        <span className="text-amber-500 dark:text-amber-400">({text.length} 字)</span>
+        <span className="font-medium">{t("thinkingBlock.thinkingProcess")}</span>
+        <span className="text-amber-500 dark:text-amber-400">({text.length} {t("thinkingBlock.charCount")})</span>
         <DownOutlined
           className={`ml-auto transition-transform ${open ? "" : "-rotate-90"}`}
         />
@@ -51,6 +53,7 @@ interface MapMessagesToBubbleItemsOptions {
   loading: boolean;
   onRegenerate: (msg: Message) => void;
   onSaveSingleMessage: (msg: Message) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 export function mapMessagesToBubbleItems({
@@ -58,6 +61,7 @@ export function mapMessagesToBubbleItems({
   loading,
   onRegenerate,
   onSaveSingleMessage,
+  t,
 }: MapMessagesToBubbleItemsOptions): BubbleItemType[] {
   return messages.map((msg) => {
     const isAiLoading =
@@ -101,13 +105,13 @@ export function mapMessagesToBubbleItems({
                   items={[
                     {
                       key: "save",
-                      label: "保存",
+                      label: t("actions.save"),
                       icon: <SaveOutlined />,
                       onItemClick: () => onSaveSingleMessage(msg),
                     },
                     {
                       key: "regenerate",
-                      label: "重新生成",
+                      label: t("actions.regenerate"),
                       icon: <RedoOutlined />,
                       onItemClick: () => onRegenerate(msg),
                     },

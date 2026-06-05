@@ -16,6 +16,7 @@ import fs from "fs";
 import { db } from "@/db";
 import { documentActivities, sharedHtmlFiles } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { getApiT } from "@/lib/i18n-api";
 
 /**
  * 从 path 段识别文件类型：".html" -> "html"；其他（含 ".md"）-> "md"。
@@ -85,18 +86,19 @@ function parseDocumentMeta(segments: string[]) {
 // GET /api/fs/document?path=personal/default/my-project/doc-title
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const { searchParams } = new URL(req.url);
   const filePath = searchParams.get("path") || "";
 
   if (!filePath) {
-    return NextResponse.json({ error: "path is required" }, { status: 400 });
+    return NextResponse.json({ error: t('api.pathRequired') }, { status: 400 });
   }
 
   const segments = filePath.split("/").filter(Boolean);
   const content = readAnyDocument(...segments);
 
   if (content === null) {
-    return NextResponse.json({ error: "Document not found" }, { status: 404 });
+    return NextResponse.json({ error: t('api.documentNotFound') }, { status: 404 });
   }
 
   return NextResponse.json({ content });
@@ -105,11 +107,12 @@ export async function GET(req: NextRequest) {
 // POST /api/fs/document - create/update document
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { path: filePath, content } = body;
 
   if (!filePath || content === undefined) {
-    return NextResponse.json({ error: "path and content are required" }, { status: 400 });
+    return NextResponse.json({ error: t('api.pathAndContentRequired') }, { status: 400 });
   }
 
   const segments = filePath.split("/").filter(Boolean);
@@ -135,11 +138,12 @@ export async function POST(req: NextRequest) {
 // DELETE /api/fs/document - delete document
 export async function DELETE(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { path: filePath } = body;
 
   if (!filePath) {
-    return NextResponse.json({ error: "path is required" }, { status: 400 });
+    return NextResponse.json({ error: t('api.pathRequired') }, { status: 400 });
   }
 
   const segments = filePath.split("/").filter(Boolean);
@@ -175,17 +179,18 @@ export async function DELETE(req: NextRequest) {
 // PATCH /api/fs/document - rename document
 export async function PATCH(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { path: filePath, newTitle } = body;
 
   if (!filePath || !newTitle) {
-    return NextResponse.json({ error: "path and newTitle are required" }, { status: 400 });
+    return NextResponse.json({ error: t('api.pathAndNewTitleRequired') }, { status: 400 });
   }
 
   const segments = filePath.split("/").filter(Boolean);
   const newPath = buildNewPath(segments, newTitle);
   if (fs.existsSync(newPath)) {
-    return NextResponse.json({ error: "A file with this name already exists" }, { status: 409 });
+    return NextResponse.json({ error: t('api.fileAlreadyExists') }, { status: 409 });
   }
 
   const meta = parseDocumentMeta(segments);

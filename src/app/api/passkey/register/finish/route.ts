@@ -6,6 +6,7 @@ import { requireAuth } from "@/lib/auth/session";
 import { getSetting, setSetting } from "@/lib/auth/settings";
 import type { AuthUser } from "@/lib/auth/session";
 import crypto from "crypto";
+import { getApiT } from "@/lib/i18n-api";
 
 function getDeviceName(aaguid: string): string {
   const known: Record<string, string> = {
@@ -22,6 +23,7 @@ export async function POST(req: NextRequest) {
   if (authResult instanceof NextResponse) return authResult;
   const user = authResult as AuthUser;
 
+  const t = await getApiT();
   try {
     const body = await req.json();
     const credential = typeof body.credential === "string"
@@ -30,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     const challengeStr = getSetting(`passkey_challenge_${user.id}`);
     if (!challengeStr) {
-      return NextResponse.json({ error: "No pending registration" }, { status: 400 });
+      return NextResponse.json({ error: t('api.passkey.noPendingRegistration') }, { status: 400 });
     }
 
     const rpID = getSetting("passkey_rp_id") || req.headers.get("host")?.split(":")[0] || "localhost";
@@ -44,7 +46,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!verification.verified || !verification.registrationInfo) {
-      return NextResponse.json({ error: "Verification failed" }, { status: 400 });
+      return NextResponse.json({ error: t('api.passkey.verificationFailed') }, { status: 400 });
     }
 
     const info = verification.registrationInfo;
@@ -72,6 +74,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[passkey] Register finish error:", error);
-    return NextResponse.json({ error: "Registration failed" }, { status: 500 });
+    return NextResponse.json({ error: t('api.passkey.registrationFailed') }, { status: 500 });
   }
 }

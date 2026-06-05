@@ -19,7 +19,8 @@ const DIR_SEGMENTS = ["personal", "default", "projects", PROJECT_ID];
 
 const DATA_ROOT = path.join(os.homedir(), ".rabbitdocs", "data");
 const CONFIG_PATH = path.join(DATA_ROOT, ...DIR_SEGMENTS, ".mcp.json");
-const TMP_PATH = CONFIG_PATH + ".tmp";
+const TMP_PATH = CONFIG_PATH + ".tmp"; // keep for future atomic write
+void TMP_PATH;
 
 const GITNEXUS_ENTRY = {
   type: "stdio",

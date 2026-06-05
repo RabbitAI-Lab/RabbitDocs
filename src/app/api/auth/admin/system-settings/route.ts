@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/session";
 import { bulkSetSettings, getSetting } from "@/lib/auth/settings";
+import { getApiT } from "@/lib/i18n-api";
 
-const SETTING_KEYS = [
+// Settings keys managed by this route (used for reference)
+const _SETTING_KEYS = [
   "open_registration",
   "require_invite_code",
   "require_email_verification",
@@ -103,6 +105,7 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const authResult = await requireAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+  const t = await getApiT();
 
   try {
     const body = await req.json();
@@ -209,6 +212,6 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true, updated: updates.length });
   } catch (error) {
     console.error("[auth] Update system settings error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: t('api.internalError') }, { status: 500 });
   }
 }

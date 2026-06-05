@@ -36,5 +36,5 @@ export function getSmtpConfig(): {
 }
 
 export function getAppUrl(): string {
-  return getSetting("site_url") || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  return getSetting("site_url") || process.env.NEXT_PUBLIC_APP_URL || "https://docs.rabbitai-lab.com";
 }

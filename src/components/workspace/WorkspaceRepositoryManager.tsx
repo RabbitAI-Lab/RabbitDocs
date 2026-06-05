@@ -1,5 +1,6 @@
 "use client";
 import { useAuth } from "@/components/auth/useAuth";
+import { useTranslations } from "next-intl";
 
 import { useState } from "react";
 import { Input, Select, Button } from "antd";
@@ -16,28 +17,10 @@ interface SyncingState {
   [repoId: string]: boolean;
 }
 
-const REPO_TYPE_OPTIONS = [
-  { value: "github", label: "GitHub" },
-  { value: "gitlab", label: "GitLab" },
-  { value: "other", label: "Other" },
-];
-
-const CRED_TYPE_OPTIONS = [
-  { value: "none", label: "Public (No Auth)" },
-  { value: "token", label: "Token" },
-  { value: "username_password", label: "Username/Password" },
-];
-
 const TYPE_COLORS: Record<string, string> = {
   github: "bg-gray-100 text-gray-700",
   gitlab: "bg-orange-100 text-orange-700",
   other: "bg-blue-100 text-blue-700",
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  github: "GitHub",
-  gitlab: "GitLab",
-  other: "Other",
 };
 
 export default function WorkspaceRepositoryManager({
@@ -45,6 +28,22 @@ export default function WorkspaceRepositoryManager({
   repositories,
   onRepositoriesChange,
 }: WorkspaceRepositoryManagerProps) {
+  const t = useTranslations('workspace');
+  const REPO_TYPE_OPTIONS = [
+    { value: "github", label: "GitHub" },
+    { value: "gitlab", label: "GitLab" },
+    { value: "other", label: t('repository.other') },
+  ];
+  const CRED_TYPE_OPTIONS = [
+    { value: "none", label: t('repository.publicNoAuth') },
+    { value: "token", label: t('repository.token') },
+    { value: "username_password", label: t('repository.usernamePassword') },
+  ];
+  const TYPE_LABELS: Record<string, string> = {
+    github: "GitHub",
+    gitlab: "GitLab",
+    other: t('repository.other'),
+  };
   const [showAddForm, setShowAddForm] = useState(false);
   const { authFetch } = useAuth();
   const [submitting, setSubmitting] = useState(false);
@@ -112,7 +111,7 @@ export default function WorkspaceRepositoryManager({
   };
 
   const handleDelete = async (repoId: string) => {
-    if (!confirm("Are you sure you want to delete this repository?")) return;
+    if (!confirm(t('repository.confirmDelete'))) return;
 
     const res = await authFetch("/api/fs/workspace-repositories", {
       method: "DELETE",
@@ -165,7 +164,7 @@ export default function WorkspaceRepositoryManager({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-500">
-          {repositories.length} repositories bound
+          {t('repository.repoCount', { count: repositories.length })}
         </p>
         {!showAddForm && (
           <button
@@ -182,7 +181,7 @@ export default function WorkspaceRepositoryManager({
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            Add Repository
+            {t('repository.addRepository')}
           </button>
         )}
       </div>
@@ -226,7 +225,7 @@ export default function WorkspaceRepositoryManager({
                 onClick={() => handleSync(repo)}
                 disabled={syncingRepos[repo.id]}
                 className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-50"
-                title={repo.syncStatus === "not_cloned" ? "Clone" : "Pull"}
+                title={repo.syncStatus === "not_cloned" ? t('repository.clone') : t('repository.sync')}
               >
                 {syncingRepos[repo.id] ? (
                   <svg
@@ -253,13 +252,13 @@ export default function WorkspaceRepositoryManager({
                   </svg>
                 )}
                 <span>
-                  {repo.syncStatus === "not_cloned" ? "Clone" : "Sync"}
+                  {repo.syncStatus === "not_cloned" ? t('repository.clone') : t('repository.sync')}
                 </span>
               </button>
               <button
                 onClick={() => handleDelete(repo.id)}
                 className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 transition-all"
-                title="Delete"
+                title={t('repository.delete')}
               >
                 <svg
                   className="w-4 h-4"
@@ -281,7 +280,7 @@ export default function WorkspaceRepositoryManager({
         <div className="p-4 bg-gray-50 dark:bg-zinc-800 rounded-lg border border-gray-200 space-y-3">
           <div className="flex items-center justify-between mb-1">
             <h4 className="text-sm font-medium text-gray-700">
-              Add Repository
+              {t('repository.addRepoTitle')}
             </h4>
             <button
               onClick={() => {
@@ -305,16 +304,16 @@ export default function WorkspaceRepositoryManager({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Name</label>
+              <label className="block text-xs text-gray-500 mb-1">{t('repository.name')}</label>
               <Input
                 size="small"
-                placeholder="e.g. frontend"
+                placeholder={t('repository.namePlaceholder')}
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Type</label>
+              <label className="block text-xs text-gray-500 mb-1">{t('repository.type')}</label>
               <Select
                 size="small"
                 className="w-full"
@@ -326,10 +325,10 @@ export default function WorkspaceRepositoryManager({
           </div>
 
           <div>
-            <label className="block text-xs text-gray-500 mb-1">URL</label>
+            <label className="block text-xs text-gray-500 mb-1">{t('repository.url')}</label>
             <Input
               size="small"
-              placeholder="https://github.com/org/repo.git"
+              placeholder={t('repository.urlPlaceholder')}
               value={formUrl}
               onChange={(e) => setFormUrl(e.target.value)}
             />
@@ -337,7 +336,7 @@ export default function WorkspaceRepositoryManager({
 
           <div>
             <label className="block text-xs text-gray-500 mb-1">
-              Authentication
+              {t('repository.authentication')}
             </label>
             <Select
               size="small"
@@ -350,14 +349,14 @@ export default function WorkspaceRepositoryManager({
 
           {formCredType === "none" ? (
             <div className="text-xs text-gray-400 py-2">
-              Public repository requires no credentials, can be cloned directly
+              {t('repository.publicRepoHint')}
             </div>
           ) : formCredType === "token" ? (
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Token</label>
+              <label className="block text-xs text-gray-500 mb-1">{t('repository.token')}</label>
               <Input.Password
                 size="small"
-                placeholder="ghp_xxxx..."
+                placeholder={t('repository.tokenPlaceholder')}
                 value={formToken}
                 onChange={(e) => setFormToken(e.target.value)}
               />
@@ -366,7 +365,7 @@ export default function WorkspaceRepositoryManager({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">
-                  Username
+                  {t('repository.username')}
                 </label>
                 <Input
                   size="small"
@@ -377,7 +376,7 @@ export default function WorkspaceRepositoryManager({
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">
-                  Password
+                  {t('repository.password')}
                 </label>
                 <Input.Password
                   size="small"
@@ -397,7 +396,7 @@ export default function WorkspaceRepositoryManager({
                 resetForm();
               }}
             >
-              Cancel
+              {t('projects.cancel')}
             </Button>
             <Button
               size="small"
@@ -405,7 +404,7 @@ export default function WorkspaceRepositoryManager({
               disabled={!formName.trim() || !formUrl.trim()}
               onClick={handleAdd}
             >
-              Add
+              {t('repository.add')}
             </Button>
           </div>
         </div>
@@ -422,7 +421,7 @@ export default function WorkspaceRepositoryManager({
           >
             <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
           </svg>
-          <p className="text-sm">No repositories bound</p>
+          <p className="text-sm">{t('repository.noRepositories')}</p>
         </div>
       )}
     </div>

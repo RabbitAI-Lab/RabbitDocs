@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface ShareHtmlButtonProps {
   projectId: string;
@@ -21,6 +22,7 @@ export default function ShareHtmlButton({
   filePath,
   onClose,
 }: ShareHtmlButtonProps) {
+  const t = useTranslations('project');
   const [status, setStatus] = useState<ShareStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -49,7 +51,7 @@ export default function ShareHtmlButton({
         isShared: !!data.isShared,
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "查询分享状态失败");
+      setError(e instanceof Error ? e.message : t('shareHtml.queryFailed'));
     } finally {
       setLoading(false);
     }
@@ -67,7 +69,7 @@ export default function ShareHtmlButton({
       const res = await fetch(apiUrl, { method: "POST" });
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(text || "分享失败");
+        throw new Error(text || t('shareHtml.shareFailed'));
       }
       const data = await res.json();
       setStatus({
@@ -77,25 +79,25 @@ export default function ShareHtmlButton({
         isShared: true,
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "分享失败");
+      setError(e instanceof Error ? e.message : t('shareHtml.shareFailed'));
     } finally {
       setBusy(false);
     }
   };
 
   const handleRevoke = async () => {
-    if (!confirm("确定要取消分享吗？链接将立即失效。")) return;
+    if (!confirm(t('shareHtml.confirmCancel'))) return;
     setBusy(true);
     setError(null);
     try {
       const res = await fetch(apiUrl, { method: "DELETE" });
       if (!res.ok && res.status !== 404) {
         const text = await res.text();
-        throw new Error(text || "取消分享失败");
+        throw new Error(text || t('shareHtml.revokeFailed'));
       }
       setStatus({ isShared: false });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "取消分享失败");
+      setError(e instanceof Error ? e.message : t('shareHtml.revokeFailed'));
     } finally {
       setBusy(false);
     }
@@ -127,12 +129,12 @@ export default function ShareHtmlButton({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center px-4 h-12 border-b border-gray-100 dark:border-zinc-700">
-          <h3 className="text-sm font-semibold text-gray-800">分享 HTML</h3>
+          <h3 className="text-sm font-semibold text-gray-800">{t('shareHtml.title')}</h3>
           <button
             type="button"
             onClick={onClose}
             className="ml-auto w-7 h-7 flex items-center justify-center rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-            aria-label="关闭"
+            aria-label={t('shareHtml.close')}
           >
             ×
           </button>
@@ -142,12 +144,12 @@ export default function ShareHtmlButton({
           {loading ? (
             <div className="flex items-center justify-center py-6 text-gray-400 text-sm">
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-blue-600 mr-2" />
-              加载中...
+              {t('shareHtml.loading')}
             </div>
           ) : status?.isShared ? (
             <>
               <div>
-                <label className="text-xs text-gray-500">分享链接</label>
+                <label className="text-xs text-gray-500">{t('shareHtml.linkLabel')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <input
                     id="share-html-url"
@@ -161,26 +163,26 @@ export default function ShareHtmlButton({
                     onClick={handleCopy}
                     className="px-2.5 h-8 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                   >
-                    {copied ? "已复制" : "复制"}
+                    {copied ? t('shareHtml.copied') : t('shareHtml.copy')}
                   </button>
                 </div>
                 {status.createdAt && (
                   <p className="mt-1.5 text-xs text-gray-400">
-                    创建于 {new Date(status.createdAt).toLocaleString("zh-CN")}
+                    {t('shareHtml.createdAt', { date: new Date(status.createdAt).toLocaleString("zh-CN") })}
                   </p>
                 )}
               </div>
               <p className="text-xs text-gray-500">
-                任何持有此链接的人都可以查看此 HTML。分享始终反映文件的最新内容，删除链接后立即失效。
+                {t('shareHtml.shareNotice')}
               </p>
             </>
           ) : (
             <>
               <p className="text-sm text-gray-600">
-                生成一个公开链接，任何人都可以在只读沙箱 iframe 中查看此 HTML。
+                {t('shareHtml.generateDesc')}
               </p>
               <p className="text-xs text-gray-400">
-                为安全起见，iframe 使用 <code className="bg-gray-100 px-1 rounded">sandbox=&quot;&quot;</code>，脚本、表单和弹窗都会被阻止。
+                {t('shareHtml.sandboxNotice')}
               </p>
             </>
           )}
@@ -201,7 +203,7 @@ export default function ShareHtmlButton({
                 disabled={busy}
                 className="px-3 h-8 text-xs text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
               >
-                取消分享
+                {t('shareHtml.cancelShare')}
               </button>
               <button
                 type="button"
@@ -209,7 +211,7 @@ export default function ShareHtmlButton({
                 disabled={busy}
                 className="px-3 h-8 text-xs text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors disabled:opacity-50"
               >
-                {busy ? "处理中..." : "重新生成"}
+                {busy ? t('shareHtml.processing') : t('shareHtml.regenerate')}
               </button>
             </>
           ) : (
@@ -219,7 +221,7 @@ export default function ShareHtmlButton({
                 onClick={onClose}
                 className="px-3 h-8 text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors"
               >
-                取消
+                {t('shareHtml.cancel')}
               </button>
               <button
                 type="button"
@@ -227,7 +229,7 @@ export default function ShareHtmlButton({
                 disabled={busy || loading}
                 className="px-3 h-8 text-xs text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors disabled:opacity-50"
               >
-                {busy ? "生成中..." : "生成分享链接"}
+                {busy ? t('shareHtml.generating') : t('shareHtml.generate')}
               </button>
             </>
           )}

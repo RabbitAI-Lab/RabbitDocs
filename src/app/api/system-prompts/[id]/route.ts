@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/db";
 import { systemPrompts } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { getApiT } from "@/lib/i18n-api";
 
 // GET /api/system-prompts/[id]
 export async function GET(
@@ -16,7 +17,7 @@ export async function GET(
     .where(eq(systemPrompts.id, parseInt(id)))
     .get();
   if (!record)
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: "Not found" }, { status: 404 }); // non-authed GET
   return NextResponse.json(record);
 }
 
@@ -58,10 +59,11 @@ export async function DELETE(
     .from(systemPrompts)
     .where(eq(systemPrompts.id, parseInt(id)))
     .get();
+  const t = await getApiT();
   if (!record)
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: t('api.notFound') }, { status: 404 });
   if (record.isSystem === 1)
-    return NextResponse.json({ error: "Cannot delete built-in system prompt" }, { status: 403 });
+    return NextResponse.json({ error: t('api.systemPrompts.cannotDeleteBuiltin') }, { status: 403 });
 
   db.delete(systemPrompts)
     .where(eq(systemPrompts.id, parseInt(id)))

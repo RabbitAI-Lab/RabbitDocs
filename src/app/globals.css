@@ -12,6 +12,7 @@
   --popup-bg: #ffffff;
   --popup-border: #e5e7eb;
   --popup-header-bg: rgba(249, 250, 251, 0.5);
+  --sender-bg: #ffffff;
 }
 
 .dark {
@@ -24,6 +25,7 @@
   --popup-bg: #18181b;
   --popup-border: #27272a;
   --popup-header-bg: rgba(24, 24, 27, 0.5);
+  --sender-bg: #18181b;
 }
 
 body {

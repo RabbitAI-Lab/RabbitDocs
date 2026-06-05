@@ -1,23 +1,26 @@
+"use client";
+
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
+
+function LoadingSpinner() {
+  const tc = useTranslations("common");
+  return (
+    <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500">
+      <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 dark:border-zinc-600 border-t-blue-600 dark:border-t-blue-400 mr-2" />
+      <span className="text-sm">{tc("loadingEditor")}</span>
+    </div>
+  );
+}
 
 const CherryEditor = dynamic(() => import("@/components/editor/CherryEditor"), {
   ssr: false,
-  loading: () => (
-    <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500">
-      <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 dark:border-zinc-600 border-t-blue-600 dark:border-t-blue-400 mr-2" />
-      <span className="text-sm">Loading...</span>
-    </div>
-  ),
+  loading: () => <LoadingSpinner />,
 });
 
 const HtmlEditor = dynamic(() => import("@/components/editor/HtmlEditor"), {
   ssr: false,
-  loading: () => (
-    <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500">
-      <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 dark:border-zinc-600 border-t-blue-600 dark:border-t-blue-400 mr-2" />
-      <span className="text-sm">Loading...</span>
-    </div>
-  ),
+  loading: () => <LoadingSpinner />,
 });
 
 interface EditorTabContentProps {
@@ -42,12 +45,7 @@ export default function EditorTabContent({
   onSave,
 }: EditorTabContentProps) {
   if (!loaded) {
-    return (
-      <div className="flex-1 flex items-center justify-center text-gray-400">
-        <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-t-blue-600 mr-2" />
-        <span className="text-sm">Loading...</span>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (type === "html") {

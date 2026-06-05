@@ -5,6 +5,7 @@ import path from "node:path";
 import { db } from "@/db";
 import { storageConfig } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { getApiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
@@ -22,12 +23,13 @@ export async function GET() {
 // PUT /api/storage-config
 export async function PUT(req: NextRequest) {
   const auth = await requireAdmin(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { storagePath } = body;
 
   if (typeof storagePath !== "string") {
     return NextResponse.json(
-      { error: "storagePath 必须是字符串" },
+      { error: t('api.storage.storagePathMustBeString') },
       { status: 400 }
     );
   }
@@ -38,14 +40,14 @@ export async function PUT(req: NextRequest) {
   if (trimmed !== "") {
     if (!trimmed.startsWith("/")) {
       return NextResponse.json(
-        { error: "存储路径必须是绝对路径，以 / 开头" },
+        { error: t('api.storage.storagePathMustBeAbsolute') },
         { status: 400 }
       );
     }
 
     if (trimmed.startsWith("/.") || trimmed.includes("/..")) {
       return NextResponse.json(
-        { error: "存储路径不能包含 . 或 .. 目录片段" },
+        { error: t('api.storage.storagePathNoDotDot') },
         { status: 400 }
       );
     }
@@ -61,7 +63,7 @@ export async function PUT(req: NextRequest) {
       fs.unlinkSync(testFile);
     } catch {
       return NextResponse.json(
-        { error: "目录不可写或无法创建，请检查路径和权限" },
+        { error: t('api.storage.directoryNotWritable') },
         { status: 400 }
       );
     }

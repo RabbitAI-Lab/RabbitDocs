@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useAuth } from "@/components/auth/useAuth";
+import { useTranslations } from "next-intl";
 import {
   Button,
   Form,
@@ -80,6 +81,7 @@ interface Props {
 export default function PlansPageClient({ initialPlans }: Props) {
   const [plans, setPlans] = useState<Plan[]>(initialPlans);
   const { authFetch } = useAuth();
+  const t = useTranslations('admin');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const [form] = Form.useForm();
@@ -146,14 +148,14 @@ export default function PlansPageClient({ initialPlans }: Props) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(submitData),
         });
-        message.success("Plan updated");
+        message.success(t('plansPage.msgPlanUpdated'));
       } else {
         await authFetch("/api/plans", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(submitData),
         });
-        message.success("Plan created");
+        message.success(t('plansPage.msgPlanCreated'));
       }
       setModalOpen(false);
       setEditingPlan(null);
@@ -175,8 +177,8 @@ export default function PlansPageClient({ initialPlans }: Props) {
         refreshList();
         message.success(
           newEnabled
-            ? `"${record.title}" enabled`
-            : `"${record.title}" disabled`
+            ? t('plansPage.msgEnabled', { title: record.title })
+            : t('plansPage.msgDisabled', { title: record.title })
         );
       });
     },
@@ -186,15 +188,15 @@ export default function PlansPageClient({ initialPlans }: Props) {
   const handleDelete = useCallback(
     (id: number, title: string) => {
       modal.confirm({
-        title: "Confirm Delete",
-        content: `Confirm delete plan "${title}"?`,
-        okText: "Delete",
-        cancelText: "Cancel",
+        title: t('plansPage.confirmDeleteTitle'),
+        content: t('plansPage.confirmDeleteContent', { title }),
+        okText: t('systemPromptsPage.btnDelete'),
+        cancelText: t('modelConfigModal.btnCancel'),
         okButtonProps: { danger: true },
         onOk: async () => {
           await authFetch(`/api/plans/${id}`, { method: "DELETE" });
           await refreshList();
-          message.success("Deleted");
+          message.success(t('plansPage.msgDeleted'));
         },
       });
     },
@@ -203,19 +205,19 @@ export default function PlansPageClient({ initialPlans }: Props) {
 
   const columns: ColumnsType<Plan> = [
     {
-      title: "Title",
+      title: t('plansPage.columnTitle'),
       dataIndex: "title",
       width: 140,
       render: (title: string) => <Text strong>{title}</Text>,
     },
     {
-      title: "Default",
+      title: t('plansPage.columnDefault'),
       dataIndex: "defaultCurrency",
       width: 80,
       render: (v: string) => <Text>{v}</Text>,
     },
     {
-      title: "Pricing",
+      title: t('plansPage.columnPricing'),
       width: 220,
       render: (_: unknown, record: Plan) => {
         try {
@@ -227,9 +229,9 @@ export default function PlansPageClient({ initialPlans }: Props) {
               {priceList.map((p, i) => (
                 <div key={i} className="text-xs">
                   <Text type="secondary">{p.currency}:</Text>{" "}
-                  <Text>{formatPrice(p.currency, p.monthlyPrice)}/mo</Text>
+                  <Text>{formatPrice(p.currency, p.monthlyPrice)}{t('plansPage.pricingPerMonth')}</Text>
                   <Text type="secondary"> · </Text>
-                  <Text>{formatPrice(p.currency, p.yearlyPrice)}/yr</Text>
+                  <Text>{formatPrice(p.currency, p.yearlyPrice)}{t('plansPage.pricingPerYear')}</Text>
                 </div>
               ))}
             </div>
@@ -240,7 +242,7 @@ export default function PlansPageClient({ initialPlans }: Props) {
       },
     },
     {
-      title: "Discount",
+      title: t('plansPage.columnDiscount'),
       width: 100,
       render: (_: unknown, record: Plan) => {
         if (record.discountType === "none")
@@ -248,7 +250,7 @@ export default function PlansPageClient({ initialPlans }: Props) {
         if (record.discountType === "percentage")
           return (
             <Text type="success">
-              {(record.discountValue / 10).toFixed(1)}折
+              {(record.discountValue / 10).toFixed(1)}{t('plansPage.discountLabelFold')}
             </Text>
           );
         return (
@@ -259,7 +261,7 @@ export default function PlansPageClient({ initialPlans }: Props) {
       },
     },
     {
-      title: "Features",
+      title: t('plansPage.columnFeatures'),
       width: 80,
       render: (_: unknown, record: Plan) => {
         try {
@@ -276,7 +278,7 @@ export default function PlansPageClient({ initialPlans }: Props) {
       },
     },
     {
-      title: "Enabled",
+      title: t('plansPage.columnEnabled'),
       dataIndex: "enabled",
       width: 80,
       render: (enabled: number, record: Plan) => (
@@ -288,12 +290,12 @@ export default function PlansPageClient({ initialPlans }: Props) {
       ),
     },
     {
-      title: "Sort",
+      title: t('plansPage.columnSort'),
       dataIndex: "sortOrder",
       width: 70,
     },
     {
-      title: "Actions",
+      title: t('plansPage.columnActions'),
       width: 100,
       render: (_: unknown, record: Plan) => (
         <Space>
@@ -320,13 +322,13 @@ export default function PlansPageClient({ initialPlans }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-700">
         <div>
-          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Plans</h1>
+          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('plansPage.title')}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Manage subscription plans and pricing
+            {t('plansPage.subtitle')}
           </p>
         </div>
         <Button icon={<PlusOutlined />} onClick={handleCreate}>
-          Add Plan
+          {t('plansPage.btnAddPlan')}
         </Button>
       </div>
 
@@ -343,7 +345,7 @@ export default function PlansPageClient({ initialPlans }: Props) {
 
       {/* Create/Edit Modal */}
       <Modal
-        title={editingPlan ? "Edit Plan" : "New Plan"}
+        title={editingPlan ? t('plansPage.modalTitleEdit') : t('plansPage.modalTitleCreate')}
         open={modalOpen}
         onOk={handleSubmit}
         onCancel={() => {
@@ -351,8 +353,8 @@ export default function PlansPageClient({ initialPlans }: Props) {
           setEditingPlan(null);
           form.resetFields();
         }}
-        okText={editingPlan ? "Save" : "Create"}
-        cancelText="Cancel"
+        okText={editingPlan ? t('plansPage.btnSave') : t('plansPage.btnCreate')}
+        cancelText={t('modelConfigModal.btnCancel')}
         mask={{ closable: false }}
         width={720}
       >
@@ -371,27 +373,27 @@ export default function PlansPageClient({ initialPlans }: Props) {
           className="mt-4"
         >
           <Form.Item
-            label="Title"
+            label={t('plansPage.formTitle')}
             name="title"
-            rules={[{ required: true, message: "Please enter plan title" }]}
+            rules={[{ required: true, message: t('plansPage.formTitleRule') }]}
           >
-            <Input placeholder="e.g. Pro Plan" />
+            <Input placeholder={t('plansPage.formTitlePlaceholder')} />
           </Form.Item>
 
-          <Form.Item label="Description" name="description">
-            <Input.TextArea rows={2} placeholder="Plan description" />
+          <Form.Item label={t('plansPage.formDescription')} name="description">
+            <Input.TextArea rows={2} placeholder={t('plansPage.formDescriptionPlaceholder')} />
           </Form.Item>
 
           <Form.Item
-            label="Default Currency"
+            label={t('plansPage.formDefaultCurrency')}
             name="defaultCurrency"
-            rules={[{ required: true, message: "Required" }]}
+            rules={[{ required: true, message: t('plansPage.formDefaultCurrencyRule') }]}
           >
             <Select options={CURRENCY_OPTIONS} />
           </Form.Item>
 
           <div className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-4 mb-2">
-            Pricing by Currency
+            {t('plansPage.sectionPricingByCurrency')}
           </div>
 
           {/* Dynamic Pricing Editor */}
@@ -399,9 +401,9 @@ export default function PlansPageClient({ initialPlans }: Props) {
             {(fields, { add, remove }) => (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 px-3 text-xs font-medium text-gray-400 dark:text-gray-500">
-                  <span className="w-28">Currency</span>
-                  <span className="flex-1">Monthly Price (¥)</span>
-                  <span className="flex-1">Yearly Price (¥)</span>
+                  <span className="w-28">{t('plansPage.labelCurrency')}</span>
+                  <span className="flex-1">{t('plansPage.labelMonthlyPrice')}</span>
+                  <span className="flex-1">{t('plansPage.labelYearlyPrice')}</span>
                   <span className="w-6" />
                 </div>
                 {fields.map((field) => {
@@ -419,7 +421,7 @@ export default function PlansPageClient({ initialPlans }: Props) {
                     >
                       <Select
                         options={CURRENCY_OPTIONS}
-                        placeholder="Currency"
+                        placeholder={t('plansPage.labelCurrency')}
                       />
                     </Form.Item>
                     <Form.Item
@@ -430,7 +432,7 @@ export default function PlansPageClient({ initialPlans }: Props) {
                     >
                       <Input
                         className="w-full"
-                        placeholder="Monthly Price (¥)"
+                        placeholder={t('plansPage.labelMonthlyPrice')}
                       />
                     </Form.Item>
                     <Form.Item
@@ -441,7 +443,7 @@ export default function PlansPageClient({ initialPlans }: Props) {
                     >
                       <Input
                         className="w-full"
-                        placeholder="Yearly Price (¥)"
+                        placeholder={t('plansPage.labelYearlyPrice')}
                       />
                     </Form.Item>
                     <Button
@@ -462,54 +464,54 @@ export default function PlansPageClient({ initialPlans }: Props) {
                   icon={<PlusCircleOutlined />}
                   className="w-full"
                 >
-                  Add Currency Price
+                  {t('plansPage.btnAddCurrencyPrice')}
                 </Button>
               </div>
             )}
           </Form.List>
 
           <div className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-4 mb-2">
-            Discount
+            {t('plansPage.sectionDiscount')}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item label="Discount Type" name="discountType">
+            <Form.Item label={t('plansPage.formDiscountType')} name="discountType">
               <Select
                 options={[
-                  { value: "none", label: "No Discount" },
+                  { value: "none", label: t('plansPage.discountNone') },
                   {
                     value: "percentage",
-                    label: "Percentage (e.g. 8.5折)",
+                    label: t('plansPage.discountPercentage'),
                   },
-                  { value: "fixed", label: "Fixed Price" },
+                  { value: "fixed", label: t('plansPage.discountFixed') },
                 ]}
               />
             </Form.Item>
-            <Form.Item label="Discount Value" name="discountValue">
+            <Form.Item label={t('plansPage.formDiscountValue')} name="discountValue">
               <InputNumber min={0} className="w-full" />
             </Form.Item>
           </div>
 
           <div className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-4 mb-2">
-            Settings
+            {t('plansPage.sectionSettings')}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item label="Status" name="enabled">
+            <Form.Item label={t('plansPage.formStatus')} name="enabled">
               <Select
                 options={[
-                  { value: 1, label: "Enabled" },
-                  { value: 0, label: "Disabled" },
+                  { value: 1, label: t('plansPage.formStatusEnabled') },
+                  { value: 0, label: t('plansPage.formStatusDisabled') },
                 ]}
               />
             </Form.Item>
-            <Form.Item label="Sort Order" name="sortOrder">
+            <Form.Item label={t('plansPage.formSortOrder')} name="sortOrder">
               <InputNumber min={0} className="w-full" />
             </Form.Item>
           </div>
 
           <div className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-4 mb-2">
-            Features
+            {t('plansPage.sectionFeatures')}
           </div>
 
           {/* Dynamic Features Editor */}
@@ -526,12 +528,12 @@ export default function PlansPageClient({ initialPlans }: Props) {
                       rules={[
                         {
                           required: true,
-                          message: "Feature name required",
+                          message: t('plansPage.featureNameRule'),
                         },
                       ]}
                       className="flex-1 mb-0"
                     >
-                      <Input placeholder="Feature name" />
+                      <Input placeholder={t('plansPage.featureNamePlaceholder')} />
                     </Form.Item>
                     <Form.Item
                       {...fieldProps}
@@ -561,7 +563,7 @@ export default function PlansPageClient({ initialPlans }: Props) {
                   icon={<PlusCircleOutlined />}
                   className="w-full"
                 >
-                  Add Feature
+                  {t('plansPage.btnAddFeature')}
                 </Button>
               </div>
             )}

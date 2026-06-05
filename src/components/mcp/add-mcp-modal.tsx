@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Form, Input, Modal, Select } from "antd";
 import type { FormInstance } from "antd";
 import { NAME_PATTERN } from "./types";
@@ -26,14 +27,15 @@ export default function AddMcpModal({
   onOk,
   onCancel,
 }: AddMcpModalProps) {
+  const t = useTranslations('workspace');
   return (
     <Modal
-      title="Add MCP Server"
+      title={t('mcp.addServer')}
       open={open}
       onOk={onOk}
       onCancel={onCancel}
-      okText="Add"
-      cancelText="Cancel"
+      okText={t('mcp.add')}
+      cancelText={t('mcp.cancel')}
       confirmLoading={saving}
       width={560}
       destroyOnHidden
@@ -41,29 +43,28 @@ export default function AddMcpModal({
       <Form form={form} layout="vertical" className="mt-2">
         <Form.Item
           name="name"
-          label="Name"
+          label={t('mcp.formName')}
           rules={[
-            { required: true, message: "Please input a name" },
+            { required: true, message: t('mcp.formNameRequired') },
             {
               pattern: NAME_PATTERN,
-              message:
-                "Only letters, digits, underscore and dash are allowed",
+              message: t('mcp.formNamePattern'),
             },
           ]}
         >
-          <Input placeholder="e.g. gitnexus" />
+          <Input placeholder={t('mcp.formNamePlaceholder')} />
         </Form.Item>
 
         <Form.Item
           name="type"
-          label="Type"
+          label={t('mcp.formType')}
           rules={[{ required: true }]}
         >
           <Select
             options={[
-              { value: "stdio", label: "stdio (local command)" },
-              { value: "http", label: "http (remote endpoint)" },
-              { value: "sse", label: "sse (server-sent events)" },
+              { value: "stdio", label: t('mcp.formTypeStdio') },
+              { value: "http", label: t('mcp.formTypeHttp') },
+              { value: "sse", label: t('mcp.formTypeSse') },
             ]}
             onChange={(val) => {
               // Clear unrelated fields when switching type to avoid stale data.
@@ -88,19 +89,19 @@ export default function AddMcpModal({
                 <>
                   <Form.Item
                     name="command"
-                    label="Command"
+                    label={t('mcp.formCommand')}
                     rules={[
-                      { required: true, message: "Please input command" },
+                      { required: true, message: t('mcp.formCommandRequired') },
                     ]}
                   >
-                    <Input placeholder="e.g. npx" />
+                    <Input placeholder={t('mcp.formCommandPlaceholder')} />
                   </Form.Item>
-                  <Form.Item name="args" label="Args (space-separated)">
-                    <Input placeholder="e.g. -y gitnexus@latest mcp" />
+                  <Form.Item name="args" label={t('mcp.formArgs')}>
+                    <Input placeholder={t('mcp.formArgsPlaceholder')} />
                   </Form.Item>
                   <Form.Item
                     name="env"
-                    label="Environment variables (one KEY=VALUE per line, optional)"
+                    label={t('mcp.formEnv')}
                   >
                     <Input.TextArea
                       rows={3}
@@ -115,17 +116,17 @@ export default function AddMcpModal({
               <>
                 <Form.Item
                   name="url"
-                  label="URL"
+                  label={t('mcp.formUrl')}
                   rules={[
-                    { required: true, message: "Please input URL" },
-                    { type: "url", message: "Please input a valid URL" },
+                    { required: true, message: t('mcp.formUrlRequired') },
+                    { type: "url", message: t('mcp.formUrlInvalid') },
                   ]}
                 >
-                  <Input placeholder="https://example.com/mcp" />
+                  <Input placeholder={t('mcp.formUrlPlaceholder')} />
                 </Form.Item>
                 <Form.Item
                   name="headers"
-                  label="Headers (one Key: Value per line, optional)"
+                  label={t('mcp.formHeaders')}
                 >
                   <Input.TextArea
                     rows={3}

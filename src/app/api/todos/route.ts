@@ -1,32 +1,40 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { todos } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { withAuth } from "@/lib/auth/with-auth";
+import { getApiT } from "@/lib/i18n-api";
 
 // GET /api/todos
-export const GET = withAuth(async () => {
-  const all = db.select().from(todos).orderBy(desc(todos.createdAt)).all();
+export const GET = withAuth(async (_req, user) => {
+  const all = db
+    .select()
+    .from(todos)
+    .where(eq(todos.userId, user.id))
+    .orderBy(desc(todos.createdAt))
+    .all();
   return NextResponse.json(all);
 });
 
 // POST /api/todos
-export const POST = withAuth(async (req) => {
+export const POST = withAuth(async (req, user) => {
+  const t = await getApiT();
   const body = await req.json();
   const { title, description } = body;
 
   if (!title || typeof title !== "string" || title.trim().length === 0) {
-    return NextResponse.json({ error: "title is required" }, { status: 400 });
+    return NextResponse.json({ error: t('api.todos.titleRequired') }, { status: 400 });
   }
   if (title.length > 100) {
-    return NextResponse.json({ error: "title must be 100 characters or less" }, { status: 400 });
+    return NextResponse.json({ error: t('api.todos.titleMaxLength') }, { status: 400 });
   }
   if (description && typeof description === "string" && description.length > 100) {
-    return NextResponse.json({ error: "description must be 100 characters or less" }, { status: 400 });
+    return NextResponse.json({ error: t('api.todos.titleMaxLength') }, { status: 400 });
   }
 
   const now = new Date().toISOString();
   const result = db.insert(todos).values({
+    userId: user.id,
     title: title.trim(),
     description: (description || "").trim(),
     completed: 0,
@@ -39,17 +47,21 @@ export const POST = withAuth(async (req) => {
 });
 
 // PUT /api/todos
-export const PUT = withAuth(async (req) => {
+export const PUT = withAuth(async (req, user) => {
+  const t = await getApiT();
   const body = await req.json();
   const { id, title, description, completed } = body;
 
   if (!id) {
-    return NextResponse.json({ error: "id is required" }, { status: 400 });
+    return NextResponse.json({ error: t('api.idRequired') }, { status: 400 });
   }
 
   const existing = db.select().from(todos).where(eq(todos.id, id)).get();
   if (!existing) {
-    return NextResponse.json({ error: "todo not found" }, { status: 404 });
+    return NextResponse.json({ error: t('api.todos.todoNotFound') }, { status: 404 });
+  }
+  if (existing.userId !== user.id) {
+    return NextResponse.json({ error: t('api.forbidden') }, { status: 403 });
   }
 
   const updates: Record<string, unknown> = {
@@ -57,16 +69,16 @@ export const PUT = withAuth(async (req) => {
   };
   if (title !== undefined) {
     if (typeof title !== "string" || title.trim().length === 0) {
-      return NextResponse.json({ error: "title must not be empty" }, { status: 400 });
+      return NextResponse.json({ error: t('api.todos.titleRequired') }, { status: 400 });
     }
     if (title.length > 100) {
-      return NextResponse.json({ error: "title must be 100 characters or less" }, { status: 400 });
+      return NextResponse.json({ error: t('api.todos.titleMaxLength') }, { status: 400 });
     }
     updates.title = title.trim();
   }
   if (description !== undefined) {
     if (description.length > 100) {
-      return NextResponse.json({ error: "description must be 100 characters or less" }, { status: 400 });
+      return NextResponse.json({ error: t('api.todos.titleMaxLength') }, { status: 400 });
     }
     updates.description = description.trim();
   }
@@ -80,12 +92,21 @@ export const PUT = withAuth(async (req) => {
 });
 
 // DELETE /api/todos
-export const DELETE = withAuth(async (req) => {
+export const DELETE = withAuth(async (req, user) => {
+  const t = await getApiT();
   const body = await req.json();
   const { id } = body;
 
   if (!id) {
-    return NextResponse.json({ error: "id is required" }, { status: 400 });
+    return NextResponse.json({ error: t('api.idRequired') }, { status: 400 });
+  }
+
+  const existing = db.select().from(todos).where(eq(todos.id, id)).get();
+  if (!existing) {
+    return NextResponse.json({ error: t('api.todos.todoNotFound') }, { status: 404 });
+  }
+  if (existing.userId !== user.id) {
+    return NextResponse.json({ error: t('api.forbidden') }, { status: 403 });
   }
 
   db.delete(todos).where(eq(todos.id, id)).run();

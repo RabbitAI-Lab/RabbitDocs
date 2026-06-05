@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/components/auth/useAuth";
+import { useTranslations } from "next-intl";
 import {
   Button,
   Table,
@@ -59,6 +60,7 @@ interface Props {
 export default function DatabasePageClient({ initialInfo }: Props) {
   const { authFetch } = useAuth();
   const { message, modal } = App.useApp();
+  const t = useTranslations('admin');
 
   const [info, setInfo] = useState<DatabaseInfo>(initialInfo);
   const [dumping, setDumping] = useState(false);
@@ -75,9 +77,9 @@ export default function DatabasePageClient({ initialInfo }: Props) {
       if (res.ok) {
         const data = await res.json();
         setInfo(data);
-        message.success("Refreshed");
+        message.success(t('databasePage.msgRefreshed'));
       } else {
-        message.error("Failed to refresh");
+        message.error(t('databasePage.msgRefreshFailed'));
       }
     } catch {
       message.error("Failed to refresh");
@@ -95,7 +97,7 @@ export default function DatabasePageClient({ initialInfo }: Props) {
       );
       if (!res.ok) {
         const data = await res.json();
-        message.error(data.error || "Dump failed");
+        message.error(data.error || t('databasePage.msgDumpFailed'));
         return;
       }
 
@@ -109,9 +111,9 @@ export default function DatabasePageClient({ initialInfo }: Props) {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      message.success(`${format.toUpperCase()} dump downloaded`);
+      message.success(t('databasePage.msgDumpDownloaded', { format: format.toUpperCase() }));
     } catch {
-      message.error("Dump failed");
+      message.error(t('databasePage.msgDumpFailed'));
     } finally {
       setDumping(false);
     }
@@ -127,14 +129,14 @@ export default function DatabasePageClient({ initialInfo }: Props) {
         const dump = JSON.parse(content) as DatabaseDump;
 
         if (!dump.version || !dump.tables) {
-          message.error("Invalid dump file: missing version or tables");
+          message.error(t('databasePage.msgInvalidDumpFile'));
           return;
         }
 
         setPreviewData(dump);
         setPreviewFileName(rawFile.name);
       } catch {
-        message.error("Failed to parse JSON file");
+        message.error(t('databasePage.msgParseFailed'));
       }
     };
     reader.readAsText(rawFile);
@@ -151,27 +153,25 @@ export default function DatabasePageClient({ initialInfo }: Props) {
     const tableCount = Object.keys(dump.tables).length;
 
     modal.confirm({
-      title: "Confirm Restore",
+      title: t('databasePage.confirmRestoreTitle'),
       icon: <WarningOutlined />,
       content: (
         <div>
           <p>
-            This operation will <strong>replace all existing data</strong> in the
-            database.
+            {t('databasePage.confirmRestoreReplaceData')}
           </p>
           <p>
-            Source: <strong>{previewFileName}</strong>
+            {t('databasePage.confirmRestoreSource')}<strong>{previewFileName}</strong>
           </p>
           <p>
-            Tables: <strong>{tableCount}</strong> | Rows:{" "}
-            <strong>{totalRows}</strong>
+            {t('databasePage.confirmRestoreTables')}<strong>{tableCount}</strong>{t('databasePage.confirmRestoreRows')}<strong>{totalRows}</strong>
           </p>
           <p style={{ color: "#ff4d4f", fontWeight: 500 }}>
-            This action cannot be undone. Make sure you have a backup.
+            {t('databasePage.confirmRestoreWarning')}
           </p>
         </div>
       ),
-      okText: "Confirm Restore",
+      okText: t('databasePage.btnConfirmRestore'),
       okButtonProps: { danger: true },
       onOk: async () => {
         setRestoring(true);
@@ -186,18 +186,19 @@ export default function DatabasePageClient({ initialInfo }: Props) {
           if (res.ok && result.success) {
             const stats = result.stats as RestoreStats;
             message.success(
-              `Restored ${stats.inserted} rows` +
+              t('databasePage.msgRestored', { count: stats.inserted }) +
                 (stats.errors.length > 0
-                  ? ` (${stats.errors.length} warnings)`
+                  ? t('databasePage.msgRestoredWithWarnings', { count: stats.inserted, warnings: stats.errors.length })
+                    .replace(t('databasePage.msgRestored', { count: stats.inserted }), "")
                   : "")
             );
             setPreviewData(null);
             refreshInfo();
           } else {
-            message.error(result.error || "Restore failed");
+            message.error(result.error || t('databasePage.msgRestoreFailed'));
           }
         } catch {
-          message.error("Restore failed");
+          message.error(t('databasePage.msgRestoreFailed'));
         } finally {
           setRestoring(false);
         }
@@ -208,7 +209,7 @@ export default function DatabasePageClient({ initialInfo }: Props) {
   // Table columns for the info table
   const tableColumns = [
     {
-      title: "Table",
+      title: t('databasePage.columnTable'),
       dataIndex: "name",
       key: "name",
       render: (name: string) => (
@@ -218,14 +219,14 @@ export default function DatabasePageClient({ initialInfo }: Props) {
       ),
     },
     {
-      title: "Rows",
+      title: t('databasePage.columnRows'),
       dataIndex: "rowCount",
       key: "rowCount",
       render: (count: number) => count.toLocaleString(),
       sorter: (a: TableInfo, b: TableInfo) => a.rowCount - b.rowCount,
     },
     {
-      title: "Columns",
+      title: t('databasePage.columnColumns'),
       dataIndex: "columnCount",
       key: "columnCount",
     },
@@ -234,7 +235,7 @@ export default function DatabasePageClient({ initialInfo }: Props) {
   // Preview table columns for restore
   const previewColumns = [
     {
-      title: "Table",
+      title: t('databasePage.columnTable'),
       dataIndex: "name",
       key: "name",
       render: (name: string) => (
@@ -244,13 +245,13 @@ export default function DatabasePageClient({ initialInfo }: Props) {
       ),
     },
     {
-      title: "Rows",
+      title: t('databasePage.columnRows'),
       dataIndex: "rows",
       key: "rows",
       render: (rows: unknown[]) => rows.length.toLocaleString(),
     },
     {
-      title: "Columns",
+      title: t('databasePage.columnColumns'),
       dataIndex: "columns",
       key: "columns",
       render: (cols: string[]) => cols.length,
@@ -262,9 +263,9 @@ export default function DatabasePageClient({ initialInfo }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-700">
         <div>
-          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Database</h1>
+          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('databasePage.title')}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Dump, restore, and inspect the database
+            {t('databasePage.subtitle')}
           </p>
         </div>
         <Button
@@ -272,7 +273,7 @@ export default function DatabasePageClient({ initialInfo }: Props) {
           loading={refreshing}
           onClick={refreshInfo}
         >
-          Refresh
+          {t('databasePage.btnRefresh')}
         </Button>
       </div>
 
@@ -283,14 +284,14 @@ export default function DatabasePageClient({ initialInfo }: Props) {
           title={
             <Space>
               <DatabaseOutlined />
-              <span>Database Overview</span>
+              <span>{t('databasePage.overviewTitle')}</span>
               {info.integrityOk ? (
                 <Tag
                   icon={<CheckCircleOutlined />}
                   color="success"
                   className="ml-2"
                 >
-                  Healthy
+                  {t('databasePage.tagHealthy')}
                 </Tag>
               ) : (
                 <Tag
@@ -298,7 +299,7 @@ export default function DatabasePageClient({ initialInfo }: Props) {
                   color="error"
                   className="ml-2"
                 >
-                  Integrity Issue
+                  {t('databasePage.tagIntegrityIssue')}
                 </Tag>
               )}
             </Space>
@@ -306,24 +307,24 @@ export default function DatabasePageClient({ initialInfo }: Props) {
           size="small"
         >
           <Descriptions size="small" column={2} bordered>
-            <Descriptions.Item label="File Path">
+            <Descriptions.Item label={t('databasePage.descFilePath')}>
               <Text code className="text-xs">
                 {info.filePath}
               </Text>
             </Descriptions.Item>
-            <Descriptions.Item label="File Size">
+            <Descriptions.Item label={t('databasePage.descFileSize')}>
               {info.fileSizeHuman}
             </Descriptions.Item>
-            <Descriptions.Item label="SQLite Version">
+            <Descriptions.Item label={t('databasePage.descSqliteVersion')}>
               {info.sqliteVersion}
             </Descriptions.Item>
-            <Descriptions.Item label="Journal Mode">
+            <Descriptions.Item label={t('databasePage.descJournalMode')}>
               <Tag>{info.journalMode}</Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="Last Modified">
+            <Descriptions.Item label={t('databasePage.descLastModified')}>
               {new Date(info.lastModified).toLocaleString()}
             </Descriptions.Item>
-            <Descriptions.Item label="Total Rows">
+            <Descriptions.Item label={t('databasePage.descTotalRows')}>
               {info.totalRows.toLocaleString()}
             </Descriptions.Item>
           </Descriptions>
@@ -341,11 +342,9 @@ export default function DatabasePageClient({ initialInfo }: Props) {
         </Card>
 
         {/* Export */}
-        <Card title="Export" size="small">
+        <Card title={t('databasePage.exportTitle')} size="small">
           <Paragraph type="secondary" className="text-xs mb-3">
-            Export the entire database. JSON format is database-agnostic and can
-            be restored via the import function below. SQL format generates
-            SQLite-compatible INSERT statements.
+            {t('databasePage.exportDesc')}
           </Paragraph>
           <Space>
             <Button
@@ -353,26 +352,25 @@ export default function DatabasePageClient({ initialInfo }: Props) {
               loading={dumping}
               onClick={() => handleDump("json")}
             >
-              Export JSON
+              {t('databasePage.btnExportJson')}
             </Button>
             <Button
               icon={<DownloadOutlined />}
               loading={dumping}
               onClick={() => handleDump("sql")}
             >
-              Export SQL
+              {t('databasePage.btnExportSql')}
             </Button>
           </Space>
         </Card>
 
         {/* Import / Restore */}
-        <Card title="Restore" size="small">
+        <Card title={t('databasePage.restoreTitle')} size="small">
           <Paragraph type="secondary" className="text-xs mb-3">
-            Import a previously exported JSON dump file. This will{" "}
-            <strong>replace all existing data</strong> in the database.
+            {t('databasePage.restoreDesc')}
           </Paragraph>
 
-          <Space direction="vertical" className="w-full">
+          <Space orientation="vertical" className="w-full">
             <Upload
               accept=".json"
               maxCount={1}
@@ -380,7 +378,7 @@ export default function DatabasePageClient({ initialInfo }: Props) {
               beforeUpload={handleFileSelect}
             >
               <Button icon={<UploadOutlined />} disabled={restoring}>
-                Select JSON Dump File
+                {t('databasePage.btnSelectDump')}
               </Button>
             </Upload>
 
@@ -389,20 +387,19 @@ export default function DatabasePageClient({ initialInfo }: Props) {
                 <Alert
                   type="warning"
                   showIcon
-                  message={
+                  title={
                     <span>
-                      Preview: <strong>{previewFileName}</strong> —{" "}
-                      {Object.keys(previewData.tables).length} tables,{" "}
+                      {t('databasePage.previewLabel')}<strong>{previewFileName}</strong>{" "}
+                      {Object.keys(previewData.tables).length}{t('databasePage.previewTables')}
                       {Object.values(previewData.tables).reduce(
                         (sum, t) => sum + t.rows.length,
                         0
                       )}{" "}
-                      total rows
+                      {t('databasePage.previewTotalRows')}
                       {previewData.timestamp && (
                         <span>
                           {" "}
-                          (dumped at{" "}
-                          {new Date(previewData.timestamp).toLocaleString()})
+                          {t('databasePage.previewDumpedAt')}{new Date(previewData.timestamp).toLocaleString()})
                         </span>
                       )}
                     </span>
@@ -428,7 +425,7 @@ export default function DatabasePageClient({ initialInfo }: Props) {
                   loading={restoring}
                   onClick={() => executeRestore(previewData)}
                 >
-                  Restore Database
+                  {t('databasePage.btnRestoreDatabase')}
                 </Button>
               </div>
             )}
@@ -436,7 +433,7 @@ export default function DatabasePageClient({ initialInfo }: Props) {
             {restoring && (
               <div className="flex items-center gap-2">
                 <Spin size="small" />
-                <Text type="secondary">Restoring database...</Text>
+                <Text type="secondary">{t('databasePage.restoringText')}</Text>
               </div>
             )}
           </Space>

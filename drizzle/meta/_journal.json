@@ -92,6 +92,20 @@
       "when": 1780700000000,
       "tag": "0027_add_role_to_users",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1780800000000,
+      "tag": "0033_add_user_id_to_todos",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1780900000000,
+      "tag": "0034_add_entities_tables",
+      "breakpoints": true
     }
   ]
 }

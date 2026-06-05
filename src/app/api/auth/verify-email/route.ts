@@ -3,18 +3,20 @@ import { z } from "zod";
 import { db } from "@/db";
 import { emailVerifications, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { getApiT } from "@/lib/i18n-api";
 
 const codeSchema = z
   .string()
   .trim()
-  .regex(/^\d{6}$/, "验证码必须是 6 位数字");
+  .regex(/^\d{6}$/, "api.auth.verificationCodeRequired");
 
 /**
  * GET /api/auth/verify-email?token=<uuid>     — 来自邮件链接
  * GET /api/auth/verify-email?code=<6digits>   — 用户手动输入验证码
  */
 export async function GET(req: NextRequest) {
-  return handleVerify(req.nextUrl.searchParams);
+  const t = await getApiT();
+  return handleVerify(req.nextUrl.searchParams, t);
 }
 
 /**
@@ -22,27 +24,29 @@ export async function GET(req: NextRequest) {
  * 方便无法把验证码放 query 的客户端（如某些移动 WebView）
  */
 export async function POST(req: NextRequest) {
+  const t = await getApiT();
   try {
     const body = await req.json().catch(() => ({}));
     const parsed = codeSchema.safeParse(body?.code);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0].message },
+        { error: t(parsed.error.issues[0].message) },
         { status: 400 }
       );
     }
-    return handleVerify({ get: (k: string) => (k === "code" ? parsed.data : null) });
+    return handleVerify({ get: (k: string) => (k === "code" ? parsed.data : null) }, t);
   } catch (error) {
     console.error("[auth] Verify email error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: t('api.internalError') },
       { status: 500 }
     );
   }
 }
 
 function handleVerify(
-  searchParams: URLSearchParams | { get: (k: string) => string | null }
+  searchParams: URLSearchParams | { get: (k: string) => string | null },
+  t: (key: string, params?: Record<string, string | number>) => string
 ) {
   try {
     const token = searchParams.get("token");
@@ -50,7 +54,7 @@ function handleVerify(
 
     if (!token && !code) {
       return NextResponse.json(
-        { error: "Token or verification code is required" },
+        { error: t('api.auth.tokenOrCodeRequired') },
         { status: 400 }
       );
     }
@@ -68,7 +72,7 @@ function handleVerify(
 
     if (!verification) {
       return NextResponse.json(
-        { error: "Invalid or expired verification token/code" },
+        { error: t('api.auth.invalidOrExpiredToken') },
         { status: 400 }
       );
     }
@@ -79,7 +83,7 @@ function handleVerify(
         .where(eq(emailVerifications.userId, verification.userId))
         .run();
       return NextResponse.json(
-        { error: "Verification token has expired" },
+        { error: t('api.auth.tokenExpired') },
         { status: 400 }
       );
     }
@@ -98,12 +102,12 @@ function handleVerify(
 
     return NextResponse.json({
       success: true,
-      message: "Email verified successfully",
+      message: t('api.auth.emailVerified'),
     });
   } catch (error) {
     console.error("[auth] Verify email error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: t('api.internalError') },
       { status: 500 }
     );
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import ChatWorkspace from "@/components/chat/ChatWorkspace";
 import ProjectInfoTab from "@/components/project/ProjectInfoTab";
 import type { FileTab, ProjectMeta, RecentChat } from "./types";
@@ -9,23 +10,23 @@ import type { DocumentActivity } from "@/lib/types";
 
 const CherryEditor = dynamic(() => import("@/components/editor/CherryEditor"), {
   ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-64 text-gray-400">
-      <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-blue-600 mr-2" />
-      加载编辑器中...
-    </div>
-  ),
+  loading: () => <EditorLoading />,
 });
 
 const HtmlEditor = dynamic(() => import("@/components/editor/HtmlEditor"), {
   ssr: false,
-  loading: () => (
+  loading: () => <EditorLoading />,
+});
+
+function EditorLoading() {
+  const t = useTranslations('common');
+  return (
     <div className="flex items-center justify-center h-64 text-gray-400">
       <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-blue-600 mr-2" />
-      加载编辑器中...
+      {t('loadingEditor')}
     </div>
-  ),
-});
+  );
+}
 
 interface ProjectEditorAreaProps {
   /** 当前激活的标签 ID */
@@ -88,6 +89,8 @@ export default function ProjectEditorArea({
   onToolCall,
   getCachedContent,
 }: ProjectEditorAreaProps) {
+  const t = useTranslations('project');
+
   return (
     <div className="flex-1 min-h-0 relative">
       {/* Project Info tab content */}
@@ -164,7 +167,7 @@ export default function ProjectEditorArea({
           ) : (
             <div className="flex-1 flex items-center justify-center text-gray-400">
               <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-t-blue-600 mr-2" />
-              <span className="text-sm">加载中...</span>
+              <span className="text-sm">{t('loading')}</span>
             </div>
           )}
         </div>

@@ -8,18 +8,20 @@ import {
   getRepoLocalPath,
 } from "@/lib/git-service";
 import type { Repository } from "@/lib/fs";
+import { getApiT } from "@/lib/i18n-api";
 
 // GET /api/fs/project-repositories/sync?dirSegments=...&repoId=...
 // 获取单个仓库的同步状态
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const { searchParams } = new URL(req.url);
   const dirSegmentsStr = searchParams.get("dirSegments");
   const repoId = searchParams.get("repoId");
 
   if (!dirSegmentsStr || !repoId) {
     return NextResponse.json(
-      { error: "dirSegments and repoId are required" },
+      { error: t('api.repositories.dirSegmentsRepoIdRequired') },
       { status: 400 }
     );
   }
@@ -29,12 +31,12 @@ export async function GET(req: NextRequest) {
   try {
     const meta = readProjectMeta(dirSegments);
     if (!meta) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+      return NextResponse.json({ error: t('api.projectNotFound') }, { status: 404 });
     }
 
     const repo = meta.repositories?.find((r) => r.id === repoId);
     if (!repo) {
-      return NextResponse.json({ error: "Repository not found" }, { status: 404 });
+      return NextResponse.json({ error: t('api.repositoryNotFound') }, { status: 404 });
     }
 
     const localPath = getRepoLocalPath(dirSegments, repoId);
@@ -50,19 +52,20 @@ export async function GET(req: NextRequest) {
 // 执行同步操作 (clone 或 pull)
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { dirSegments, repoId, action } = body;
 
   if (!dirSegments || !repoId || !action) {
     return NextResponse.json(
-      { error: "dirSegments, repoId and action are required" },
+      { error: t('api.repositories.dirSegmentsRepoIdRequired') },
       { status: 400 }
     );
   }
 
   if (action !== "clone" && action !== "pull") {
     return NextResponse.json(
-      { error: "action must be 'clone' or 'pull'" },
+      { error: t('api.actionMustBeCloneOrPull') },
       { status: 400 }
     );
   }
@@ -70,13 +73,13 @@ export async function POST(req: NextRequest) {
   try {
     const meta = readProjectMeta(dirSegments);
     if (!meta) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+      return NextResponse.json({ error: t('api.projectNotFound') }, { status: 404 });
     }
 
     const repos = meta.repositories || [];
     const repoIndex = repos.findIndex((r) => r.id === repoId);
     if (repoIndex === -1) {
-      return NextResponse.json({ error: "Repository not found" }, { status: 404 });
+      return NextResponse.json({ error: t('api.repositoryNotFound') }, { status: 404 });
     }
 
     const repo = repos[repoIndex];

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/useAuth";
 import type { Repository, SandboxStatus, ProjectMember, GitNexusStatus } from "@/lib/fs";
 import type { DocumentActivity } from "@/lib/types";
@@ -68,14 +69,14 @@ interface WorkspaceInfoTabProps {
   accountId: string;
 }
 
-const SUB_TABS: { key: SubTab; label: string }[] = [
-  { key: "activity", label: "Activity" },
-  { key: "projects", label: "Projects" },
-  { key: "integration", label: "Integration" },
-  { key: "skills", label: "Skills" },
-  { key: "mcp", label: "MCP" },
-  { key: "members", label: "Members" },
-  { key: "log", label: "Log" },
+const SUB_TAB_KEYS: SubTab[] = [
+  "activity",
+  "projects",
+  "integration",
+  "skills",
+  "mcp",
+  "members",
+  "log",
 ];
 
 export default function WorkspaceInfoTab({
@@ -94,6 +95,7 @@ export default function WorkspaceInfoTab({
   accountId,
 }: WorkspaceInfoTabProps) {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>("activity");
+  const t = useTranslations('workspace');
   const { authFetch } = useAuth();
   const [repositories, setRepositories] = useState<Repository[]>(
     workspaceMeta?.repositories || []
@@ -176,18 +178,18 @@ export default function WorkspaceInfoTab({
     <div className="flex flex-col">
       {/* Sub-tab bar */}
       <div className="flex items-center px-6 border-b border-gray-200 dark:border-zinc-700 shrink-0">
-        {SUB_TABS.map((tab) => (
+        {SUB_TAB_KEYS.map((tabKey) => (
           <button
-            key={tab.key}
-            onClick={() => handleTabChange(tab.key)}
+            key={tabKey}
+            onClick={() => handleTabChange(tabKey)}
             className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-              activeSubTab === tab.key
+              activeSubTab === tabKey
                 ? "text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400"
                 : "text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-zinc-500"
             }`}
           >
-            {tab.label}
-            {tab.key === "integration" && hasUnsynced && (
+            {t(`tabs.${tabKey}`)}
+            {tabKey === "integration" && hasUnsynced && (
               <Badge variant="dot" className="ml-1.5" />
             )}
           </button>

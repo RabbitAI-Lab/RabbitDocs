@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useAuth } from "@/components/auth/useAuth";
+import { useTranslations } from "next-intl";
 import { Button, Space, App } from "antd";
 import {
   PlusOutlined,
@@ -27,6 +28,7 @@ interface Props {
 export default function ModelsPageClient({ initialModels }: Props) {
   const [models, setModels] = useState<ModelConfig[]>(initialModels);
   const { authFetch } = useAuth();
+  const t = useTranslations('admin');
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editingModel, setEditingModel] = useState<ModelConfig | null>(null);
@@ -89,8 +91,8 @@ export default function ModelsPageClient({ initialModels }: Props) {
         refreshList();
         message.success(
           newDefault
-            ? `"${model.name}" set as default model`
-            : `"${model.name}" removed as default model`
+            ? t('modelsPage.msgSetAsDefault', { name: model.name })
+            : t('modelsPage.msgRemovedDefault', { name: model.name })
         );
       });
     },
@@ -99,16 +101,15 @@ export default function ModelsPageClient({ initialModels }: Props) {
 
   const handleDelete = useCallback(
     (id: number, name: string, isDefault?: number) => {
-      let content = `Confirm delete "${name}"?`;
+      let content = t('modelsPage.confirmDeleteContent', { name });
       if (isDefault) {
-        content +=
-          "\n\nNote: This model is the default model. After deletion, new chats will not automatically select a model.";
+        content += "\n\n" + t('modelsPage.confirmDeleteDefaultNote');
       }
       modal.confirm({
-        title: "Confirm Delete",
+        title: t('modelsPage.confirmDeleteTitle'),
         content,
-        okText: "Delete",
-        cancelText: "Cancel",
+        okText: t('modelsPage.btnDelete'),
+        cancelText: t('modelConfigModal.btnCancel'),
         okButtonProps: { danger: true },
         onOk: async () => {
           await authFetch(`/api/models/${id}`, { method: "DELETE" });
@@ -142,7 +143,7 @@ export default function ModelsPageClient({ initialModels }: Props) {
 
   const handleExport = useCallback(() => {
     if (models.length === 0) {
-      message.warning("No model configurations to export");
+      message.warning(t('modelsPage.msgNoModelsToExport'));
       return;
     }
     const exportData = models.map(
@@ -160,7 +161,7 @@ export default function ModelsPageClient({ initialModels }: Props) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    message.success(`Exported ${models.length} model configurations`);
+    message.success(t('modelsPage.msgExported', { count: models.length }));
   }, [models, message]);
 
   const handleImport = useCallback(() => {
@@ -189,7 +190,7 @@ export default function ModelsPageClient({ initialModels }: Props) {
         } else if (data.models && Array.isArray(data.models)) {
           importList = data.models;
         } else {
-          message.error("Invalid file format");
+          message.error(t('modelsPage.msgInvalidFileFormat'));
           return;
         }
 
@@ -210,15 +211,15 @@ export default function ModelsPageClient({ initialModels }: Props) {
           );
 
         if (validItems.length === 0) {
-          message.error("No valid model configurations in file");
+          message.error(t('modelsPage.msgNoValidModels'));
           return;
         }
 
         modal.confirm({
-          title: "Confirm Import",
-          content: `Detected ${validItems.length} valid model configurations. Import?`,
-          okText: "Import",
-          cancelText: "Cancel",
+          title: t('modelsPage.confirmImportTitle'),
+          content: t('modelsPage.confirmImportContent', { count: validItems.length }),
+          okText: t('modelsPage.btnImportConfirm'),
+          cancelText: t('modelConfigModal.btnCancel'),
           onOk: async () => {
             let successCount = 0;
             for (const item of validItems) {
@@ -235,12 +236,12 @@ export default function ModelsPageClient({ initialModels }: Props) {
             }
             await refreshList();
             message.success(
-              `Successfully imported ${successCount} model configurations`
+              t('modelsPage.msgImported', { count: successCount })
             );
           },
         });
       } catch {
-        message.error("File parsing failed, please check JSON format");
+        message.error(t('modelsPage.msgFileParsingFailed'));
       }
     },
     [modal, message, refreshList]
@@ -270,20 +271,20 @@ export default function ModelsPageClient({ initialModels }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-700">
         <div>
-          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Model Config</h1>
+          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('modelsPage.title')}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Manage AI model API connection configurations
+            {t('modelsPage.subtitle')}
           </p>
         </div>
         <Space>
           <Button icon={<ExportOutlined />} onClick={handleExport}>
-            Export
+            {t('modelsPage.btnExport')}
           </Button>
           <Button icon={<ImportOutlined />} onClick={handleImport}>
-            Import
+            {t('modelsPage.btnImport')}
           </Button>
           <Button icon={<PlusOutlined />} onClick={openCreateModal}>
-            Add Model
+            {t('modelsPage.btnAddModel')}
           </Button>
         </Space>
         {/* Hidden file input */}
@@ -302,7 +303,7 @@ export default function ModelsPageClient({ initialModels }: Props) {
           <div className="flex flex-col items-center justify-center h-[60%] text-gray-400 dark:text-gray-500">
             <CloudServerOutlined style={{ fontSize: 48, marginBottom: 16 }} />
             <p className="text-sm">
-              No model configurations, click the button above to add
+              {t('modelsPage.emptyText')}
             </p>
           </div>
         ) : (

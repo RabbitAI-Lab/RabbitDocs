@@ -1,19 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/session";
 import { generateJsonDump, generateSqlDump } from "@/lib/db-dump";
+import { getApiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   const authResult = await requireAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+  const t = await getApiT();
 
   const { searchParams } = new URL(req.url);
   const format = searchParams.get("format") || "json";
 
   if (format !== "json" && format !== "sql") {
     return NextResponse.json(
-      { error: "Invalid format. Use 'json' or 'sql'." },
+      { error: t('api.auth.database.invalidFormat') },
       { status: 400 }
     );
   }
@@ -43,7 +45,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("[database] dump error:", error);
     return NextResponse.json(
-      { error: "Failed to generate dump" },
+      { error: t('api.auth.database.failedToDump') },
       { status: 500 }
     );
   }

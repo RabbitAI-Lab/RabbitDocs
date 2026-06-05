@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/useAuth";
 import { Card, Button, Typography, Descriptions, App } from "antd";
 import { SafetyCertificateOutlined } from "@ant-design/icons";
-import { useRouter } from "next/navigation";
 
 const { Text, Title } = Typography;
 
@@ -13,7 +13,7 @@ export default function CliConsentPage() {
   const searchParams = useSearchParams();
   const { authFetch, user } = useAuth();
   const { message } = App.useApp();
-  const router = useRouter();
+  const t = useTranslations('cliConsent');
   const [brandName, setBrandName] = useState("RabbitDocs");
 
   useEffect(() => {
@@ -33,8 +33,8 @@ export default function CliConsentPage() {
   if (!codeChallenge || !redirectUri || !state) {
     return (
       <Card className="shadow-lg">
-        <Title level={4}>错误</Title>
-        <Text type="danger">缺少必要的 OAuth 参数</Text>
+        <Title level={4}>{t('error')}</Title>
+        <Text type="danger">{t('missingOAuthParams')}</Text>
       </Card>
     );
   }
@@ -56,16 +56,16 @@ export default function CliConsentPage() {
 
       // 手动处理重定向
       if (res.status === 302 || res.type === "opaqueredirect") {
-        message.success("已授权，请返回终端查看");
+        message.success(t('authorizedReturn'));
         return;
       }
 
       // 如果没有重定向，可能直接返回了结果
       if (res.ok) {
-        message.success("已授权");
+        message.success(t('authorized'));
       }
-    } catch (err) {
-      message.error("授权失败");
+    } catch {
+      message.error(t('authorizationFailed'));
     }
   };
 
@@ -81,35 +81,35 @@ export default function CliConsentPage() {
       <div className="text-center mb-6">
         <SafetyCertificateOutlined style={{ fontSize: 48, color: "#1677ff" }} />
         <Title level={4} className="mt-4">
-          CLI 授权请求
+          {t('cliAuthRequest')}
         </Title>
         <p className="text-gray-500">
-          一个 CLI 工具请求访问您的 {brandName} 账号
+          {t('cliRequesting', { brandName })}
         </p>
       </div>
 
       <Descriptions column={1} bordered size="small" className="mb-6">
-        <Descriptions.Item label="当前用户">{user?.email}</Descriptions.Item>
-        <Descriptions.Item label="回调地址">
+        <Descriptions.Item label={t('currentUser')}>{user?.email}</Descriptions.Item>
+        <Descriptions.Item label={t('callbackUrl')}>
           <Text code className="text-xs">{redirectUri}</Text>
         </Descriptions.Item>
       </Descriptions>
 
       <div className="mb-6">
-        <Text type="secondary">授权后 CLI 将能够：</Text>
+        <Text type="secondary">{t('afterAuthCan')}</Text>
         <ul className="mt-2 text-sm text-gray-600 list-disc pl-5">
-          <li>访问您的个人资料信息</li>
-          <li>管理项目和工作区</li>
-          <li>执行命令</li>
+          <li>{t('accessProfile')}</li>
+          <li>{t('manageProjects')}</li>
+          <li>{t('executeCommands')}</li>
         </ul>
       </div>
 
       <div className="flex gap-3 justify-center">
         <Button size="large" onClick={handleDeny}>
-          拒绝
+          {t('deny')}
         </Button>
         <Button type="primary" size="large" onClick={handleApprove}>
-          授权
+          {t('authorize')}
         </Button>
       </div>
     </Card>

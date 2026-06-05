@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import CollapsibleGroup from "@/components/ui/CollapsibleGroup";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./SidebarContext";
@@ -34,16 +35,16 @@ function getGroupKey(dateStr: string): string {
   return `${y}-${m}-${day}`;
 }
 
-function formatGroupLabel(key: string): string {
+function formatGroupLabel(key: string, t: (key: string) => string): string {
   const d = new Date(key + "T00:00:00");
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const diffDays = Math.floor((today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays === 2) return "2 days ago";
+  if (diffDays === 0) return t('today');
+  if (diffDays === 1) return t('yesterday');
+  if (diffDays === 2) return t('twoDaysAgo');
   // Within this year, show "M/D"
   if (d.getFullYear() === now.getFullYear()) {
     return `${d.getMonth() + 1}/${d.getDate()}`;
@@ -52,7 +53,7 @@ function formatGroupLabel(key: string): string {
   return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-function groupChats(chats: Chat[]): ChatGroup[] {
+function groupChats(chats: Chat[], t: (key: string) => string): ChatGroup[] {
   if (chats.length === 0) return [];
 
   const now = new Date();
@@ -80,13 +81,13 @@ function groupChats(chats: Chat[]): ChatGroup[] {
 
   // First group: recent 7 days
   if (recentChats.length > 0) {
-    groups.push({ label: "Last 7 Days", chats: recentChats });
+    groups.push({ label: t('last7Days'), chats: recentChats });
   }
 
   // Then by date descending
   const sortedKeys = [...olderMap.keys()].sort((a, b) => b.localeCompare(a));
   for (const key of sortedKeys) {
-    groups.push({ label: formatGroupLabel(key), chats: olderMap.get(key)! });
+    groups.push({ label: formatGroupLabel(key, t), chats: olderMap.get(key)! });
   }
 
   return groups;
@@ -96,7 +97,8 @@ export default function ChatsHistoryPanel({ chats, panelCollapsed, onTogglePanel
   const router = useRouter();
   const pathname = usePathname();
   const { collapsed } = useSidebar();
-  const groups = groupChats(chats);
+  const t = useTranslations("chatsHistory");
+  const groups = groupChats(chats, t);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const { user, authFetch } = useAuth();
 
@@ -108,10 +110,10 @@ export default function ChatsHistoryPanel({ chats, panelCollapsed, onTogglePanel
   const handleDelete = async (chatId: number) => {
     await authFetch(`/api/chats/${chatId}`, { method: "DELETE" });
     setConfirmDeleteId(null);
+    window.dispatchEvent(new Event("chats-changed"));
     if (pathname === `/chat/${chatId}`) {
       router.push("/chat/new");
     }
-    router.refresh();
   };
 
   if (collapsed) {
@@ -125,10 +127,10 @@ export default function ChatsHistoryPanel({ chats, panelCollapsed, onTogglePanel
   }
 
   return (
-    <CollapsibleGroup title="Chats History" open={panelCollapsed !== undefined ? !panelCollapsed : undefined} onToggle={onTogglePanelCollapse ? (open) => onTogglePanelCollapse(!open) : undefined} storageKey={panelCollapsed === undefined ? "chats-history-collapsed" : undefined}>
+    <CollapsibleGroup title={t('title')} open={panelCollapsed !== undefined ? !panelCollapsed : undefined} onToggle={onTogglePanelCollapse ? (open) => onTogglePanelCollapse(!open) : undefined} storageKey={panelCollapsed === undefined ? "chats-history-collapsed" : undefined}>
       <div className="space-y-1">
         {groups.length === 0 && (
-          <p className="px-3 py-2 text-sm text-gray-400 dark:text-gray-500 text-center">No chat history</p>
+          <p className="px-3 py-2 text-sm text-gray-400 dark:text-gray-500 text-center">{t('noChatHistory')}</p>
         )}
         {groups.map((group) => (
           <div key={group.label}>
@@ -177,15 +179,15 @@ export default function ChatsHistoryPanel({ chats, panelCollapsed, onTogglePanel
                             onClick={(e) => e.stopPropagation()}
                             className="absolute right-0 bottom-full mb-1 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50"
                           >
-                            <span className="text-gray-500 dark:text-gray-400">确认删除?</span>
+                            <span className="text-gray-500 dark:text-gray-400">{t('confirmDelete')}</span>
                             <button
                               onClick={() => handleDelete(chat.id)}
                               className="px-1.5 py-0.5 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                            >删除</button>
+                            >{t('delete')}</button>
                             <button
                               onClick={() => setConfirmDeleteId(null)}
                               className="px-1.5 py-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-                            >取消</button>
+                            >{t('cancel')}</button>
                           </span>
                         )}
                       </span>

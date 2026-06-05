@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Popconfirm, Switch, Tag } from "antd";
 import {
   DeleteOutlined,
@@ -49,6 +50,7 @@ export default function McpListItem({
   onEdit,
   onDelete,
 }: McpListItemProps) {
+  const t = useTranslations('workspace');
   const type = inferType(entry);
   const tagColor = TYPE_TAG_COLOR[type] || "default";
   const hasAuth = hasAuthorization(entry);
@@ -89,7 +91,7 @@ export default function McpListItem({
           </Tag>
           {!isEnabled && (
             <Tag color="default" className="text-[10px] leading-4 m-0">
-              Disabled
+              {t('mcp.disabled')}
             </Tag>
           )}
         </div>
@@ -104,7 +106,7 @@ export default function McpListItem({
         {showKey && (
           <KeyOutlined
             className="text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 cursor-pointer text-base p-1"
-            title="修改 API Key"
+            title={t('mcp.editApiKey')}
             onClick={() => onEditKey(name)}
           />
         )}
@@ -114,21 +116,21 @@ export default function McpListItem({
               ? "text-gray-300 dark:text-zinc-600 cursor-not-allowed text-base p-1"
               : "text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 cursor-pointer text-base p-1"
           }
-          title="Edit JSON"
+          title={t('mcp.editJson')}
           onClick={() => onEdit(name)}
         />
         {!system && (
           <Popconfirm
-            title={`Delete "${name}"?`}
-            description="This will also remove its saved API Key."
-            okText="Delete"
-            cancelText="Cancel"
+            title={t('mcp.deleteConfirm', { name })}
+            description={t('mcp.deleteDescription')}
+            okText={t('mcp.delete')}
+            cancelText={t('mcp.cancel')}
             okButtonProps={{ danger: true }}
             onConfirm={() => onDelete(name)}
           >
             <DeleteOutlined
               className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 cursor-pointer text-base p-1"
-              title="Delete"
+              title={t('mcp.delete')}
             />
           </Popconfirm>
         )}

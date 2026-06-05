@@ -6,8 +6,10 @@ import { eq } from "drizzle-orm";
 import { generateTokenPair } from "@/lib/auth/tokens";
 import { getSetting, setSetting } from "@/lib/auth/settings";
 import { isAdmin } from "@/lib/auth/settings";
+import { getApiT } from "@/lib/i18n-api";
 
 export async function POST(req: NextRequest) {
+  const t = await getApiT();
   try {
     const body = await req.json();
     const credential = typeof body.credential === "string"
@@ -16,12 +18,12 @@ export async function POST(req: NextRequest) {
     const challengeKey = body._challengeKey as string;
 
     if (!challengeKey) {
-      return NextResponse.json({ error: "Missing challenge key" }, { status: 400 });
+      return NextResponse.json({ error: t('api.passkey.missingChallengeKey') }, { status: 400 });
     }
 
     const challengeStr = getSetting(challengeKey);
     if (!challengeStr) {
-      return NextResponse.json({ error: "No pending authentication" }, { status: 400 });
+      return NextResponse.json({ error: t('api.passkey.noPendingAuthentication') }, { status: 400 });
     }
 
     // 根据 credentialId 查找 passkey
@@ -33,7 +35,7 @@ export async function POST(req: NextRequest) {
       .get();
 
     if (!passkey) {
-      return NextResponse.json({ error: "Passkey not found" }, { status: 400 });
+      return NextResponse.json({ error: t('api.passkey.passkeyNotFound') }, { status: 400 });
     }
 
     const rpID = getSetting("passkey_rp_id") || req.headers.get("host")?.split(":")[0] || "localhost";
@@ -52,7 +54,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!verification.verified) {
-      return NextResponse.json({ error: "Verification failed" }, { status: 400 });
+      return NextResponse.json({ error: t('api.passkey.verificationFailed') }, { status: 400 });
     }
 
     // 更新 signCount 和 lastUsedAt
@@ -73,7 +75,7 @@ export async function POST(req: NextRequest) {
       .get();
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 400 });
+      return NextResponse.json({ error: t('api.auth.userNotFound') }, { status: 400 });
     }
 
     // 签发 JWT
@@ -106,6 +108,6 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error) {
     console.error("[passkey] Authenticate finish error:", error);
-    return NextResponse.json({ error: "Authentication failed" }, { status: 500 });
+    return NextResponse.json({ error: t('api.passkey.authenticationFailed') }, { status: 500 });
   }
 }

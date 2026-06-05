@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/useAuth";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import type { Message } from "./chat-workspace-ref";
@@ -31,6 +32,7 @@ async function streamAiResponse(params: {
   selectedModelId: number;
   selectedProject: string | undefined;
   onToolCall?: (toolCall: { toolName: string; args: Record<string, unknown> }) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }): Promise<{ aiContent: string; aiThinking: string; aiSignature: string | undefined; hasError: boolean }> {
   const {
     authFetch,
@@ -41,6 +43,7 @@ async function streamAiResponse(params: {
     selectedModelId,
     selectedProject,
     onToolCall,
+    t,
   } = params;
 
   let aiContent = "";
@@ -64,8 +67,8 @@ async function streamAiResponse(params: {
     });
 
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({ error: "请求失败" }));
-      aiContent = errData.error || "模型调用失败";
+      const errData = await res.json().catch(() => ({ error: t('errors.requestFailed') }));
+      aiContent = errData.error || t('errors.modelCallFailed');
       setMessages((prev) => updateMessageById(prev, tempAiMsgId, { content: aiContent }));
     } else {
       const reader = res.body?.getReader();
@@ -83,7 +86,7 @@ async function streamAiResponse(params: {
           } else if (eventType === "thinking_signature" && data.type === "thinking_signature" && typeof data.signature === "string") {
             aiSignature = data.signature;
           } else if (eventType === "error") {
-            aiContent = (data.error as string) || "模型调用出错";
+            aiContent = (data.error as string) || t('errors.modelCallError');
             hasError = true;
             setMessages((prev) => updateMessageById(prev, tempAiMsgId, { content: aiContent, isError: true }));
           } else if (eventType === "done" && data.type === "done") {
@@ -109,14 +112,14 @@ async function streamAiResponse(params: {
           }
         });
       } else {
-        aiContent = "无法读取响应流";
+        aiContent = t('errors.cannotReadStream');
         hasError = true;
         setMessages((prev) => updateMessageById(prev, tempAiMsgId, { content: aiContent, isError: true }));
       }
     }
   } catch (err) {
     if ((err as Error).name !== "AbortError") {
-      aiContent = aiContent || "模型调用失败，请重试";
+      aiContent = aiContent || t('errors.modelCallFailedRetry');
       hasError = true;
       setMessages((prev) => updateMessageById(prev, tempAiMsgId, { content: aiContent, isError: true }));
     }
@@ -172,6 +175,7 @@ export function useChatMessages({
   const abortControllerRef = useRef<AbortController | null>(null);
   const [messages, setMessages] = useState<Message[]>(initialMessages || []);
   const { authFetch } = useAuth();
+  const t = useTranslations("chat");
   const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [mentionedFiles, setMentionedFiles] = useState<string[]>([]);
@@ -321,6 +325,7 @@ export function useChatMessages({
       selectedModelId,
       selectedProject,
       onToolCall,
+      t,
     });
 
     // 6. Save AI message to DB（带 Extended Thinking 字段）
@@ -420,6 +425,7 @@ export function useChatMessages({
       selectedModelId,
       selectedProject,
       onToolCall,
+      t,
     });
 
     // Save AI message to DB

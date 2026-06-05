@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { requireAuth } from "@/lib/auth/session";
 import { getSetting, setSetting } from "@/lib/auth/settings";
 import type { AuthUser } from "@/lib/auth/session";
+import { getApiT } from "@/lib/i18n-api";
 
 export async function POST(req: NextRequest) {
   const authResult = await requireAuth(req);
@@ -14,7 +15,8 @@ export async function POST(req: NextRequest) {
 
   const enabled = getSetting("passkey_enabled") === "true";
   if (!enabled) {
-    return NextResponse.json({ error: "Passkey registration is disabled" }, { status: 400 });
+    const t = await getApiT();
+    return NextResponse.json({ error: t('api.passkey.registrationDisabled') }, { status: 400 });
   }
 
   const rpID = getSetting("passkey_rp_id") || req.headers.get("host")?.split(":")[0] || "localhost";

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/useAuth";
 import { useRouter } from "next/navigation";
 import { App } from "antd";
@@ -25,6 +26,7 @@ export default function ProjectWorkspace({
   recentChats,
   recentDocuments,
 }: ProjectWorkspaceProps) {
+  const t = useTranslations('project');
   const router = useRouter();
   const { message } = App.useApp();
   const { open: openFloatingChat, isOpen: floatingChatOpen, isMinimized: floatingChatMinimized, setMentionFile: setFloatingMentionFile } = useFloatingChat();
@@ -161,7 +163,7 @@ export default function ProjectWorkspace({
 
     if (res.status === 409) {
       const data = await res.json();
-      message.warning(data.error || "A file or folder with this name already exists");
+      message.warning(data.error || t('nameConflict'));
       setTimeout(() => renameInputRef.current?.focus(), 0);
       return;
     }
@@ -273,7 +275,7 @@ export default function ProjectWorkspace({
   // Open (or switch to) an HTML file in a tab. Triggered by preview_html client tool.
   const handlePreviewHtml = useCallback(async (filePath: string) => {
     if (!filePath || !filePath.toLowerCase().endsWith(".html")) {
-      message.warning("preview_html 仅支持 .html 文件");
+      message.warning(t('onlyHtmlPreview'));
       return;
     }
     setTabs((prev) => {
@@ -362,7 +364,7 @@ export default function ProjectWorkspace({
       const msgData = await msgRes.json();
 
       setActiveChatId(chatId);
-      setActiveChatTitle(chatData.title || "New Chat");
+      setActiveChatTitle(chatData.title || t('newChat'));
       setActiveChatMessages(
         (Array.isArray(msgData) ? msgData : msgData.messages || []).map((m: Record<string, unknown>) => ({
           id: m.id as number,
@@ -388,7 +390,7 @@ export default function ProjectWorkspace({
     try {
       const res = await authFetch(`/api/fs/document?path=${docsPath}/${documentPath}`);
       if (res.status === 404) {
-        alert("该文档已被删除");
+        alert(t('documentDeleted'));
         return;
       }
       if (!res.ok) return;

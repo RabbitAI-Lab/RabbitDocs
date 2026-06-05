@@ -5,6 +5,7 @@ import { modelConfigs } from "@/db/schema";
 import { PROTOCOLS } from "@/lib/model-constants";
 import { parseExtraEnv, serializeExtraEnv } from "@/lib/model-env";
 import { eq } from "drizzle-orm";
+import { getApiT } from "@/lib/i18n-api";
 
 // GET /api/models/[id]
 export async function GET(
@@ -18,7 +19,7 @@ export async function GET(
     .where(eq(modelConfigs.id, parseInt(id)))
     .get();
   if (!model)
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: "Not found" }, { status: 404 }); // keep English for non-authed GET
   return NextResponse.json(model);
 }
 
@@ -28,6 +29,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const { id } = await params;
   const body = await req.json();
   const { provider, name, baseUrl, apiKey, modelName, protocol, isDefault, extraEnvJson } = body;
@@ -45,7 +47,7 @@ export async function PATCH(
     const validProtocols = PROTOCOLS as readonly string[];
     if (!validProtocols.includes(protocol)) {
       return NextResponse.json(
-        { error: `protocol must be one of: ${validProtocols.join(", ")}` },
+        { error: t('api.models.protocolMustBeOneOf') + ': ' + validProtocols.join(", ") },
         { status: 400 }
       );
     }

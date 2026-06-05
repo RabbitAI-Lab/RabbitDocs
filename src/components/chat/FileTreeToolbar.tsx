@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 interface FileTreeToolbarProps {
   onCreateFile: () => void;
   onCreateDir: () => void;
@@ -5,6 +9,7 @@ interface FileTreeToolbarProps {
 }
 
 export default function FileTreeToolbar({ onCreateFile, onCreateDir, disabled }: FileTreeToolbarProps) {
+  const t = useTranslations("chat");
   return (
     <div className="px-2 py-1.5 border-b border-gray-100 flex gap-1">
       <button
@@ -17,7 +22,7 @@ export default function FileTreeToolbar({ onCreateFile, onCreateDir, disabled }:
           <line x1="12" y1="11" x2="12" y2="17" />
           <line x1="9" y1="14" x2="15" y2="14" />
         </svg>
-        Document
+        {t('document')}
       </button>
       <button
         onClick={() => onCreateDir()}
@@ -29,7 +34,7 @@ export default function FileTreeToolbar({ onCreateFile, onCreateDir, disabled }:
           <line x1="12" y1="11" x2="12" y2="17" />
           <line x1="9" y1="14" x2="15" y2="14" />
         </svg>
-        Folder
+        {t('folder')}
       </button>
     </div>
   );

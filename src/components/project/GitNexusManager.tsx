@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/auth/useAuth";
 import { Modal } from "antd";
+import { useTranslations } from "next-intl";
 import type { GitNexusStatus, GitNexusPhase } from "@/lib/fs";
 
 interface GitNexusManagerProps {
@@ -11,18 +12,20 @@ interface GitNexusManagerProps {
   onStatusChange: (s: GitNexusStatus | null) => void;
 }
 
-interface PhaseBadge {
-  text: string;
-  color: string;
-  spin: boolean;
-}
+const PHASE_BADGE_KEY: Record<GitNexusPhase, string> = {
+  idle: "gitnexus.notIndexed",
+  analyzing: "gitnexus.analyzing",
+  cleaning: "gitnexus.cleaning",
+  success: "gitnexus.indexed",
+  failed: "gitnexus.failed",
+};
 
-const PHASE_BADGE: Record<GitNexusPhase, PhaseBadge> = {
-  idle: { text: "Not indexed", color: "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-400", spin: false },
-  analyzing: { text: "Analyzing…", color: "bg-blue-100 text-blue-700", spin: true },
-  cleaning: { text: "Cleaning…", color: "bg-blue-100 text-blue-700", spin: true },
-  success: { text: "Indexed", color: "bg-green-100 text-green-700", spin: false },
-  failed: { text: "Failed", color: "bg-red-100 text-red-700", spin: false },
+const PHASE_BADGE_STYLE: Record<GitNexusPhase, { color: string; spin: boolean }> = {
+  idle: { color: "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-400", spin: false },
+  analyzing: { color: "bg-blue-100 text-blue-700", spin: true },
+  cleaning: { color: "bg-blue-100 text-blue-700", spin: true },
+  success: { color: "bg-green-100 text-green-700", spin: false },
+  failed: { color: "bg-red-100 text-red-700", spin: false },
 };
 
 function formatTime(iso: string): string {
@@ -52,8 +55,10 @@ export default function GitNexusManager({
   onStatusChange,
 }: GitNexusManagerProps) {
   const { authFetch } = useAuth();
+  const t = useTranslations('project');
   const phase: GitNexusPhase = status?.phase ?? "idle";
-  const badge = PHASE_BADGE[phase];
+  const badgeKey = PHASE_BADGE_KEY[phase];
+  const badgeStyle = PHASE_BADGE_STYLE[phase];
   const isInProgress = phase === "analyzing" || phase === "cleaning";
 
   // 轮询：每 2s 拉一次最新状态
@@ -82,7 +87,7 @@ export default function GitNexusManager({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          dirSegments: projectPath.split(","),
+          dirSegments: projectPath.split("/"),
         }),
       });
       if (res.ok) {
@@ -93,13 +98,13 @@ export default function GitNexusManager({
       } else {
         const data = await res.json().catch(() => ({}));
         Modal.error({
-          title: "Failed to start analyze",
+          title: t('gitnexus.failedToStartAnalyze'),
           content: data.error || `Server returned ${res.status}`,
         });
       }
     } catch (e: unknown) {
       Modal.error({
-        title: "Failed to start analyze",
+        title: t('gitnexus.failedToStartAnalyze'),
         content: e instanceof Error ? e.message : String(e),
       });
     }
@@ -107,32 +112,31 @@ export default function GitNexusManager({
 
   const handleCancel = () => {
     Modal.confirm({
-      title: "Cancel analyze?",
-      content:
-        "Stop the running GitNexus task? Partial output may remain until you Clean the index.",
-      okText: "Cancel task",
+      title: t('gitnexus.cancelAnalyze'),
+      content: t('gitnexus.cancelAnalyzeContent'),
+      okText: t('gitnexus.cancelTask'),
       okButtonProps: { danger: true },
-      cancelText: "Keep running",
+      cancelText: t('gitnexus.keepRunning'),
       onOk: async () => {
         try {
           const res = await authFetch("/api/fs/project-gitnexus/clean", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              dirSegments: projectPath.split(","),
+              dirSegments: projectPath.split("/"),
               action: "cancel",
             }),
           });
           if (!res.ok) {
             const data = await res.json().catch(() => ({}));
             Modal.error({
-              title: "Failed to cancel",
+              title: t('gitnexus.failedToCancel'),
               content: data.error || `Server returned ${res.status}`,
             });
           }
         } catch (e: unknown) {
           Modal.error({
-            title: "Failed to cancel",
+            title: t('gitnexus.failedToCancel'),
             content: e instanceof Error ? e.message : String(e),
           });
         }
@@ -142,19 +146,18 @@ export default function GitNexusManager({
 
   const handleClean = () => {
     Modal.confirm({
-      title: "Clean GitNexus index?",
-      content:
-        "Delete the .gitnexus/ folder under the project root? This removes the local code knowledge graph.",
-      okText: "Clean",
+      title: t('gitnexus.cleanIndex'),
+      content: t('gitnexus.cleanIndexContent'),
+      okText: t('gitnexus.cleanBtn'),
       okButtonProps: { danger: true },
-      cancelText: "Cancel",
+      cancelText: t('mcp.cancel'),
       onOk: async () => {
         try {
           const res = await authFetch("/api/fs/project-gitnexus/clean", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              dirSegments: projectPath.split(","),
+              dirSegments: projectPath.split("/"),
               action: "clean",
             }),
           });
@@ -166,13 +169,13 @@ export default function GitNexusManager({
           } else {
             const data = await res.json().catch(() => ({}));
             Modal.error({
-              title: "Failed to start clean",
+              title: t('gitnexus.failedToStartAnalyze'),
               content: data.error || `Server returned ${res.status}`,
             });
           }
         } catch (e: unknown) {
           Modal.error({
-            title: "Failed to start clean",
+            title: t('gitnexus.failedToStartAnalyze'),
             content: e instanceof Error ? e.message : String(e),
           });
         }
@@ -185,14 +188,14 @@ export default function GitNexusManager({
       {/* 状态 + 按钮 */}
       <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-100">
         <span
-          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium ${badge.color}`}
+          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium ${badgeStyle.color}`}
         >
-          {badge.spin && <Spinner />}
-          {badge.text}
+          {badgeStyle.spin && <Spinner />}
+          {t(badgeKey)}
         </span>
         <div className="flex-1 min-w-0 text-xs text-gray-500">
           {phase === "success" && status?.lastSuccessAt && (
-            <p>Last indexed: {formatTime(status.lastSuccessAt)}</p>
+            <p>{t('gitnexus.lastIndexed', { time: formatTime(status.lastSuccessAt) })}</p>
           )}
           {phase === "failed" && status?.lastError && (
             <p className="text-red-500 truncate" title={status.lastError}>
@@ -207,7 +210,7 @@ export default function GitNexusManager({
               onClick={handleCancel}
               className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50 rounded transition-colors"
             >
-              Cancel
+              {t('gitnexus.cancelTask')}
             </button>
           ) : (
             <>
@@ -215,14 +218,14 @@ export default function GitNexusManager({
                 onClick={handleAnalyze}
                 className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
               >
-                Analyze
+                {t('gitnexus.analyze')}
               </button>
               <button
                 onClick={handleClean}
                 disabled={!status?.indexExists}
                 className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Clean
+                {t('gitnexus.cleanBtn')}
               </button>
             </>
           )}

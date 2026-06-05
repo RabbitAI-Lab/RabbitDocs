@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/db";
 import { operationLogs } from "@/db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
+import { getApiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 // 注意：复用 operation_logs 表，projectId 参数实际是 workspaceId
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const { searchParams } = new URL(req.url);
   const projectId = searchParams.get("projectId");
   const category = searchParams.get("category");
@@ -17,7 +19,7 @@ export async function GET(req: NextRequest) {
   const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get("pageSize") || "20", 10)));
 
   if (!projectId) {
-    return NextResponse.json({ error: "缺少 projectId 参数" }, { status: 400 });
+    return NextResponse.json({ error: t('api.projectIdRequired') }, { status: 400 });
   }
 
   const conditions = [eq(operationLogs.projectId, projectId)];

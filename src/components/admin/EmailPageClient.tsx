@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useTranslations } from "next-intl";
 import {
   Card,
   Switch,
@@ -61,6 +62,7 @@ const emptyTemplateDraft = (): EmailTemplateSettings => ({
 export default function EmailPageClient() {
   const { authFetch } = useAuth();
   const { message } = App.useApp();
+  const t = useTranslations('admin');
   const [smtp, setSmtp] = useState<SmtpSettings | null>(null);
   const [draft, setDraft] = useState<SmtpSettings>(emptySmtpDraft());
   const [loading, setLoading] = useState(true);
@@ -88,7 +90,7 @@ export default function EmailPageClient() {
       const res = await authFetch("/api/auth/admin/system-settings");
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to load");
+        throw new Error(err.error || t('emailPage.msgFailedToLoad'));
       }
       const data = (await res.json()) as {
         smtp: Omit<SmtpSettings, "pass"> | null;
@@ -109,7 +111,7 @@ export default function EmailPageClient() {
       setPreviewHtml(null);
       setPreviewSubject(null);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Failed to load";
+      const msg = error instanceof Error ? error.message : t('emailPage.msgFailedToLoad');
       message.error(msg);
     } finally {
       setLoading(false);
@@ -175,17 +177,17 @@ export default function EmailPageClient() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to save");
+        throw new Error(err.error || t('emailPage.msgFailedToSave'));
       }
       const data = await res.json();
-      message.success(`Saved (${data.updated} item(s))`);
+      message.success(t('emailPage.msgSavedCount', { count: data.updated }));
 
       const next: SmtpSettings = { ...draft, pass: "", hasPassword: true };
       setSmtp(next);
       setDraft(next);
       setTemplates({ ...templateDraft });
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Failed to save";
+      const msg = error instanceof Error ? error.message : t('emailPage.msgFailedToSave');
       message.error(msg);
     } finally {
       setSaving(false);
@@ -213,7 +215,7 @@ export default function EmailPageClient() {
 
   const handleTestSmtp = async () => {
     if (!testEmail) {
-      message.warning("Please enter a recipient email address");
+      message.warning(t('emailPage.msgPleaseEnterEmail'));
       return;
     }
     setTestState({ testing: true, result: null });
@@ -228,12 +230,12 @@ export default function EmailPageClient() {
       );
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Request failed");
+        throw new Error(err.error || t('emailPage.msgRequestFailed'));
       }
       const data = (await res.json()) as { success: boolean; message: string };
       setTestState({ testing: false, result: data });
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Request failed";
+      const msg = error instanceof Error ? error.message : t('emailPage.msgRequestFailed');
       setTestState({
         testing: false,
         result: { success: false, message: msg },
@@ -258,7 +260,7 @@ export default function EmailPageClient() {
       );
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Preview failed");
+        throw new Error(err.error || t('emailPage.msgPreviewFailed'));
       }
       const data = (await res.json()) as {
         preview: { subject: string; html: string };
@@ -266,7 +268,7 @@ export default function EmailPageClient() {
       setPreviewSubject(data.preview.subject);
       setPreviewHtml(data.preview.html);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Preview failed";
+      const msg = error instanceof Error ? error.message : t('emailPage.msgPreviewFailed');
       message.error(msg);
     } finally {
       setPreviewing(false);
@@ -291,10 +293,10 @@ export default function EmailPageClient() {
     <div className="h-full overflow-auto p-6">
       <div className="max-w-3xl mx-auto flex flex-col gap-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Email Service</h1>
+          <h1 className="text-lg font-semibold">{t('emailPage.title')}</h1>
           <Space>
             <Button icon={<ReloadOutlined />} onClick={load}>
-              Reset
+              {t('emailPage.btnReset')}
             </Button>
             <Button
               icon={<SaveOutlined />}
@@ -302,7 +304,7 @@ export default function EmailPageClient() {
               loading={saving}
               onClick={handleSave}
             >
-              Save
+              {t('emailPage.btnSave')}
             </Button>
           </Space>
         </div>
@@ -330,14 +332,14 @@ export default function EmailPageClient() {
           onResetTemplate={handleResetTemplate}
         />
 
-        <Card title="Current Configuration">
+        <Card title={t('emailPage.currentConfigTitle')}>
           <Space orientation="vertical" size="small">
             <div>
-              <Text type="secondary">SMTP Email Service: </Text>
+              <Text type="secondary">{t('emailPage.currentConfigSmtpLabel')}</Text>
               {smtp ? (
-                <Tag color="green">Configured</Tag>
+                <Tag color="green">{t('emailPage.tagConfigured')}</Tag>
               ) : (
-                <Tag>Not Configured</Tag>
+                <Tag>{t('emailPage.tagNotConfigured')}</Tag>
               )}
               {smtp && (
                 <Tag>
@@ -347,7 +349,7 @@ export default function EmailPageClient() {
             </div>
           </Space>
           <Paragraph type="secondary" className="mt-3 text-xs">
-            Changes take effect after clicking &quot;Save&quot;. Without SMTP configured, verification emails will only be printed to the server console and users will not receive them.
+            {t('emailPage.configNote')}
           </Paragraph>
         </Card>
       </div>
@@ -376,6 +378,8 @@ function EmailTemplateCard(props: {
     onResetTemplate,
   } = props;
 
+  const t = useTranslations('admin');
+
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Write preview HTML into iframe
@@ -398,27 +402,27 @@ function EmailTemplateCard(props: {
       title={
         <Space>
           <MailOutlined />
-          <span>Email Templates</span>
-          {isDefault && <Tag color="blue">Using default</Tag>}
+          <span>{t('emailPage.templateCardTitle')}</span>
+          {isDefault && <Tag color="blue">{t('emailPage.tagUsingDefault')}</Tag>}
         </Space>
       }
       extra={
         !isDefault ? (
           <Button size="small" icon={<UndoOutlined />} onClick={onResetTemplate}>
-            Reset to Default
+            {t('emailPage.btnResetToDefault')}
           </Button>
         ) : null
       }
     >
       <Text type="secondary" className="text-xs block mb-4">
-        Customize the verification email content. Leave fields empty to use the default template.
+        {t('emailPage.templateTip')}
       </Text>
 
       <div className="space-y-3">
-        <FieldRow label="Subject">
+        <FieldRow label={t('emailPage.labelSubject')}>
           <Input
             value={templateDraft.verifySubject}
-            placeholder="{{brandName}} - Verify Your Email"
+            placeholder={t('emailPage.placeholderSubject')}
             allowClear
             onChange={(e) =>
               setTemplateDraft((prev) => ({
@@ -428,10 +432,10 @@ function EmailTemplateCard(props: {
             }
           />
         </FieldRow>
-        <FieldRow label="HTML Body">
+        <FieldRow label={t('emailPage.labelHtmlBody')}>
           <TextArea
             value={templateDraft.verifyHtml}
-            placeholder="Leave empty to use the default template"
+            placeholder={t('emailPage.placeholderHtmlBody')}
             rows={12}
             style={{ fontFamily: "monospace", fontSize: 13 }}
             onChange={(e) =>
@@ -449,17 +453,12 @@ function EmailTemplateCard(props: {
           className="!mt-2"
           title={
             <span>
-              Available variables:{" "}
-              <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">{"{{brandName}}"}</code>{" "}
-              <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">{"{{code}}"}</code>{" "}
-              <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">{"{{verifyUrl}}"}</code>{" "}
-              <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">{"{{codeBlock}}"}</code>
+              {t('emailPage.alertAvailableVarsTitle')}
             </span>
           }
           description={
             <span className="text-xs">
-              <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">{"{{codeBlock}}"}</code> renders a styled verification code
-              display block. Leave fields empty to use the default template.
+              {t('emailPage.alertAvailableVarsDesc')}
             </span>
           }
         />
@@ -470,7 +469,7 @@ function EmailTemplateCard(props: {
             loading={previewing}
             onClick={onPreview}
           >
-            Preview
+            {t('emailPage.btnPreview')}
           </Button>
         </Space>
 
@@ -478,7 +477,7 @@ function EmailTemplateCard(props: {
           <>
             <Divider className="!my-3" />
             <div className="mb-2">
-              <Text strong>Subject: </Text>
+              <Text strong>{t('emailPage.labelPreviewSubject')}</Text>
               <Text>{previewSubject}</Text>
             </div>
             <div
@@ -497,7 +496,7 @@ function EmailTemplateCard(props: {
                   height: 500,
                   border: "none",
                 }}
-                title="Email Preview"
+                title={t('emailPage.previewIframeTitle')}
               />
             </div>
           </>
@@ -534,23 +533,25 @@ function SmtpCard(props: {
     onTest,
   } = props;
 
+  const t = useTranslations('admin');
+
   return (
     <Card
       title={
         <Space>
           <MailOutlined />
-          <span>SMTP Configuration</span>
+          <span>{t('emailPage.smtpCardTitle')}</span>
           {currentConfigured ? (
-            <Tag color="green">Configured</Tag>
+            <Tag color="green">{t('emailPage.tagConfigured')}</Tag>
           ) : (
-            <Tag>Not Configured</Tag>
+            <Tag>{t('emailPage.tagNotConfigured')}</Tag>
           )}
         </Space>
       }
       extra={
         currentConfigured ? (
           <Button danger size="small" onClick={onClear}>
-            Clear SMTP Config
+            {t('emailPage.btnClearSmtp')}
           </Button>
         ) : null
       }
@@ -560,11 +561,11 @@ function SmtpCard(props: {
           type="warning"
           showIcon
           className="!mb-4"
-          title="SMTP email service not configured"
-          description="Without SMTP configured, verification emails will only be printed to the server console and users will not receive them."
+          title={t('emailPage.alertNotConfiguredTitle')}
+          description={t('emailPage.alertNotConfiguredDesc')}
           action={
             <Button size="small" onClick={onInit}>
-              Set Up Now
+              {t('emailPage.btnSetUpNow')}
             </Button>
           }
         />
@@ -572,16 +573,16 @@ function SmtpCard(props: {
 
       {smtp && (
       <div className="space-y-3">
-        <FieldRow label="SMTP Host">
+        <FieldRow label={t('emailPage.labelHost')}>
           <Input
             value={smtp.host}
-            placeholder="smtp.example.com"
+            placeholder={t('emailPage.placeholderHost')}
             allowClear
             onChange={(e) => onChangeField("host", e.target.value)}
           />
         </FieldRow>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <FieldRow label="Port">
+          <FieldRow label={t('emailPage.labelPort')}>
             <InputNumber
               value={smtp.port}
               min={1}
@@ -590,44 +591,44 @@ function SmtpCard(props: {
               onChange={(v) => onChangeField("port", typeof v === "number" ? v : 465)}
             />
           </FieldRow>
-          <FieldRow label="Use SSL/TLS">
+          <FieldRow label={t('emailPage.labelUseSsl')}>
             <div className="pt-1">
               <Switch
                 checked={smtp.secure}
                 onChange={(v) => onChangeField("secure", v)}
               />
               <Text type="secondary" className="ml-2 text-xs">
-                Usually enabled for port 465; disabled for 587/25 (uses STARTTLS)
+                {t('emailPage.tipSsl')}
               </Text>
             </div>
           </FieldRow>
         </div>
-        <FieldRow label="Username">
+        <FieldRow label={t('emailPage.labelUsername')}>
           <Input
             value={smtp.user}
-            placeholder="user@example.com"
+            placeholder={t('emailPage.placeholderUsername')}
             autoComplete="off"
             onChange={(e) => onChangeField("user", e.target.value)}
           />
         </FieldRow>
-        <FieldRow label="Password / Authorization Code">
+        <FieldRow label={t('emailPage.labelPassword')}>
           <Input.Password
             value={smtp.pass}
             placeholder={
               smtp.hasPassword
-                ? "Leave empty to keep current password"
-                : "SMTP login password or authorization code"
+                ? t('emailPage.placeholderPasswordSet')
+                : t('emailPage.placeholderPasswordEmpty')
             }
             autoComplete="new-password"
             onChange={(e) => onChangeField("pass", e.target.value)}
           />
           {smtp.hasPassword && !smtp.pass && (
             <Text type="secondary" className="mt-1 block text-xs">
-              Password has been set (not displayed). Only fill in when you need to change it.
+              {t('emailPage.tipPasswordSet')}
             </Text>
           )}
         </FieldRow>
-        <FieldRow label="Sender Email">
+        <FieldRow label={t('emailPage.labelSenderEmail')}>
           <Input
             type="email"
             value={smtp.fromEmail}
@@ -636,25 +637,25 @@ function SmtpCard(props: {
             onChange={(e) => onChangeField("fromEmail", e.target.value)}
           />
           <Text type="secondary" className="mt-1 block text-xs">
-            Leave empty to use noreply@&lt;SMTP Host&gt;
+            {t('emailPage.tipSenderEmail')}
           </Text>
         </FieldRow>
 
         <Divider className="!my-4" />
 
         <div>
-          <div className="font-medium mb-2">Test Email</div>
+          <div className="font-medium mb-2">{t('emailPage.labelTestEmail')}</div>
           <Text type="secondary" className="text-xs block mb-3">
-            Send a test email to verify your SMTP configuration.{" "}
+            {t('emailPage.testEmailDesc')}{" "}
             <span className="text-orange-600">
-              The test uses saved settings. Please click &quot;Save&quot; at the top first.
+              {t('emailPage.testEmailWarning')}
             </span>
-            {dirty && " You have unsaved changes. The test will use the saved values."}
+            {dirty && t('emailPage.testEmailUnsaved')}
           </Text>
           <Space.Compact className="!w-full !flex">
             <Input
               type="email"
-              placeholder="test@example.com"
+              placeholder={t('emailPage.placeholderTestEmail')}
               value={testEmail}
               onChange={(e) => setTestEmail(e.target.value)}
               onPressEnter={onTest}
@@ -664,7 +665,7 @@ function SmtpCard(props: {
               loading={testState.testing}
               onClick={onTest}
             >
-              Send Test Email
+              {t('emailPage.btnSendTestEmail')}
             </Button>
           </Space.Compact>
           {testState.result && (
@@ -674,8 +675,8 @@ function SmtpCard(props: {
               showIcon
               title={
                 testState.result.success
-                  ? "Sent successfully"
-                  : "Send failed"
+                  ? t('emailPage.alertSentSuccess')
+                  : t('emailPage.alertSentFailed')
               }
               description={testState.result.message}
             />

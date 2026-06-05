@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/useAuth";
 import { Modal, Input, Spin, message } from "antd";
 
@@ -26,6 +27,7 @@ export default function SaveToDocumentModal({
   onClose,
   onSaved,
 }: SaveToDocumentModalProps) {
+  const t = useTranslations("chat");
   const [tree, setTree] = useState<TreeNode[]>([]);
   const { authFetch, user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -73,7 +75,7 @@ export default function SaveToDocumentModal({
         })
         .catch(() => {
           if (cancelled) return;
-          setError("加载文件树失败");
+          setError(t("saveModal.loadTreeFailed"));
         })
         .finally(() => {
           if (!cancelled) setLoading(false);
@@ -121,7 +123,7 @@ export default function SaveToDocumentModal({
       if (!res.ok) throw new Error("Save failed");
       onSaved(docPath);
     } catch {
-      message.error("保存失败，请重试");
+      message.error(t("saveModal.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -238,12 +240,12 @@ export default function SaveToDocumentModal({
       const last = parts[parts.length - 1] || "";
       return last || selectedDir;
     }
-    return "项目根目录";
+    return t("saveModal.projectRoot");
   };
 
   return (
     <Modal
-      title="保存到文档"
+      title={t("saveModal.title")}
       open={open}
       onCancel={onClose}
       destroyOnHidden
@@ -253,7 +255,7 @@ export default function SaveToDocumentModal({
             onClick={onClose}
             className="px-3 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 rounded hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors"
           >
-            取消
+            {t("saveModal.cancel")}
           </button>
           <button
             onClick={handleSave}
@@ -264,7 +266,7 @@ export default function SaveToDocumentModal({
                 : "bg-gray-200 dark:bg-zinc-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
             }`}
           >
-            {saving ? "保存中..." : "保存"}
+            {saving ? t("saveModal.saving") : t("saveModal.save")}
           </button>
         </div>
       }
@@ -290,17 +292,17 @@ export default function SaveToDocumentModal({
                       return r.json();
                     })
                     .then((data: TreeNode[]) => setTree(data))
-                    .catch(() => setError("加载文件树失败"))
+                    .catch(() => setError(t("saveModal.loadTreeFailed")))
                     .finally(() => setLoading(false));
                 }}
                 className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
               >
-                重试
+                {t("saveModal.retry")}
               </button>
             </div>
           ) : tree.length === 0 ? (
             <div className="flex items-center justify-center py-8">
-              <span className="text-xs text-gray-400 dark:text-gray-500">No documents</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">{t("saveModal.noDocuments")}</span>
             </div>
           ) : (
             <div className="py-1">{renderTree(tree)}</div>
@@ -309,12 +311,12 @@ export default function SaveToDocumentModal({
 
         {/* Save path hint */}
         <div className="text-xs text-gray-400 dark:text-gray-500">
-          将保存到: {getSavePathHint()}
+          {t("saveModal.savePathHint", { path: getSavePathHint() })}
         </div>
 
         {/* Filename input */}
         <Input
-          placeholder="输入文档名称（不含 .md）"
+          placeholder={t("saveModal.filenamePlaceholder")}
           value={filename}
           onChange={(e) => {
             setFilename(e.target.value);
@@ -335,7 +337,7 @@ export default function SaveToDocumentModal({
               <line x1="12" y1="9" x2="12" y2="13" />
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
-            将覆盖现有文档: {overwriteTarget.name}
+            {t("saveModal.overwriteWarning", { name: overwriteTarget.name })}
           </div>
         )}
       </div>

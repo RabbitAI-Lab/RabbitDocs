@@ -1,5 +1,6 @@
 import { db } from "./index";
 import { accounts, templates, systemPrompts } from "./schema";
+import { migrateMetaToDb } from "@/lib/fs/migrate-meta-to-db";
 import { backfillEntityMembers } from "@/lib/fs/backfill-members";
 
 export async function seed() {
@@ -213,7 +214,10 @@ MCP configuration:
     console.log(`[seed] ${existingSystemPrompts.length} system prompts already exist.`);
   }
 
-  // 回填成员索引
+  // 迁移元数据到 DB（在 backfill 之前，因为 migrateMetaToDb 已包含 member 回填）
+  migrateMetaToDb();
+
+  // 回填成员索引（兜底：如果 migrateMetaToDb 未覆盖的场景）
   backfillEntityMembers();
 
   console.log("[seed] Done.");

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/components/auth/useAuth";
+import { useTranslations } from "next-intl";
 import { Button, Input, App, Typography, Space } from "antd";
 import { SaveOutlined } from "@ant-design/icons";
 
@@ -23,13 +24,14 @@ export default function SandboxPageClient({ initialConfig }: Props) {
     initialConfig?.sandboxUrl || DEFAULT_URL
   );
   const { authFetch } = useAuth();
+  const t = useTranslations('admin');
   const [updatedAt, setUpdatedAt] = useState(initialConfig?.updatedAt || null);
   const [isSaving, setIsSaving] = useState(false);
   const { message } = App.useApp();
 
   const handleSave = async () => {
     if (!sandboxUrl.trim()) {
-      message.error("Sandbox URL cannot be empty");
+      message.error(t('sandboxPage.msgUrlEmpty'));
       return;
     }
 
@@ -43,14 +45,14 @@ export default function SandboxPageClient({ initialConfig }: Props) {
       const data = await res.json();
 
       if (!res.ok) {
-        message.error(data.error || "Save failed");
+        message.error(data.error || t('sandboxPage.msgSaveFailed'));
         return;
       }
 
       setUpdatedAt(data.updatedAt);
-      message.success("Saved successfully");
+      message.success(t('sandboxPage.msgSavedSuccess'));
     } catch {
-      message.error("Save failed, please check network connection");
+      message.error(t('sandboxPage.msgSaveFailedNetwork'));
     } finally {
       setIsSaving(false);
     }
@@ -61,9 +63,9 @@ export default function SandboxPageClient({ initialConfig }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-700">
         <div>
-          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Sandbox Config</h1>
+          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('sandboxPage.title')}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Configure RabbitAI-Lab OpenSandbox service URL
+            {t('sandboxPage.subtitle')}
           </p>
         </div>
         <Space>
@@ -72,7 +74,7 @@ export default function SandboxPageClient({ initialConfig }: Props) {
             loading={isSaving}
             onClick={handleSave}
           >
-            Save
+            {t('sandboxPage.btnSave')}
           </Button>
         </Space>
       </div>
@@ -82,13 +84,13 @@ export default function SandboxPageClient({ initialConfig }: Props) {
         <div className="bg-white dark:bg-zinc-800 rounded-lg border border-gray-200 dark:border-zinc-700 p-4">
           <div className="mb-3">
             <Text type="secondary" className="text-xs">
-              Configure OpenSandbox service connection URL for running code in sandbox environment.
+              {t('sandboxPage.tipDescription')}
             </Text>
           </div>
 
           <div className="mb-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              OpenSandbox URL
+              {t('sandboxPage.labelSandboxUrl')}
             </label>
             <Input
               value={sandboxUrl}
@@ -101,7 +103,7 @@ export default function SandboxPageClient({ initialConfig }: Props) {
           {updatedAt && (
             <div className="mt-4">
               <Text type="secondary" className="text-xs">
-                Last saved: {new Date(updatedAt).toLocaleString()}
+                {t('sandboxPage.lastSaved')}{new Date(updatedAt).toLocaleString()}
               </Text>
             </div>
           )}

@@ -1,15 +1,21 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
-const menuGroups = [
-  {
-    title: "General",
-    items: [
-      {
-        href: "/admin/general",
-        label: "Site Settings",
+export default function AdminSidebar() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const t = useTranslations('admin');
+
+  const menuGroups = [
+    {
+      title: t('sidebar.groupGeneral'),
+      items: [
+        {
+          href: "/admin/general",
+          label: t('sidebar.menuSiteSettings'),
         icon: (
           <svg
             className="w-4 h-4"
@@ -29,11 +35,11 @@ const menuGroups = [
     ],
   },
   {
-    title: "AI Services",
+    title: t('sidebar.groupAiServices'),
     items: [
       {
         href: "/admin/models",
-        label: "Model Config",
+        label: t('sidebar.menuModelConfig'),
         icon: (
           <svg
             className="w-4 h-4"
@@ -52,7 +58,7 @@ const menuGroups = [
       },
       {
         href: "/admin/mcp",
-        label: "MCP Config",
+        label: t('sidebar.menuMcpConfig'),
         icon: (
           <svg
             className="w-4 h-4"
@@ -79,7 +85,7 @@ const menuGroups = [
       },
       {
         href: "/admin/system-prompts",
-        label: "System Prompts",
+        label: t('sidebar.menuSystemPrompts'),
         icon: (
           <svg
             className="w-4 h-4"
@@ -98,11 +104,11 @@ const menuGroups = [
     ],
   },
   {
-    title: "Infrastructure",
+    title: t('sidebar.groupInfrastructure'),
     items: [
       {
         href: "/admin/sandbox",
-        label: "Sandbox Config",
+        label: t('sidebar.menuSandboxConfig'),
         icon: (
           <svg
             className="w-4 h-4"
@@ -121,7 +127,7 @@ const menuGroups = [
       },
       {
         href: "/admin/storage",
-        label: "File Storage",
+        label: t('sidebar.menuFileStorage'),
         icon: (
           <svg
             className="w-4 h-4"
@@ -138,7 +144,7 @@ const menuGroups = [
       },
       {
         href: "/admin/email",
-        label: "Email",
+        label: t('sidebar.menuEmail'),
         icon: (
           <svg
             className="w-4 h-4"
@@ -156,7 +162,7 @@ const menuGroups = [
       },
       {
         href: "/admin/database",
-        label: "Database",
+        label: t('sidebar.menuDatabase'),
         icon: (
           <svg
             className="w-4 h-4"
@@ -176,11 +182,11 @@ const menuGroups = [
     ],
   },
   {
-    title: "User Management",
+    title: t('sidebar.groupUserManagement'),
     items: [
       {
         href: "/admin/users",
-        label: "Users",
+        label: t('sidebar.menuUsers'),
         icon: (
           <svg
             className="w-4 h-4"
@@ -200,7 +206,7 @@ const menuGroups = [
       },
       {
         href: "/admin/invite-codes",
-        label: "Invite Codes",
+        label: t('sidebar.menuInviteCodes'),
         icon: (
           <svg
             className="w-4 h-4"
@@ -219,7 +225,7 @@ const menuGroups = [
       },
       {
         href: "/admin/auth",
-        label: "Auth",
+        label: t('sidebar.menuAuth'),
         icon: (
           <svg
             className="w-4 h-4"
@@ -238,11 +244,11 @@ const menuGroups = [
     ],
   },
   {
-    title: "Business",
+    title: t('sidebar.groupBusiness'),
     items: [
       {
         href: "/admin/plans",
-        label: "Plans",
+        label: t('sidebar.menuPlans'),
         icon: (
           <svg
             className="w-4 h-4"
@@ -263,15 +269,11 @@ const menuGroups = [
   },
 ];
 
-export default function AdminSidebar() {
-  const router = useRouter();
-  const pathname = usePathname();
-
   return (
     <div className="w-[200px] h-full flex flex-col border-r border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shrink-0">
       {/* Header */}
       <div className="px-4 py-3 border-b border-gray-100 dark:border-zinc-700">
-        <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">System Admin</h2>
+        <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">{t('sidebar.headerTitle')}</h2>
       </div>
 
       {/* Menu Items */}

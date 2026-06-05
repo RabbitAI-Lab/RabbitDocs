@@ -4,13 +4,12 @@ import { db } from "@/db";
 import { users, inviteCodes, emailVerifications } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { hashPassword } from "@/lib/auth/password";
-import { generateTokenPair } from "@/lib/auth/tokens";
+// generateTokenPair — kept for future token-on-registration feature
+// import { generateTokenPair } from "@/lib/auth/tokens";
 import {
   isOpenRegistration,
   isInviteCodeRequired,
   isValidGeneralRegistrationKey,
-  setSetting,
-  getSetting,
 } from "@/lib/auth/settings";
 import { getAppUrl } from "@/lib/auth/env";
 import {
@@ -18,6 +17,7 @@ import {
   generateVerificationCode,
   isSmtpConfigured,
 } from "@/lib/auth/mail";
+import { getApiT } from "@/lib/i18n-api";
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -28,6 +28,7 @@ const registerSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const t = await getApiT();
   try {
     const body = await req.json();
     const parsed = registerSchema.safeParse(body);
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
     // 检查注册是否开放
     if (!isOpenRegistration()) {
       return NextResponse.json(
-        { error: "Registration is currently closed" },
+        { error: t('api.auth.registrationClosed') },
         { status: 403 }
       );
     }
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
     const requireCode = isInviteCodeRequired();
     if (requireCode && !hasInviteCode && !hasGeneralKey) {
       return NextResponse.json(
-        { error: "Invite code or general registration key is required" },
+        { error: t('api.auth.inviteCodeOrKeyRequired') },
         { status: 400 }
       );
     }
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
 
       if (!codeRow || codeRow.usedById) {
         return NextResponse.json(
-          { error: "Invalid or already used invite code" },
+          { error: t('api.auth.invalidInviteCode') },
           { status: 400 }
         );
       }
@@ -87,7 +88,7 @@ export async function POST(req: NextRequest) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "Email already registered" },
+        { error: t('api.auth.emailAlreadyRegistered') },
         { status: 409 }
       );
     }
@@ -150,19 +151,19 @@ export async function POST(req: NextRequest) {
     const verifyUrl = `${getAppUrl()}/verify-email?token=${verificationToken}`;
 
     return NextResponse.json({
-      message: "Registration successful. Please verify your email.",
+      message: t('api.auth.registrationSuccess'),
       ...(smtpEnabled
         ? {}
         : {
             verificationUrl: verifyUrl,
             verificationCode,
-            devHint: "SMTP 未配置，验证码已直接返回（仅用于本地开发）",
+            devHint: t('api.auth.smtpNotConfigured'),
           }),
     });
   } catch (error) {
     console.error("[auth] Registration error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: t('api.internalError') },
       { status: 500 }
     );
   }

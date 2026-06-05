@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/useAuth";
 
 type LogCategory = "repository" | "sandbox" | "skills" | "mcp" | "member";
@@ -20,13 +21,13 @@ interface LogPanelProps {
   projectPath: string;
 }
 
-const CATEGORY_FILTERS: { key: LogCategory | "all"; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "repository", label: "Repository" },
-  { key: "sandbox", label: "Sandbox" },
-  { key: "skills", label: "Skills" },
-  { key: "mcp", label: "MCP" },
-  { key: "member", label: "Members" },
+const CATEGORY_FILTER_KEYS: (LogCategory | "all")[] = [
+  "all",
+  "repository",
+  "sandbox",
+  "skills",
+  "mcp",
+  "member",
 ];
 
 const CATEGORY_CONFIG: Record<LogCategory, { color: string }> = {
@@ -37,12 +38,12 @@ const CATEGORY_CONFIG: Record<LogCategory, { color: string }> = {
   member: { color: "#6B7280" },
 };
 
-const ACTION_LABELS: Record<string, { text: string; className: string }> = {
-  create: { text: "Added", className: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" },
-  update: { text: "Modified", className: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400" },
-  delete: { text: "Deleted", className: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400" },
-  enable: { text: "Enabled", className: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" },
-  disable: { text: "Disabled", className: "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-400" },
+const ACTION_LABEL_KEYS: Record<string, { key: string; className: string }> = {
+  create: { key: "log.added", className: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" },
+  update: { key: "log.modified", className: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400" },
+  delete: { key: "log.deleted", className: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400" },
+  enable: { key: "log.enabled", className: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" },
+  disable: { key: "log.disabled", className: "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-400" },
 };
 
 function formatTime(dateStr: string) {
@@ -79,7 +80,8 @@ function CategoryIcon({ category }: { category: LogCategory }) {
 }
 
 export default function LogPanel({ projectPath }: LogPanelProps) {
-  const projectId = projectPath.split(",").pop() || "";
+  const t = useTranslations('project');
+  const projectId = projectPath.split("/").pop() || "";
   const { authFetch } = useAuth();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [total, setTotal] = useState(0);
@@ -137,17 +139,17 @@ export default function LogPanel({ projectPath }: LogPanelProps) {
     <div className="space-y-3">
       {/* Category filter */}
       <div className="flex items-center gap-1 flex-wrap">
-        {CATEGORY_FILTERS.map((filter) => (
+        {CATEGORY_FILTER_KEYS.map((filterKey) => (
           <button
-            key={filter.key}
-            onClick={() => handleCategoryChange(filter.key)}
+            key={filterKey}
+            onClick={() => handleCategoryChange(filterKey)}
             className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
-              selectedCategory === filter.key
+              selectedCategory === filterKey
                 ? "bg-blue-600 text-white"
                 : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200"
             }`}
           >
-            {filter.label}
+            {t(`log.${filterKey === 'member' ? 'members' : filterKey}`)}
           </button>
         ))}
       </div>
@@ -162,12 +164,12 @@ export default function LogPanel({ projectPath }: LogPanelProps) {
             <line x1="16" y1="17" x2="8" y2="17" />
             <polyline points="10 9 9 9 8 9" />
           </svg>
-          <p className="text-sm">No activity logs</p>
+          <p className="text-sm">{t('log.noLogs')}</p>
         </div>
       ) : (
         <div className="space-y-0.5">
           {logs.map((log) => {
-            const actionLabel = ACTION_LABELS[log.action];
+            const actionLabel = ACTION_LABEL_KEYS[log.action];
             return (
               <div
                 key={log.id}
@@ -179,7 +181,7 @@ export default function LogPanel({ projectPath }: LogPanelProps) {
                     <span className="text-sm text-gray-700 dark:text-gray-200 truncate">{log.detail}</span>
                     {actionLabel && (
                       <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded ${actionLabel.className}`}>
-                        {actionLabel.text}
+                        {actionLabel && t(actionLabel.key)}
                       </span>
                     )}
                   </div>
@@ -210,7 +212,9 @@ export default function LogPanel({ projectPath }: LogPanelProps) {
             disabled={loading}
             className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-zinc-800 rounded-lg transition-colors disabled:opacity-50"
           >
-            {loading ? "Loading..." : `Load More (${total - logs.length} remaining)`}
+            {loading
+              ? t('log.loading')
+              : t('log.loadMore', { count: total - logs.length })}
           </button>
         </div>
       )}

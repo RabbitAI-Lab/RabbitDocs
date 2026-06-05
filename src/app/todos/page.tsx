@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Modal, Input, Form, App } from "antd";
 import { useAuth } from "@/components/auth/useAuth";
 
@@ -16,6 +17,7 @@ interface Todo {
 export default function TodosPage() {
   const { message } = App.useApp();
   const { user, isLoading: authLoading, authFetch } = useAuth();
+  const t = useTranslations('todosPage');
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -78,11 +80,11 @@ export default function TodosPage() {
         if (res.ok) {
           form.resetFields();
           setEditingTodo(null);
-          message.success("Todo updated");
+          message.success(t('todoUpdated'));
           fetchTodos();
         } else {
           const data = await res.json();
-          message.error(data.error || "Failed to update todo");
+          message.error(data.error || t('failedToUpdate'));
         }
       } else {
         // Add mode
@@ -95,11 +97,11 @@ export default function TodosPage() {
         if (res.ok) {
           form.resetFields();
           setShowForm(false);
-          message.success("Todo added");
+          message.success(t('todoAdded'));
           fetchTodos();
         } else {
           const data = await res.json();
-          message.error(data.error || "Failed to add todo");
+          message.error(data.error || t('failedToAdd'));
         }
       }
     } catch {
@@ -137,7 +139,7 @@ export default function TodosPage() {
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="text-gray-400 dark:text-gray-500">Loading...</div>
+        <div className="text-gray-400 dark:text-gray-500">{t('loading')}</div>
       </div>
     );
   }
@@ -146,7 +148,7 @@ export default function TodosPage() {
     <div className="h-full flex flex-col p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Todo</h1>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{t('title')}</h1>
         <button
           onClick={() => setShowForm(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
@@ -155,16 +157,16 @@ export default function TodosPage() {
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          Add Todo
+          {t('addTodo')}
         </button>
       </div>
 
       {/* Add Todo Modal */}
       <Modal
-        title="Add Todo"
+        title={t('addTodoTitle')}
         open={showForm}
         onOk={handleSave}
-        okText="Add"
+        okText={t('add')}
         confirmLoading={saving}
         onCancel={() => {
           setShowForm(false);
@@ -180,33 +182,33 @@ export default function TodosPage() {
           className="mt-4"
         >
           <Form.Item
-            label="Title"
+            label={t('titleLabel')}
             name="title"
             rules={[
-              { required: true, message: "Please enter title" },
-              { max: 100, message: "Title must be 100 characters or less" },
+              { required: true, message: t('titleRequired') },
+              { max: 100, message: t('titleMaxLength') },
             ]}
           >
-            <Input placeholder="Enter title" maxLength={100} autoFocus />
+            <Input placeholder={t('titlePlaceholder')} maxLength={100} autoFocus />
           </Form.Item>
           <Form.Item
-            label="Description"
+            label={t('descriptionLabel')}
             name="description"
             rules={[
-              { max: 100, message: "Description must be 100 characters or less" },
+              { max: 100, message: t('descriptionMaxLength') },
             ]}
           >
-            <Input placeholder="Enter description (optional)" maxLength={100} />
+            <Input placeholder={t('descriptionPlaceholder')} maxLength={100} />
           </Form.Item>
         </Form>
       </Modal>
 
       {/* Edit Todo Modal */}
       <Modal
-        title="Edit Todo"
+        title={t('editTodoTitle')}
         open={!!editingTodo}
         onOk={handleSave}
-        okText="Save"
+        okText={t('save')}
         confirmLoading={saving}
         onCancel={() => {
           setEditingTodo(null);
@@ -222,23 +224,23 @@ export default function TodosPage() {
           className="mt-4"
         >
           <Form.Item
-            label="Title"
+            label={t('titleLabel')}
             name="title"
             rules={[
-              { required: true, message: "Please enter title" },
-              { max: 100, message: "Title must be 100 characters or less" },
+              { required: true, message: t('titleRequired') },
+              { max: 100, message: t('titleMaxLength') },
             ]}
           >
-            <Input placeholder="Enter title" maxLength={100} autoFocus />
+            <Input placeholder={t('titlePlaceholder')} maxLength={100} autoFocus />
           </Form.Item>
           <Form.Item
-            label="Description"
+            label={t('descriptionLabel')}
             name="description"
             rules={[
-              { max: 100, message: "Description must be 100 characters or less" },
+              { max: 100, message: t('descriptionMaxLength') },
             ]}
           >
-            <Input placeholder="Enter description (optional)" maxLength={100} />
+            <Input placeholder={t('descriptionPlaceholder')} maxLength={100} />
           </Form.Item>
         </Form>
       </Modal>
@@ -248,12 +250,12 @@ export default function TodosPage() {
         {todos.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <p className="text-gray-400 dark:text-gray-500 mb-2">No todos yet</p>
+              <p className="text-gray-400 dark:text-gray-500 mb-2">{t('noTodos')}</p>
               <button
                 onClick={() => setShowForm(true)}
                 className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
               >
-                Add your first todo
+                {t('addFirstTodo')}
               </button>
             </div>
           </div>
@@ -262,10 +264,10 @@ export default function TodosPage() {
             {/* Pending Section */}
             <section>
               <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-                Pending ({pendingTodos.length})
+                {t('pending', { count: pendingTodos.length })}
               </h2>
               {pendingTodos.length === 0 ? (
-                <p className="text-sm text-gray-300 dark:text-gray-600 py-2">All caught up!</p>
+                <p className="text-sm text-gray-300 dark:text-gray-600 py-2">{t('allCaughtUp')}</p>
               ) : (
                 <div className="space-y-2">
                   {pendingTodos.map((todo) => (
@@ -287,7 +289,7 @@ export default function TodosPage() {
             {completedTodos.length > 0 && (
               <section>
                 <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-                  Completed ({completedTodos.length})
+                  {t('completed', { count: completedTodos.length })}
                 </h2>
                 <div className="space-y-2">
                   {completedTodos.map((todo) => (
@@ -328,6 +330,7 @@ function TodoItem({
   confirmDeleteId: number | null;
   setConfirmDeleteId: (id: number | null) => void;
 }) {
+  const t = useTranslations('todosPage');
   const isCompleted = todo.completed === 1;
 
   return (
@@ -342,7 +345,7 @@ function TodoItem({
       <button
         onClick={() => onToggle(todo)}
         className="mt-0.5 flex-shrink-0"
-        title={isCompleted ? "Mark as pending" : "Mark as completed"}
+        title={isCompleted ? t('markPending') : t('markCompleted')}
       >
         {isCompleted ? (
           <svg className="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -376,7 +379,7 @@ function TodoItem({
         <button
           onClick={() => onEdit(todo)}
           className="text-gray-300 dark:text-gray-600 hover:text-blue-400 transition-colors"
-          title="Edit"
+          title={t('edit')}
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -386,7 +389,7 @@ function TodoItem({
         <button
           onClick={() => setConfirmDeleteId(confirmDeleteId === todo.id ? null : todo.id)}
           className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors"
-          title="Delete"
+          title={t('delete')}
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="3 6 5 6 21 6" />
@@ -395,18 +398,18 @@ function TodoItem({
         </button>
         {confirmDeleteId === todo.id && (
           <span className="absolute right-0 top-full mt-1 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50">
-            <span className="text-gray-500">Delete?</span>
+            <span className="text-gray-500">{t('deleteConfirm')}</span>
             <button
               onClick={() => onDelete(todo.id)}
               className="px-1.5 py-0.5 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
             >
-              Delete
+              {t('delete')}
             </button>
             <button
               onClick={() => setConfirmDeleteId(null)}
               className="px-1.5 py-0.5 text-gray-500 hover:text-gray-700 transition-colors"
             >
-              Cancel
+              {t('cancel')}
             </button>
           </span>
         )}

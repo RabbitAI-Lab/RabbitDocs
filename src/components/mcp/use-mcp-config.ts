@@ -142,7 +142,7 @@ export function useMcpConfig({
    * to align with server state; on failure, refetch to roll back.
    */
   const writeBack = useCallback(
-    async (next: McpJson, successMsg?: string) => {
+    async (next: McpJson, successMsg?: string, opHint?: { serverName: string; action: string }) => {
       setMcpJson(next);
       setSaving(true);
       try {
@@ -156,6 +156,7 @@ export function useMcpConfig({
               disabled: next.disabled || {},
               _apiKeys: next._apiKeys,
             },
+            _op: opHint,
           }),
         });
         if (!res.ok) {
@@ -210,6 +211,7 @@ export function useMcpConfig({
             _apiKeys: mcpJson._apiKeys,
           },
           "Enabled",
+          { serverName: name, action: "enable" },
         );
       } else {
         const entry = mcpJson.mcpServers[name];
@@ -227,6 +229,7 @@ export function useMcpConfig({
             _apiKeys: mcpJson._apiKeys,
           },
           "Disabled",
+          { serverName: name, action: "disable" },
         );
       }
     },

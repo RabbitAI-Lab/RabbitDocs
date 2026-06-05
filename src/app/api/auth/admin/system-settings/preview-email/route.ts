@@ -7,6 +7,7 @@ import {
   DEFAULT_EMAIL_TEMPLATES,
 } from "@/lib/auth/mail";
 import { getSetting } from "@/lib/auth/settings";
+import { getApiT } from "@/lib/i18n-api";
 
 const previewSchema = z.object({
   verifySubject: z.string().max(500).optional(),
@@ -16,6 +17,7 @@ const previewSchema = z.object({
 export async function POST(req: NextRequest) {
   const authResult = await requireAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+  const t = await getApiT();
 
   try {
     const body = await req.json().catch(() => ({}));
@@ -54,7 +56,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("[auth] preview-email error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: t('api.internalError') },
       { status: 500 }
     );
   }

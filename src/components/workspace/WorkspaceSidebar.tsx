@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { TreeNode } from "@/lib/tree";
 import FileTree from "@/components/ui/FileTree";
 
@@ -49,10 +50,11 @@ export default function WorkspaceSidebar({
   onRenameCancel,
   onRenamingNameChange,
 }: WorkspaceSidebarProps) {
+  const t = useTranslations('workspace');
   return (
     <div className="w-[240px] h-full flex flex-col border-r border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900 shrink-0">
       <div className="px-3 h-[41px] flex items-center border-b border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800">
-        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{workspaceName} Documents</h3>
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{t('documents', { name: workspaceName })}</h3>
       </div>
 
       <div className="px-2 py-1.5 border-b border-gray-100 dark:border-zinc-700 dark:border-zinc-700 flex gap-1">
@@ -66,7 +68,7 @@ export default function WorkspaceSidebar({
             <line x1="12" y1="11" x2="12" y2="17" />
             <line x1="9" y1="14" x2="15" y2="14" />
           </svg>
-          Document
+          {t('document')}
         </button>
         <button
           onClick={() => onCreateDir("")}
@@ -78,7 +80,7 @@ export default function WorkspaceSidebar({
             <line x1="12" y1="11" x2="12" y2="17" />
             <line x1="9" y1="14" x2="15" y2="14" />
           </svg>
-          Folder
+          {t('folder')}
         </button>
       </div>
 

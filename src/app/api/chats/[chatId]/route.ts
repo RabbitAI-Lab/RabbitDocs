@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { chats } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { canAccessChat } from "@/lib/auth/chat-access";
+import { getApiT } from "@/lib/i18n-api";
 
 // GET /api/chats/[chatId]
 export async function GET(
@@ -13,8 +14,9 @@ export async function GET(
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
   const { chatId } = await params;
   const c = db.select().from(chats).where(eq(chats.id, parseInt(chatId))).get();
-  if (!c) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (!canAccessChat(auth, c)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const t = await getApiT();
+  if (!c) return NextResponse.json({ error: t('api.notFound') }, { status: 404 });
+  if (!canAccessChat(auth, c)) return NextResponse.json({ error: t('api.forbidden') }, { status: 403 });
   return NextResponse.json(c);
 }
 
@@ -28,8 +30,9 @@ export async function PATCH(
 
   // 校验访问权限（所有者或项目/工作空间成员可编辑）
   const existing = db.select().from(chats).where(eq(chats.id, parseInt(chatId))).get();
-  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (!canAccessChat(auth, existing)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const t = await getApiT();
+  if (!existing) return NextResponse.json({ error: t('api.notFound') }, { status: 404 });
+  if (!canAccessChat(auth, existing)) return NextResponse.json({ error: t('api.forbidden') }, { status: 403 });
 
   const body = await req.json();
   const { title, modelId, templateId, projectId, workspaceId } = body;
@@ -58,9 +61,10 @@ export async function DELETE(
 
   // 校验访问权限（仅所有者或 admin 可删除）
   const existing = db.select().from(chats).where(eq(chats.id, parseInt(chatId))).get();
-  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const t = await getApiT();
+  if (!existing) return NextResponse.json({ error: t('api.notFound') }, { status: 404 });
   if (existing.userId && existing.userId !== auth.id && !auth.isAdmin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: t('api.forbidden') }, { status: 403 });
   }
 
   db.delete(chats).where(eq(chats.id, parseInt(chatId))).run();

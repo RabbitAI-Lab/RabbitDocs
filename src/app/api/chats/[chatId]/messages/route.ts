@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { chatMessages, chats } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { canAccessChat } from "@/lib/auth/chat-access";
+import { getApiT } from "@/lib/i18n-api";
 
 // GET /api/chats/[chatId]/messages
 export async function GET(
@@ -12,11 +13,12 @@ export async function GET(
 ) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
   const { chatId } = await params;
+  const t = await getApiT();
 
   // 校验 chat 访问权限
   const chat = db.select().from(chats).where(eq(chats.id, parseInt(chatId))).get();
-  if (!chat) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (!canAccessChat(auth, chat)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!chat) return NextResponse.json({ error: t('api.notFound') }, { status: 404 });
+  if (!canAccessChat(auth, chat)) return NextResponse.json({ error: t('api.forbidden') }, { status: 403 });
 
   const messages = db
     .select()
@@ -34,17 +36,18 @@ export async function POST(
 ) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
   const { chatId } = await params;
+  const t = await getApiT();
 
   // 校验 chat 访问权限
   const existing = db.select().from(chats).where(eq(chats.id, parseInt(chatId))).get();
-  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (!canAccessChat(auth, existing)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!existing) return NextResponse.json({ error: t('api.notFound') }, { status: 404 });
+  if (!canAccessChat(auth, existing)) return NextResponse.json({ error: t('api.forbidden') }, { status: 403 });
 
   const body = await req.json();
   const { role, content, thinking, thinkingSignature, isError } = body;
 
   if (!role || !content) {
-    return NextResponse.json({ error: "role and content are required" }, { status: 400 });
+    return NextResponse.json({ error: t('api.chat.roleAndContentRequired') }, { status: 400 });
   }
 
   const result = db.insert(chatMessages).values({

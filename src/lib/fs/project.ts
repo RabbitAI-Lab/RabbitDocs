@@ -4,8 +4,8 @@
  */
 import type { ProjectMeta, Repository, ProjectMember } from "../types";
 import {
-  readMetaFile,
-  writeMetaFile,
+  readMetaFromDb,
+  writeMetaToDb,
   createEntityCrud,
   createRepositoryCrud,
   createMemberCrud,
@@ -20,14 +20,16 @@ import type { EntityStrategy } from "./meta-crud";
 const PROJECT_STRATEGY: EntityStrategy = {
   entityName: "Project",
   entityDir: "projects",
+  entityType: "project",
   metaFileName: ".project.json",
   defaultNamePrefix: "Project",
   createDocsDir: true,
   readMeta(dirSegments) {
-    return readMetaFile(dirSegments, ".project.json");
+    const entityId = dirSegments[dirSegments.length - 1];
+    return readMetaFromDb(entityId, "project");
   },
-  writeMeta(meta, dirSegments) {
-    writeMetaFile(meta, dirSegments, ".project.json");
+  writeMeta(meta, _dirSegments) {
+    writeMetaToDb(meta, "project");
   },
 };
 

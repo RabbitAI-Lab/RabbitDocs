@@ -5,6 +5,7 @@ import { userSubscriptions, plans } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import crypto from "crypto";
+import { getApiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,7 @@ const subscribeSchema = z.object({
 // POST /api/subscriptions — 订阅或升级套餐
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
 
   const body = await req.json();
   const parsed = subscribeSchema.safeParse(body);
@@ -63,7 +65,7 @@ export async function POST(req: NextRequest) {
   const plan = db.select().from(plans).where(eq(plans.id, planId)).get();
   if (!plan || plan.enabled !== 1) {
     return NextResponse.json(
-      { error: "Plan not found or disabled" },
+      { error: t('api.subscriptions.planNotFoundOrDisabled') },
       { status: 404 },
     );
   }
@@ -89,7 +91,7 @@ export async function POST(req: NextRequest) {
   if (current) {
     if (current.planId === planId && current.billingCycle === billingCycle) {
       return NextResponse.json(
-        { error: "Already subscribed to this plan" },
+        { error: t('api.subscriptions.alreadySubscribed') },
         { status: 400 },
       );
     }

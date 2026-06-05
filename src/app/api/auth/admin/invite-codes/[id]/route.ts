@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { inviteCodes } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth/session";
+import { getApiT } from "@/lib/i18n-api";
 
 export async function DELETE(
   req: NextRequest,
@@ -10,16 +11,17 @@ export async function DELETE(
 ) {
   const authResult = await requireAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+  const t = await getApiT();
 
   try {
     const { id } = await params;
     const target = db.select().from(inviteCodes).where(eq(inviteCodes.id, id)).get();
     if (!target) {
-      return NextResponse.json({ error: "Invite code not found" }, { status: 404 });
+      return NextResponse.json({ error: t('api.auth.inviteCodes.notFound') }, { status: 404 });
     }
     if (target.usedById) {
       return NextResponse.json(
-        { error: "Cannot delete a used invite code" },
+        { error: t('api.auth.inviteCodes.cannotDeleteUsed') },
         { status: 400 }
       );
     }
@@ -28,6 +30,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[auth] Admin delete invite code error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: t('api.internalError') }, { status: 500 });
   }
 }

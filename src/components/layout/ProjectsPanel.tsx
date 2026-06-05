@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./SidebarContext";
 import { useAuth } from "@/components/auth/useAuth";
@@ -16,8 +17,8 @@ interface ProjectMeta {
   sortOrder: number;
 }
 
-function computeDefaultName(existingProjects: ProjectMeta[]): string {
-  const baseName = "新项目";
+function computeDefaultName(existingProjects: ProjectMeta[], t: (key: string) => string): string {
+  const baseName = t('defaultProjectName');
   const existingNames = new Set(existingProjects.map((p) => p.name));
   if (!existingNames.has(baseName)) return baseName;
   let i = 1;
@@ -39,6 +40,8 @@ export default function ProjectsPanel() {
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const [dropPosition, setDropPosition] = useState<"before" | "after">("before");
+
+  const t = useTranslations("projects");
 
   const fetchProjects = useCallback(async () => {
     if (!user) return;
@@ -82,7 +85,7 @@ export default function ProjectsPanel() {
   };
 
   const handleCreateProject = async () => {
-    const name = computeDefaultName(projects);
+    const name = computeDefaultName(projects, t);
     const res = await authFetch("/api/fs/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -97,6 +100,7 @@ export default function ProjectsPanel() {
   };
 
   const handleDoubleClick = (project: ProjectMeta) => {
+    if (project.accountId !== user!.id) return; // 不允许重命名成员项目
     setEditingId(project.id);
     setEditName(project.name);
   };
@@ -168,11 +172,11 @@ export default function ProjectsPanel() {
     <div className="mb-1">
       {/* Header */}
       <div className="flex items-center gap-1.5 px-3 py-1.5">
-        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Projects</span>
+        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('header')}</span>
         <button
           onClick={handleCreateProject}
           className="ml-auto p-0.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-          title="新建项目"
+          title={t('newProject')}
         >
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="12" y1="5" x2="12" y2="19" />
@@ -184,7 +188,8 @@ export default function ProjectsPanel() {
       {/* Content */}
       <div className="mt-0.5 space-y-0.5 px-2">
         {projects.map((project) => {
-          const projectPath = `/project/personal/${user!.id}/projects/${project.id}`;
+          const isOwned = project.accountId === user!.id;
+          const projectPath = `/project/personal/${project.accountId}/projects/${project.id}`;
           const isActive = pathname === projectPath || pathname.startsWith(projectPath + "/");
           const isEditing = editingId === project.id;
           const isDragTarget = dropTargetId === project.id;
@@ -214,12 +219,12 @@ export default function ProjectsPanel() {
           return (
             <div
               key={project.id}
-              draggable={!isEditing}
-              onDragStart={(e) => handleDragStart(e, project.id)}
-              onDragEnd={handleDragEnd}
-              onDragOver={(e) => handleDragOver(e, project.id)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, project.id)}
+              draggable={!isEditing && isOwned}
+              onDragStart={isOwned ? (e) => handleDragStart(e, project.id) : undefined}
+              onDragEnd={isOwned ? handleDragEnd : undefined}
+              onDragOver={isOwned ? (e) => handleDragOver(e, project.id) : undefined}
+              onDragLeave={isOwned ? handleDragLeave : undefined}
+              onDrop={isOwned ? (e) => handleDrop(e, project.id) : undefined}
               className={cn(
                 "relative flex items-center gap-2 w-full px-3 py-1.5 text-sm rounded-lg transition-colors cursor-pointer select-none",
                 isDragging && "opacity-40",

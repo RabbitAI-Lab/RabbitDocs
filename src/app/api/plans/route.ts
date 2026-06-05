@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/db";
 import { plans } from "@/db/schema";
+import { getApiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
@@ -14,12 +15,13 @@ export async function GET() {
 // POST /api/plans
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { title, description, defaultCurrency, prices, discountType, discountValue, features, enabled, sortOrder } = body;
 
   if (!title) {
     return NextResponse.json(
-      { error: "title is required" },
+      { error: t('api.plans.titleRequired') },
       { status: 400 }
     );
   }

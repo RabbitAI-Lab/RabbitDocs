@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Input, Modal } from "antd";
 
 export interface ApiKeyMcpModalProps {
@@ -28,22 +29,22 @@ export default function ApiKeyMcpModal({
   onOk,
   onCancel,
 }: ApiKeyMcpModalProps) {
+  const t = useTranslations('workspace');
   return (
     <Modal
-      title={name ? `API Key for "${name}"` : "API Key"}
+      title={name ? t('mcp.apiKeyTitle', { name }) : t('mcp.apiKey')}
       open={open}
       onOk={onOk}
       onCancel={onCancel}
-      okText="Save"
-      cancelText="Cancel"
+      okText={t('mcp.save')}
+      cancelText={t('mcp.cancel')}
       confirmLoading={saving}
     >
       <p className="text-xs text-gray-500 mb-2">
-        The key will be stored in <code>_apiKeys</code> and prepended to the
-        server URL as <code>?Authorization=&lt;key&gt;</code>.
+        {t('mcp.apiKeyDescription')}
       </p>
       <Input.Password
-        placeholder="Enter API Key"
+        placeholder={t('mcp.apiKeyPlaceholder')}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         autoFocus

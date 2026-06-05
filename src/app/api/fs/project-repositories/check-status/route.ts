@@ -3,22 +3,24 @@ import { requireAuth } from "@/lib/auth/session";
 import { readProjectMeta, writeProjectMeta } from "@/lib/fs";
 import { checkSyncStatus, getRepoLocalPath } from "@/lib/git-service";
 import type { Repository } from "@/lib/fs";
+import { getApiT } from "@/lib/i18n-api";
 
 // POST /api/fs/project-repositories/check-status
 // 批量检查项目所有仓库的同步状态
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { dirSegments } = body;
 
   if (!dirSegments) {
-    return NextResponse.json({ error: "dirSegments is required" }, { status: 400 });
+    return NextResponse.json({ error: t('api.dirSegmentsRequired') }, { status: 400 });
   }
 
   try {
     const meta = readProjectMeta(dirSegments);
     if (!meta) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+      return NextResponse.json({ error: t('api.projectNotFound') }, { status: 404 });
     }
 
     const repos = meta.repositories || [];

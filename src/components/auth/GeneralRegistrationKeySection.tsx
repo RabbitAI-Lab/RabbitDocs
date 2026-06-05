@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { App, Button, Input, Space, Tag, Typography, Alert } from "antd";
 import {
   KeyOutlined,
@@ -25,6 +26,7 @@ interface KeyState {
 export default function GeneralRegistrationKeySection() {
   const { user, authFetch } = useAuth();
   const { message, modal } = App.useApp();
+  const t = useTranslations('settings');
   const [state, setState] = useState<KeyState>({
     enabled: false,
     key: null,
@@ -66,8 +68,8 @@ export default function GeneralRegistrationKeySection() {
       <Alert
         type="info"
         showIcon
-        message="Registration key is managed by admins only"
-        description="Contact your system administrator to enable the registration key."
+        title={t('regKeyManagedByAdmin')}
+        description={t('regKeyContactAdmin')}
       />
     );
   }
@@ -82,14 +84,14 @@ export default function GeneralRegistrationKeySection() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Generation failed");
+        throw new Error(err.error || t('generationFailed'));
       }
       const data = (await res.json()) as { enabled: boolean; key: string };
       setState({ enabled: true, key: data.key, maskedKey: null });
       setRevealing(true);
-      message.success("Registration key generated");
+      message.success(t('regKeyGenerated'));
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Generation failed";
+      const msg = error instanceof Error ? error.message : t('generationFailed');
       message.error(msg);
     } finally {
       setLoading(false);
@@ -99,7 +101,7 @@ export default function GeneralRegistrationKeySection() {
   const applyCustom = async () => {
     const trimmed = customKey.trim();
     if (trimmed.length < 4) {
-      message.warning("Custom key must be at least 4 characters");
+      message.warning(t('customKeyMinLength'));
       return;
     }
     setLoading(true);
@@ -111,15 +113,15 @@ export default function GeneralRegistrationKeySection() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to set key");
+        throw new Error(err.error || t('failedToSetKey'));
       }
       const data = (await res.json()) as { enabled: boolean; key: string };
       setState({ enabled: true, key: data.key, maskedKey: null });
       setRevealing(true);
       setCustomKey("");
-      message.success("Registration key updated");
+      message.success(t('regKeyUpdated'));
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Failed to set key";
+      const msg = error instanceof Error ? error.message : t('failedToSetKey');
       message.error(msg);
     } finally {
       setLoading(false);
@@ -128,11 +130,11 @@ export default function GeneralRegistrationKeySection() {
 
   const disable = () => {
     modal.confirm({
-      title: "Disable registration key?",
-      content: "New users will no longer be able to register with this key. Existing users are unaffected.",
-      okText: "Disable",
+      title: t('disableRegKey'),
+      content: t('disableRegKeyDesc'),
+      okText: t('disable'),
       okButtonProps: { danger: true },
-      cancelText: "Cancel",
+      cancelText: t('cancel'),
       onOk: async () => {
         setLoading(true);
         try {
@@ -143,13 +145,13 @@ export default function GeneralRegistrationKeySection() {
           });
           if (!res.ok) {
             const err = await res.json().catch(() => ({}));
-            throw new Error(err.error || "Failed to disable");
+            throw new Error(err.error || t('failedToDisable'));
           }
           setState({ enabled: false, key: null, maskedKey: null });
           setRevealing(false);
-          message.success("Registration key disabled");
+          message.success(t('regKeyDisabled'));
         } catch (error: unknown) {
-          const msg = error instanceof Error ? error.message : "Failed to disable";
+          const msg = error instanceof Error ? error.message : t('failedToDisable');
           message.error(msg);
         } finally {
           setLoading(false);
@@ -160,7 +162,7 @@ export default function GeneralRegistrationKeySection() {
 
   const copyKey = (value: string) => {
     navigator.clipboard.writeText(value);
-    message.success("Key copied");
+    message.success(t('keyCopied'));
   };
 
   const displayKey = revealing && state.key ? state.key : state.maskedKey;
@@ -171,12 +173,12 @@ export default function GeneralRegistrationKeySection() {
       <div className="flex items-center gap-2 text-sm text-gray-600">
         <KeyOutlined />
         <span>
-          The registration key can be reused by multiple people, suitable for team distribution.
+          {t('regKeyDescription')}
         </span>
         {state.enabled ? (
-          <Tag color="green">Enabled</Tag>
+          <Tag color="green">{t('enabled')}</Tag>
         ) : (
-          <Tag>Disabled</Tag>
+          <Tag>{t('disabled')}</Tag>
         )}
       </div>
 
@@ -188,7 +190,7 @@ export default function GeneralRegistrationKeySection() {
                 {displayKey || "—"}
               </Text>
               {isJustGenerated && (
-                <Tag color="blue">Newly generated, shown only once</Tag>
+                <Tag color="blue">{t('newlyGenerated')}</Tag>
               )}
             </Space>
             <Space>
@@ -198,7 +200,7 @@ export default function GeneralRegistrationKeySection() {
                   icon={revealing ? <EyeInvisibleOutlined /> : <EyeOutlined />}
                   onClick={() => setRevealing((v) => !v)}
                 >
-                  {revealing ? "Hide" : "Show"}
+                  {revealing ? t('hide') : t('show')}
                 </Button>
               )}
               <Button
@@ -207,7 +209,7 @@ export default function GeneralRegistrationKeySection() {
                 disabled={!state.key}
                 onClick={() => state.key && copyKey(state.key)}
               >
-                Copy
+                {t('copy')}
               </Button>
               <Button
                 size="small"
@@ -215,7 +217,7 @@ export default function GeneralRegistrationKeySection() {
                 loading={loading}
                 onClick={generate}
               >
-                Regenerate
+                {t('regenerate')}
               </Button>
               <Button
                 size="small"
@@ -224,7 +226,7 @@ export default function GeneralRegistrationKeySection() {
                 loading={loading}
                 onClick={disable}
               >
-                Disable
+                {t('disable')}
               </Button>
             </Space>
           </div>
@@ -238,14 +240,14 @@ export default function GeneralRegistrationKeySection() {
               loading={loading}
               onClick={generate}
             >
-              Enable Registration Key
+              {t('enableRegKey')}
             </Button>
             <div className="flex items-center gap-2">
               <Text type="secondary" className="text-xs shrink-0">
-                Or use a custom key:
+                {t('orUseCustomKey')}
               </Text>
               <Input
-                placeholder="At least 4 characters"
+                placeholder={t('atLeast4Chars')}
                 value={customKey}
                 onChange={(e) => setCustomKey(e.target.value)}
                 onPressEnter={applyCustom}
@@ -253,7 +255,7 @@ export default function GeneralRegistrationKeySection() {
                 allowClear
               />
               <Button onClick={applyCustom} loading={loading} disabled={!customKey.trim()}>
-                Set
+                {t('set')}
               </Button>
             </div>
           </div>

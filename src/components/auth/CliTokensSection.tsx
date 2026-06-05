@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "./useAuth";
 import {
   Button,
@@ -26,6 +27,7 @@ interface CliToken {
 export default function CliTokensSection() {
   const { authFetch } = useAuth();
   const { message } = App.useApp();
+  const t = useTranslations('settings');
   const [tokens, setTokens] = useState<CliToken[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -54,11 +56,11 @@ export default function CliTokensSection() {
         method: "DELETE",
       });
       if (res.ok) {
-        message.success("Revoked");
+        message.success(t('revoked'));
         loadTokens();
       }
     } catch {
-      message.error("Failed to revoke");
+      message.error(t('revokeFailed'));
     }
   };
 
@@ -66,11 +68,11 @@ export default function CliTokensSection() {
     <div>
       <div className="flex items-center gap-2 mb-4">
         <CodeOutlined />
-        <Text strong>CLI Tokens</Text>
+        <Text strong>{t('cliTokens')}</Text>
       </div>
 
       {tokens.length === 0 ? (
-        <Empty description="No CLI tokens yet" />
+        <Empty description={t('noCliTokens')} />
       ) : (
         <Table
           dataSource={tokens}
@@ -80,34 +82,34 @@ export default function CliTokensSection() {
           size="small"
           columns={[
             {
-              title: "Name",
+              title: t('name'),
               dataIndex: "name",
             },
             {
-              title: "Prefix",
+              title: t('columnPrefix'),
               dataIndex: "prefix",
               render: (v: string) => <Text code>{v}...</Text>,
             },
             {
-              title: "Created At",
+              title: t('columnCreatedAt'),
               dataIndex: "createdAt",
               render: (v: string) => new Date(v).toLocaleString(),
             },
             {
-              title: "Last Used",
+              title: t('columnLastUsed'),
               dataIndex: "lastUsedAt",
               render: (v: string | null) =>
                 v ? new Date(v).toLocaleString() : "-",
             },
             {
-              title: "Actions",
+              title: t('columnActions'),
               render: (_: unknown, record: CliToken) => (
                 <Popconfirm
-                  title="Revoke this token?"
+                  title={t('revokeToken')}
                   onConfirm={() => handleRevoke(record.id)}
                 >
                   <Button type="text" size="small" danger icon={<DeleteOutlined />}>
-                    Revoke
+                    {t('revoke')}
                   </Button>
                 </Popconfirm>
               ),

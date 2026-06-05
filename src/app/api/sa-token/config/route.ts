@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/session";
 import { getSaTokenConfig } from "@/lib/auth/sa-token";
-import { getSetting, setSetting } from "@/lib/auth/settings";
+import { setSetting } from "@/lib/auth/settings";
 
 export async function GET(req: NextRequest) {
   const authResult = await requireAdmin(req);

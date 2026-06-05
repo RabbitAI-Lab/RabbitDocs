@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { TreeNode } from "@/lib/tree";
 
 export interface FileTreeProps {
@@ -80,6 +81,7 @@ function FileTreeNode({
   expandedPaths: Set<string>;
   onToggleExpand: (path: string) => void;
 }) {
+  const t = useTranslations('common');
   const isEditable = props.mode === "editable";
   const isSelected = props.selectedPath === node.path;
   const isRenaming = props.renamingPath === node.path;
@@ -150,7 +152,7 @@ function FileTreeNode({
                 <button
                   onClick={() => props.onNewDirectory!(node.path)}
                   className="p-0.5 text-gray-400 hover:text-blue-600"
-                  title="Folder"
+                  title={t('folder')}
                 >
                   <svg
                     className="w-3.5 h-3.5"
@@ -169,7 +171,7 @@ function FileTreeNode({
                 <button
                   onClick={() => props.onNewFile!(node.path)}
                   className="p-0.5 text-gray-400 hover:text-blue-600"
-                  title="Document"
+                  title={t('document')}
                 >
                   <svg
                     className="w-3.5 h-3.5"
@@ -192,7 +194,7 @@ function FileTreeNode({
                       setConfirmDeletePath(node.path);
                     }}
                     className="p-0.5 text-gray-400 hover:text-red-500"
-                    title="删除"
+                    title={t('delete')}
                   >
                     <svg
                       className="w-3 h-3"
@@ -207,7 +209,7 @@ function FileTreeNode({
                   </button>
                   {confirmDeletePath === node.path && (
                     <span className="absolute right-0 bottom-full mb-1 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50">
-                      <span className="text-gray-500 dark:text-gray-400">确认删除?</span>
+                      <span className="text-gray-500 dark:text-gray-400">{t('confirmDelete')}</span>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -215,14 +217,14 @@ function FileTreeNode({
                           props.onDeleteDirectory!(node.path);
                         }}
                         className="px-1.5 py-0.5 bg-red-500 text-white rounded hover:bg-red-600"
-                      >删除</button>
+                      >{t('delete')}</button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setConfirmDeletePath(null);
                         }}
                         className="px-1.5 py-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                      >取消</button>
+                      >{t('cancel')}</button>
                     </span>
                   )}
                 </span>
@@ -335,7 +337,7 @@ function FileTreeNode({
                   props.onMentionFile!(node);
                 }}
                 className="p-0.5 text-gray-400 hover:text-blue-600"
-                title="@引用"
+                title={t('mention')}
               >
                 <svg
                   className="w-3 h-3"
@@ -359,7 +361,7 @@ function FileTreeNode({
                       setConfirmDeletePath(node.path);
                     }}
                     className="p-0.5 text-gray-400 hover:text-red-500"
-                    title="删除"
+                    title={t('delete')}
                   >
                     <svg
                       className="w-3 h-3"
@@ -374,7 +376,7 @@ function FileTreeNode({
                   </button>
                   {confirmDeletePath === node.path && (
                     <span className="absolute right-0 bottom-full mb-1 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap z-50">
-                      <span className="text-gray-500 dark:text-gray-400">确认删除?</span>
+                      <span className="text-gray-500 dark:text-gray-400">{t('confirmDelete')}</span>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -382,14 +384,14 @@ function FileTreeNode({
                           props.onDeleteFile!(node.path);
                         }}
                         className="px-1.5 py-0.5 bg-red-500 text-white rounded hover:bg-red-600"
-                      >删除</button>
+                      >{t('delete')}</button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setConfirmDeletePath(null);
                         }}
                         className="px-1.5 py-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                      >取消</button>
+                      >{t('cancel')}</button>
                     </span>
                   )}
                 </span>
@@ -402,7 +404,8 @@ function FileTreeNode({
 }
 
 export default function FileTree(props: FileTreeProps) {
-  const { tree, emptyText = "No documents" } = props;
+  const t = useTranslations('common');
+  const { tree, emptyText = t('noDocuments') } = props;
   const [confirmDeletePath, setConfirmDeletePath] = useState<string | null>(null);
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
   const containerRef = useRef<HTMLDivElement>(null);

@@ -8,18 +8,22 @@ import { getDataRoot, readProjectMeta } from "@/lib/fs";
 import { db } from "@/db";
 import { systemPrompts } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { getApiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
 // POST /api/chat/completions — SSE streaming endpoint
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body: Partial<ChatCompletionRequest> = await req.json();
-  const { modelId, messages, systemPrompt, projectId } = body;
+  const { modelId, messages, projectId } = body;
+  const _systemPrompt = body.systemPrompt; // reserved for future per-request override
+  void _systemPrompt;
 
   if (!modelId || !messages || messages.length === 0) {
     return new Response(
-      JSON.stringify({ error: "modelId and messages are required" }),
+      JSON.stringify({ error: t('api.chat.modelAndMessagesRequired') }),
       { status: 400, headers: { "Content-Type": "application/json" } }
     );
   }
@@ -111,7 +115,7 @@ export async function POST(req: NextRequest) {
             encoder.encode(
               `event: error\ndata: ${JSON.stringify({
                 type: "error",
-                error: `服务内部错误: ${err instanceof Error ? err.message : String(err)}`,
+                error: t('api.internalError') + ": " + (err instanceof Error ? err.message : String(err)),
               })}\n\n`
             )
           );

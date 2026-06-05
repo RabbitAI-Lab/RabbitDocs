@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/useAuth";
 import { useRouter } from "next/navigation";
 import { App } from "antd";
@@ -51,6 +52,8 @@ export default function WorkspaceDetail({
 }: WorkspaceDetailProps) {
   const router = useRouter();
   const { message } = App.useApp();
+  const t = useTranslations('workspace');
+  const tc = useTranslations('chat');
   const { open: openFloatingChat, isOpen: floatingChatOpen, isMinimized: floatingChatMinimized, setMentionFile: setFloatingMentionFile } = useFloatingChat();
 
   // Tab 系统
@@ -188,7 +191,7 @@ export default function WorkspaceDetail({
 
     if (res.status === 409) {
       const data = await res.json();
-      message.warning(data.error || "A file or folder with this name already exists");
+      message.warning(data.error || t('nameConflict'));
       setTimeout(() => renameInputRef.current?.focus(), 0);
       return;
     }
@@ -300,7 +303,7 @@ export default function WorkspaceDetail({
   // Open (or switch to) an HTML file in a tab. Triggered by preview_html client tool.
   const handlePreviewHtml = useCallback(async (filePath: string) => {
     if (!filePath || !filePath.toLowerCase().endsWith(".html")) {
-      message.warning("preview_html only supports .html files");
+      message.warning(tc('previewHtml.onlyHtml'));
       return;
     }
     setTabs((prev) => {
@@ -412,7 +415,7 @@ export default function WorkspaceDetail({
 
   const handleNewChat = useCallback(() => {
     setActiveChatId(null);
-    setActiveChatTitle("New Chat");
+    setActiveChatTitle(t('newChat'));
     setActiveChatMessages([]);
     setActiveChatModelId(undefined);
     setActiveChatTemplateId(undefined);

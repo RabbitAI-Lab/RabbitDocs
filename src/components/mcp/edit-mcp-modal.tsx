@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Input, Modal } from "antd";
 
 export interface EditMcpModalProps {
@@ -27,14 +28,15 @@ export default function EditMcpModal({
   onOk,
   onCancel,
 }: EditMcpModalProps) {
+  const t = useTranslations('workspace');
   return (
     <Modal
-      title={name ? `Edit "${name}"` : "Edit MCP"}
+      title={name ? t('mcp.editTitle', { name }) : "Edit MCP"}
       open={open}
       onOk={onOk}
       onCancel={onCancel}
-      okText="Save"
-      cancelText="Cancel"
+      okText={t('mcp.save')}
+      cancelText={t('mcp.cancel')}
       confirmLoading={saving}
       width={560}
     >

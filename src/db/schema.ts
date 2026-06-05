@@ -165,6 +165,7 @@ export const systemPrompts = sqliteTable("system_prompts", {
 // todos: 待办事项
 export const todos = sqliteTable("todos", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: text("user_id"),  // 所属用户 ID
   title: text("title").notNull(),
   description: text("description").notNull().default(""),
   completed: integer("completed").notNull().default(0),  // 0=待办, 1=已完成
@@ -308,4 +309,40 @@ export const entityMembers = sqliteTable("entity_members", {
   ownerId: text("owner_id").notNull(),
   addedAt: text("added_at").notNull(),
   createdAt: text("created_at").notNull(),
+});
+
+// entities: 项目/工作空间实体主表（DB 为 source of truth）
+export const entities = sqliteTable("entities", {
+  id: text("id").primaryKey(),                // UUID
+  type: text("type", { enum: ["project", "workspace"] }).notNull(),
+  name: text("name").notNull().default(""),
+  description: text("description").notNull().default(""),
+  accountId: text("account_id").notNull(),
+  accountType: text("account_type", { enum: ["personal", "enterprise"] }).notNull().default("personal"),
+  ownerId: text("owner_id").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  gitnexusStatus: text("gitnexus_status"),    // JSON: GitNexusStatus
+  sandboxStatus: text("sandbox_status"),      // JSON: SandboxStatus
+  skillsStatus: text("skills_status"),        // JSON: ProjectSkills
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
+// entity_repositories: 仓库子表
+export const entityRepositories = sqliteTable("entity_repositories", {
+  id: text("id").primaryKey(),
+  entityId: text("entity_id").notNull(),
+  entityType: text("entity_type").notNull(),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  repoType: text("repo_type", { enum: ["github", "gitlab", "other"] }).notNull().default("other"),
+  credentials: text("credentials").notNull().default("{}"),  // JSON: RepositoryCredentials
+  syncStatus: text("sync_status"),              // 'not_cloned' | 'synced' | 'behind' | 'error'
+  lastSyncAt: text("last_sync_at"),
+  lastCheckedAt: text("last_checked_at"),
+  localCommitHash: text("local_commit_hash"),
+  remoteCommitHash: text("remote_commit_hash"),
+  errorMessage: text("error_message"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
 });

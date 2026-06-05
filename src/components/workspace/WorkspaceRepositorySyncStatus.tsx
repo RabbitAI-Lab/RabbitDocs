@@ -1,42 +1,46 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { Repository } from "@/lib/fs";
 
 interface WorkspaceRepositorySyncStatusProps {
   repository: Repository;
 }
 
-const STATUS_CONFIG: Record<
+const STATUS_KEY_MAP: Record<string, string> = {
+  not_cloned: "syncStatus.notCloned",
+  cloned: "syncStatus.cloned",
+  up_to_date: "syncStatus.upToDate",
+  behind: "syncStatus.behind",
+  error: "syncStatus.error",
+  syncing: "syncStatus.syncing",
+};
+
+const STATUS_STYLE: Record<
   string,
-  { label: string; color: string; bgColor: string }
+  { color: string; bgColor: string }
 > = {
   not_cloned: {
-    label: "Not Cloned",
     color: "text-gray-500",
     bgColor: "bg-gray-100",
   },
   cloned: {
-    label: "Cloned",
     color: "text-blue-700",
     bgColor: "bg-blue-100",
   },
   up_to_date: {
-    label: "Up to Date",
     color: "text-green-700",
     bgColor: "bg-green-100",
   },
   behind: {
-    label: "Behind",
     color: "text-amber-700",
     bgColor: "bg-amber-100",
   },
   error: {
-    label: "Error",
     color: "text-red-700",
     bgColor: "bg-red-100",
   },
   syncing: {
-    label: "Syncing",
     color: "text-blue-700",
     bgColor: "bg-blue-100",
   },
@@ -45,19 +49,22 @@ const STATUS_CONFIG: Record<
 export default function WorkspaceRepositorySyncStatus({
   repository,
 }: WorkspaceRepositorySyncStatusProps) {
+  const t = useTranslations('workspace');
   const status = repository.syncStatus || "not_cloned";
-  const config = STATUS_CONFIG[status] || STATUS_CONFIG.not_cloned;
+  const style = STATUS_STYLE[status] || STATUS_STYLE.not_cloned;
+  const statusKey = STATUS_KEY_MAP[status] || STATUS_KEY_MAP.not_cloned;
+  const label = t(statusKey);
 
   return (
     <span
-      className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${config.color} ${config.bgColor}`}
+      className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${style.color} ${style.bgColor}`}
       title={
         repository.errorMessage
-          ? `${config.label}: ${repository.errorMessage}`
-          : config.label
+          ? `${label}: ${repository.errorMessage}`
+          : label
       }
     >
-      {config.label}
+      {label}
     </span>
   );
 }

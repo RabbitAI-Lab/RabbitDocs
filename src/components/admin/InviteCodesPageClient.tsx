@@ -21,6 +21,7 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "@/components/auth/useAuth";
+import { useTranslations } from "next-intl";
 
 const { Text } = Typography;
 
@@ -41,15 +42,16 @@ interface Pagination {
   totalPages: number;
 }
 
-const STATUS_OPTIONS = [
-  { value: "all", label: "All" },
-  { value: "unused", label: "Unused" },
-  { value: "used", label: "Used" },
-];
-
 export default function InviteCodesPageClient() {
   const { authFetch } = useAuth();
   const { message } = App.useApp();
+  const t = useTranslations('admin');
+
+  const STATUS_OPTIONS = [
+    { value: "all", label: t('inviteCodesPage.statusAll') },
+    { value: "unused", label: t('inviteCodesPage.statusUnused') },
+    { value: "used", label: t('inviteCodesPage.statusUsed') },
+  ];
   const [codes, setCodes] = useState<InviteCode[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -74,13 +76,13 @@ export default function InviteCodesPageClient() {
         const res = await authFetch(`/api/auth/admin/invite-codes?${params.toString()}`);
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          throw new Error(err.error || "Failed to load");
+          throw new Error(err.error || t('inviteCodesPage.msgFailedToLoad'));
         }
         const data = await res.json();
         setCodes(data.codes);
         setPagination(data.pagination);
       } catch (error: unknown) {
-        const msg = error instanceof Error ? error.message : "Failed to load";
+        const msg = error instanceof Error ? error.message : t('inviteCodesPage.msgFailedToLoad');
         message.error(msg);
       } finally {
         setLoading(false);
@@ -101,12 +103,12 @@ export default function InviteCodesPageClient() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to delete");
+        throw new Error(err.error || t('inviteCodesPage.msgFailedToDelete'));
       }
-      message.success("Deleted");
+      message.success(t('inviteCodesPage.msgDeleted'));
       load(pagination.page);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Failed to delete";
+      const msg = error instanceof Error ? error.message : t('inviteCodesPage.msgFailedToDelete');
       message.error(msg);
     }
   };
@@ -114,15 +116,15 @@ export default function InviteCodesPageClient() {
   const copyLink = (code: string) => {
     const link = `${window.location.origin}/register?code=${code}`;
     navigator.clipboard.writeText(link);
-    message.success("Invite link copied");
+    message.success(t('inviteCodesPage.msgInviteLinkCopied'));
   };
 
   return (
     <div className="h-full flex flex-col p-6 gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Invite Code Management</h1>
+        <h1 className="text-lg font-semibold">{t('inviteCodesPage.title')}</h1>
         <Button icon={<ReloadOutlined />} onClick={() => load(pagination.page)}>
-          Refresh
+          {t('inviteCodesPage.btnRefresh')}
         </Button>
       </div>
 
@@ -130,7 +132,7 @@ export default function InviteCodesPageClient() {
         <Input
           allowClear
           prefix={<SearchOutlined />}
-          placeholder="Search invite code"
+          placeholder={t('inviteCodesPage.placeholderSearch')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onPressEnter={() => load(1)}
@@ -143,7 +145,7 @@ export default function InviteCodesPageClient() {
           style={{ width: 160 }}
         />
         <Button onClick={() => load(1)}>
-          Search
+          {t('inviteCodesPage.btnSearch')}
         </Button>
       </div>
 
@@ -158,15 +160,15 @@ export default function InviteCodesPageClient() {
             total: pagination.total,
             onChange: (p) => load(p),
           }}
-          locale={{ emptyText: <Empty description="No invite codes found" /> }}
+          locale={{ emptyText: <Empty description={t('inviteCodesPage.emptyText')} /> }}
           columns={[
             {
-              title: "Code",
+              title: t('inviteCodesPage.columnCode'),
               dataIndex: "code",
               render: (code: string) => (
                 <Space>
                   <Text code>{code}</Text>
-                  <Tooltip title="Copy invite link">
+                  <Tooltip title={t('inviteCodesPage.tooltipCopyLink')}>
                     <Button
                       type="text"
                       size="small"
@@ -178,7 +180,7 @@ export default function InviteCodesPageClient() {
               ),
             },
             {
-              title: "Created By",
+              title: t('inviteCodesPage.columnCreatedBy'),
               dataIndex: "creator",
               render: (creator: InviteCode["creator"]) =>
                 creator ? (
@@ -189,42 +191,42 @@ export default function InviteCodesPageClient() {
                     </Text>
                   </Space>
                 ) : (
-                  <Tag>System</Tag>
+                  <Tag>{t('inviteCodesPage.tagSystem')}</Tag>
                 ),
             },
             {
-              title: "Status",
+              title: t('inviteCodesPage.columnStatus'),
               dataIndex: "used",
               width: 110,
               render: (used: boolean) =>
-                used ? <Tag color="red">Used</Tag> : <Tag color="green">Unused</Tag>,
+                used ? <Tag color="red">{t('inviteCodesPage.tagUsed')}</Tag> : <Tag color="green">{t('inviteCodesPage.tagUnused')}</Tag>,
             },
             {
-              title: "Used At",
+              title: t('inviteCodesPage.columnUsedAt'),
               dataIndex: "usedAt",
               width: 170,
               render: (v: string | null) =>
                 v ? new Date(v).toLocaleString() : "—",
             },
             {
-              title: "Created At",
+              title: t('inviteCodesPage.columnCreatedAt'),
               dataIndex: "createdAt",
               width: 170,
               render: (v: string) => new Date(v).toLocaleString(),
             },
             {
-              title: "Actions",
+              title: t('inviteCodesPage.columnActions'),
               width: 120,
               fixed: "right",
               render: (_: unknown, record: InviteCode) =>
                 record.used ? (
                   <Text type="secondary" className="text-xs">
-                    Used codes cannot be deleted
+                    {t('inviteCodesPage.textUsedCodesCannotDelete')}
                   </Text>
                 ) : (
-                  <Popconfirm title="Delete this code?" onConfirm={() => handleDelete(record.id)}>
+                  <Popconfirm title={t('inviteCodesPage.popconfirmDeleteTitle')} onConfirm={() => handleDelete(record.id)}>
                     <Button type="text" size="small" danger icon={<DeleteOutlined />}>
-                      Delete
+                      {t('inviteCodesPage.btnDelete')}
                     </Button>
                   </Popconfirm>
                 ),

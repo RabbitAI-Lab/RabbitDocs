@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import ChatsHistoryPanel from "./ChatsHistoryPanel";
+import { useAuth } from "@/components/auth/useAuth";
 
 const STORAGE_KEY = "chats-history-height";
 const COLLAPSED_KEY = "chats-history-collapsed";
@@ -41,7 +42,9 @@ function loadSavedCollapsed(): boolean {
   return false;
 }
 
-export default function ResizableChatsHistory({ chats }: { chats: ChatItem[] }) {
+export default function ResizableChatsHistory() {
+  const { authFetch } = useAuth();
+  const [chats, setChats] = useState<ChatItem[]>([]);
   const [height, setHeight] = useState(DEFAULT_HEIGHT);
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -55,6 +58,29 @@ export default function ResizableChatsHistory({ chats }: { chats: ChatItem[] }) 
     setCollapsed(loadSavedCollapsed());
     setMounted(true);
   }, []);
+
+  // Fetch chats from API (user-isolated)
+  const fetchChats = useCallback(() => {
+    authFetch("/api/chats?pageSize=50")
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data?.chats) {
+          setChats(data.chats);
+        }
+      })
+      .catch(() => {});
+  }, [authFetch]);
+
+  useEffect(() => {
+    fetchChats();
+  }, [fetchChats]);
+
+  // Refresh when chats-changed event fires
+  useEffect(() => {
+    const handler = () => fetchChats();
+    window.addEventListener("chats-changed", handler);
+    return () => window.removeEventListener("chats-changed", handler);
+  }, [fetchChats]);
 
   useEffect(() => {
     try {

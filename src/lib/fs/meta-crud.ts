@@ -17,8 +17,8 @@ import type {
 } from "../types";
 import { getDataRoot, getAccountSegments, createDir } from "./core";
 import { db } from "@/db";
-import { entityMembers } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { entityMembers, entities, entityRepositories } from "@/db/schema";
+import { eq, and, asc } from "drizzle-orm";
 
 // entityDir -> entityType 映射
 const ENTITY_DIR_TO_TYPE: Record<string, string> = {
@@ -40,32 +40,171 @@ export interface MetaStrategy {
 /** Extended strategy for full entity CRUD (list / create / delete). */
 export interface EntityStrategy extends MetaStrategy {
   entityDir: string;          // "projects" | "workspace"
-  metaFileName: string;       // ".project.json" | ".workspace.json"
+  entityType: string;         // "project" | "workspace"
+  metaFileName: string;       // kept for backward compat, no longer used for FS reads
   defaultNamePrefix: string;  // "Project" | "Workspace"
   /** Whether to create a docs/ subdirectory on entity creation (Project-only). */
   createDocsDir?: boolean;
 }
 
 // ────────────────────────────────────────────────────────────
-// Generic read/write helpers (used by strategies)
+// DB read/write helpers (source of truth)
 // ────────────────────────────────────────────────────────────
 
-/** Generic metadata reader — reads and parses a JSON file. */
-export function readMetaFile(dirSegments: string[], fileName: string): ProjectMeta | null {
-  const metaPath = path.join(getDataRoot(), ...dirSegments, fileName);
-  if (!fs.existsSync(metaPath)) return null;
-  try {
-    const raw = fs.readFileSync(metaPath, "utf-8");
-    return JSON.parse(raw);
-  } catch {
-    return null;
+/** Read entity metadata from DB, assembling repositories and members from sub-tables. */
+export function readMetaFromDb(entityId: string, entityType: string): ProjectMeta | null {
+  const row = db.select().from(entities)
+    .where(and(eq(entities.id, entityId), eq(entities.type, entityType as "project" | "workspace")))
+    .get();
+  if (!row) return null;
+
+  // 查询关联的 repositories
+  const repoRows = db.select().from(entityRepositories)
+    .where(and(eq(entityRepositories.entityId, entityId), eq(entityRepositories.entityType, entityType)))
+    .all();
+
+  // 查询关联的 members
+  const memberRows = db.select().from(entityMembers)
+    .where(and(eq(entityMembers.entityId, entityId), eq(entityMembers.entityType, entityType)))
+    .all();
+
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    createdAt: row.createdAt,
+    accountId: row.accountId,
+    accountType: row.accountType,
+    ownerId: row.ownerId,
+    sortOrder: row.sortOrder,
+    repositories: repoRows.length > 0 ? repoRows.map(repoRowToRepository) : undefined,
+    sandbox: row.sandboxStatus ? JSON.parse(row.sandboxStatus) : undefined,
+    skills: row.skillsStatus ? JSON.parse(row.skillsStatus) : undefined,
+    members: memberRows.length > 0 ? memberRows.map(memberRowToProjectMember) : undefined,
+    gitnexusStatus: row.gitnexusStatus ? JSON.parse(row.gitnexusStatus) : undefined,
+  };
+}
+
+/** Write entity metadata to DB (upsert), syncing repositories and members sub-tables. */
+export function writeMetaToDb(meta: ProjectMeta, entityType: string): void {
+  const now = new Date().toISOString();
+
+  db.insert(entities)
+    .values({
+      id: meta.id,
+      type: entityType as "project" | "workspace",
+      name: meta.name,
+      description: meta.description,
+      accountId: meta.accountId,
+      accountType: meta.accountType as "personal" | "enterprise",
+      ownerId: meta.ownerId,
+      sortOrder: meta.sortOrder,
+      gitnexusStatus: meta.gitnexusStatus ? JSON.stringify(meta.gitnexusStatus) : null,
+      sandboxStatus: meta.sandbox ? JSON.stringify(meta.sandbox) : null,
+      skillsStatus: meta.skills ? JSON.stringify(meta.skills) : null,
+      createdAt: meta.createdAt,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: [entities.id],
+      set: {
+        name: meta.name,
+        description: meta.description,
+        accountId: meta.accountId,
+        accountType: meta.accountType as "personal" | "enterprise",
+        ownerId: meta.ownerId,
+        sortOrder: meta.sortOrder,
+        gitnexusStatus: meta.gitnexusStatus ? JSON.stringify(meta.gitnexusStatus) : null,
+        sandboxStatus: meta.sandbox ? JSON.stringify(meta.sandbox) : null,
+        skillsStatus: meta.skills ? JSON.stringify(meta.skills) : null,
+        updatedAt: now,
+      },
+    })
+    .run();
+
+  // Sync repositories sub-table: full replace strategy
+  if (meta.repositories !== undefined) {
+    db.delete(entityRepositories)
+      .where(and(eq(entityRepositories.entityId, meta.id), eq(entityRepositories.entityType, entityType)))
+      .run();
+    for (const repo of meta.repositories) {
+      db.insert(entityRepositories)
+        .values({
+          id: repo.id,
+          entityId: meta.id,
+          entityType,
+          name: repo.name,
+          url: repo.url,
+          repoType: repo.type || "other",
+          credentials: repo.credentials ? JSON.stringify(repo.credentials) : "{}",
+          syncStatus: repo.syncStatus || null,
+          lastSyncAt: repo.lastSyncAt || null,
+          lastCheckedAt: repo.lastCheckedAt || null,
+          localCommitHash: repo.localCommitHash || null,
+          remoteCommitHash: repo.remoteCommitHash || null,
+          errorMessage: repo.errorMessage || null,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .onConflictDoNothing()
+        .run();
+    }
+  }
+
+  // Sync members sub-table: full replace strategy
+  if (meta.members !== undefined) {
+    db.delete(entityMembers)
+      .where(and(eq(entityMembers.entityId, meta.id), eq(entityMembers.entityType, entityType)))
+      .run();
+    for (const member of meta.members) {
+      db.insert(entityMembers)
+        .values({
+          entityId: meta.id,
+          entityType,
+          memberId: member.id,
+          userId: member.userId ?? null,
+          accountName: member.accountName,
+          ownerId: meta.ownerId,
+          addedAt: member.addedAt,
+          createdAt: now,
+        })
+        .onConflictDoNothing()
+        .run();
+    }
   }
 }
 
-/** Generic metadata writer — serialises to a JSON file. */
-export function writeMetaFile(meta: ProjectMeta, dirSegments: string[], fileName: string): void {
-  const metaPath = path.join(getDataRoot(), ...dirSegments, fileName);
-  fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), "utf-8");
+// ────────────────────────────────────────────────────────────
+// DB row -> type mappers
+// ────────────────────────────────────────────────────────────
+
+function repoRowToRepository(row: typeof entityRepositories.$inferSelect): Repository {
+  let credentials: Repository["credentials"] = { type: "none" };
+  try {
+    if (row.credentials) credentials = JSON.parse(row.credentials);
+  } catch { /* ignore */ }
+  return {
+    id: row.id,
+    name: row.name,
+    url: row.url,
+    type: (row.repoType as Repository["type"]) || "other",
+    credentials,
+    syncStatus: (row.syncStatus as Repository["syncStatus"]) || undefined,
+    lastSyncAt: row.lastSyncAt || undefined,
+    lastCheckedAt: row.lastCheckedAt || undefined,
+    localCommitHash: row.localCommitHash || undefined,
+    remoteCommitHash: row.remoteCommitHash || undefined,
+    errorMessage: row.errorMessage || undefined,
+  };
+}
+
+function memberRowToProjectMember(row: typeof entityMembers.$inferSelect): ProjectMember {
+  return {
+    id: row.memberId,
+    accountName: row.accountName,
+    userId: row.userId ?? undefined,
+    addedAt: row.addedAt,
+  };
 }
 
 // ────────────────────────────────────────────────────────────
@@ -79,42 +218,41 @@ export interface EntityCrud {
 }
 
 export function createEntityCrud(strategy: EntityStrategy): EntityCrud {
-  const { entityDir, defaultNamePrefix, createDocsDir } = strategy;
+  const { entityDir, entityType, createDocsDir } = strategy;
 
-  function list(type: "personal" | "enterprise", accountId: string, orgId?: string): ProjectMeta[] {
-    const accountSegs = getAccountSegments(type, accountId, orgId);
-    const dirPath = path.join(getDataRoot(), ...accountSegs, entityDir);
+  function list(type: "personal" | "enterprise", accountId: string, _orgId?: string): ProjectMeta[] {
+    const rows = db.select().from(entities)
+      .where(and(
+        eq(entities.accountId, accountId),
+        eq(entities.accountType, type),
+        eq(entities.type, entityType as "project" | "workspace")
+      ))
+      .orderBy(asc(entities.sortOrder))
+      .all();
 
-    if (!fs.existsSync(dirPath)) return [];
-    const dirs = fs
-      .readdirSync(dirPath, { withFileTypes: true })
-      .filter((d) => d.isDirectory() || d.isSymbolicLink());
-
-    const result: ProjectMeta[] = [];
-    for (const d of dirs) {
-      const segs = [...accountSegs, entityDir, d.name];
-      const meta = strategy.readMeta(segs);
-      if (meta) {
-        if (meta.sortOrder === undefined || meta.sortOrder === null) meta.sortOrder = 999;
-        result.push(meta);
-      } else {
-        // Auto-create missing metadata with a friendly default name
-        const fallback: ProjectMeta = {
-          id: d.name,
-          name: `${defaultNamePrefix} ${d.name.slice(0, 8)}`,
-          description: "",
-          createdAt: new Date().toISOString(),
-          accountId,
-          accountType: type,
-          ownerId: accountId,
-          sortOrder: 999,
-        };
-        strategy.writeMeta(fallback, segs);
-        result.push(fallback);
-      }
-    }
-    result.sort((a, b) => a.sortOrder - b.sortOrder);
-    return result;
+    return rows.map((row) => {
+      const repoRows = db.select().from(entityRepositories)
+        .where(and(eq(entityRepositories.entityId, row.id), eq(entityRepositories.entityType, entityType)))
+        .all();
+      const memberRows = db.select().from(entityMembers)
+        .where(and(eq(entityMembers.entityId, row.id), eq(entityMembers.entityType, entityType)))
+        .all();
+      return {
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        createdAt: row.createdAt,
+        accountId: row.accountId,
+        accountType: row.accountType,
+        ownerId: row.ownerId,
+        sortOrder: row.sortOrder,
+        repositories: repoRows.length > 0 ? repoRows.map(repoRowToRepository) : undefined,
+        sandbox: row.sandboxStatus ? JSON.parse(row.sandboxStatus) : undefined,
+        skills: row.skillsStatus ? JSON.parse(row.skillsStatus) : undefined,
+        members: memberRows.length > 0 ? memberRows.map(memberRowToProjectMember) : undefined,
+        gitnexusStatus: row.gitnexusStatus ? JSON.parse(row.gitnexusStatus) : undefined,
+      } as ProjectMeta;
+    });
   }
 
   function create(type: "personal" | "enterprise", accountId: string, name: string, orgId?: string): ProjectMeta {
@@ -152,21 +290,17 @@ export function createEntityCrud(strategy: EntityStrategy): EntityCrud {
     const accountSegs = getAccountSegments(type, accountId, orgId);
     const dirPath = path.join(getDataRoot(), ...accountSegs, entityDir, id);
 
-    // 删除前清理 entity_members 索引
-    const entityType = ENTITY_DIR_TO_TYPE[entityDir];
-    if (entityType) {
-      try {
-        db.delete(entityMembers)
-          .where(
-            and(
-              eq(entityMembers.entityId, id),
-              eq(entityMembers.entityType, entityType)
-            )
-          )
-          .run();
-      } catch (e) {
-        console.warn(`[MemberDB] Failed to clean up entity_members for ${id}:`, e);
-      }
+    // 删除 DB 记录: entities + entity_repositories + entity_members
+    try {
+      db.delete(entityRepositories)
+        .where(and(eq(entityRepositories.entityId, id), eq(entityRepositories.entityType, entityType)))
+        .run();
+      db.delete(entityMembers)
+        .where(and(eq(entityMembers.entityId, id), eq(entityMembers.entityType, entityType)))
+        .run();
+      db.delete(entities).where(eq(entities.id, id)).run();
+    } catch (e) {
+      console.warn(`[EntityCRUD] Failed to clean up DB for ${id}:`, e);
     }
 
     if (fs.existsSync(dirPath)) {
@@ -244,9 +378,13 @@ export function createMemberCrud(strategy: MetaStrategy): MemberCrud {
           fs.mkdirSync(memberProjectsDir, { recursive: true });
         }
         const linkPath = path.join(memberProjectsDir, entityId);
-        // symlink 指向所有者的项目目录: ../../../{ownerId}/{entityDir}/{entityId}/
-        const targetPath = path.join("..", "..", "..", ownerId, entityDir, entityId);
-        if (!fs.existsSync(linkPath)) {
+        // symlink 指向所有者的项目目录: ../../{ownerId}/{entityDir}/{entityId}
+        // 从 memberProjectsDir(personal/{memberUserId}/{entityDir}) 向上 2 层到 personal/
+        const targetPath = path.join("..", "..", ownerId, entityDir, entityId);
+        // Check with lstatSync: existsSync returns false for broken symlinks
+        let linkExists = false;
+        try { fs.lstatSync(linkPath); linkExists = true; } catch { /* not exists */ }
+        if (!linkExists) {
           fs.symlinkSync(targetPath, linkPath);
         }
       } catch (e) {
@@ -272,16 +410,20 @@ export function createMemberCrud(strategy: MetaStrategy): MemberCrud {
       try {
         const [personal, _ownerId, entityDir, entityId] = dirSegments;
         const linkPath = path.join(getDataRoot(), personal, removed.userId, entityDir, entityId);
-        if (fs.existsSync(linkPath) && fs.lstatSync(linkPath).isSymbolicLink()) {
-          fs.unlinkSync(linkPath);
-        }
+        // Use lstatSync to detect symlinks (existsSync returns false for broken symlinks)
+        try {
+          const stat = fs.lstatSync(linkPath);
+          if (stat.isSymbolicLink()) {
+            fs.unlinkSync(linkPath);
+          }
+        } catch { /* linkPath doesn't exist, nothing to remove */ }
       } catch (e) {
         console.warn(`[MemberSymlink] Failed to remove symlink for member ${removed.userId}:`, e);
       }
     }
 
     // 同步从 DB 索引删除
-    removeMemberFromDb(dirSegments, memberId);
+    removeMemberFromDb(dirSegments, memberId, removed?.userId);
   }
 
   function update(dirSegments: string[], memberId: string, updates: Partial<Omit<ProjectMember, "id">>): ProjectMember | null {
@@ -302,6 +444,36 @@ export function createMemberCrud(strategy: MetaStrategy): MemberCrud {
 }
 
 // ────────────────────────────────────────────────────────────
+// 查找用户作为成员的实体 ID (纯 DB 查询)
+// ────────────────────────────────────────────────────────────
+
+/**
+ * 查找指定用户作为成员的所有实体（项目/工作空间）ID。
+ * DB 为 source of truth，纯 DB 查询。
+ */
+export function findMemberEntityIds(userId: string, entityDir: string, _metaFileName?: string): string[] {
+  const entityType = ENTITY_DIR_TO_TYPE[entityDir];
+  if (!entityType) return [];
+
+  try {
+    const rows = db
+      .select({ entityId: entityMembers.entityId })
+      .from(entityMembers)
+      .where(
+        and(
+          eq(entityMembers.userId, userId),
+          eq(entityMembers.entityType, entityType)
+        )
+      )
+      .all();
+    return rows.map((r) => r.entityId);
+  } catch (e) {
+    console.warn("[MemberDB] DB query failed:", e);
+    return [];
+  }
+}
+
+// ────────────────────────────────────────────────────────────
 // Factory: MCP Config CRUD
 // ────────────────────────────────────────────────────────────
 
@@ -311,136 +483,99 @@ export interface McpConfigCrud {
 }
 
 export function createMcpConfigCrud(): McpConfigCrud {
+  /**
+   * 读取 MCP 配置：合并 .mcp.json（标准 mcpServers）+ .mcp-config.json（disabled/_apiKeys）。
+   * 向后兼容：旧版 .mcp.json 中可能包含 disabled/_apiKeys，首次读取时自动迁移到 .mcp-config.json。
+   */
   function read(dirSegments: string[]): Record<string, unknown> | null {
-    const configPath = path.join(getDataRoot(), ...dirSegments, ".mcp.json");
-    if (!fs.existsSync(configPath)) return null;
-    try {
-      const raw = fs.readFileSync(configPath, "utf-8");
-      return JSON.parse(raw);
-    } catch {
-      return null;
+    const dir = path.join(getDataRoot(), ...dirSegments);
+    const mcpPath = path.join(dir, ".mcp.json");
+    const configPath = path.join(dir, ".mcp-config.json");
+
+    // 读取标准 .mcp.json
+    let mcpData: Record<string, unknown> | null = null;
+    if (fs.existsSync(mcpPath)) {
+      try {
+        mcpData = JSON.parse(fs.readFileSync(mcpPath, "utf-8"));
+      } catch {
+        mcpData = null;
+      }
     }
+
+    // 读取扩展 .mcp-config.json
+    let configData: Record<string, unknown> | null = null;
+    if (fs.existsSync(configPath)) {
+      try {
+        configData = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+      } catch {
+        configData = null;
+      }
+    }
+
+    if (!mcpData && !configData) return null;
+
+    const mcpServers = (mcpData?.mcpServers && typeof mcpData.mcpServers === "object"
+      ? mcpData.mcpServers : {}) as Record<string, unknown>;
+
+    // 优先从 .mcp-config.json 读取 disabled/_apiKeys；兼容旧格式回退到 .mcp.json
+    const disabled = (configData?.disabled ?? mcpData?.disabled ?? {}) as Record<string, unknown>;
+    const _apiKeys = (configData?._apiKeys ?? mcpData?._apiKeys ?? {}) as Record<string, string>;
+
+    // 向后兼容迁移：如果旧 .mcp.json 包含 disabled/_apiKeys，自动拆分到新文件
+    if (mcpData && (mcpData.disabled !== undefined || mcpData._apiKeys !== undefined) && !configData) {
+      const extConfig: Record<string, unknown> = {};
+      if (mcpData.disabled && typeof mcpData.disabled === "object") {
+        extConfig.disabled = mcpData.disabled;
+      }
+      if (mcpData._apiKeys && typeof mcpData._apiKeys === "object") {
+        extConfig._apiKeys = mcpData._apiKeys;
+      }
+      if (Object.keys(extConfig).length > 0) {
+        try {
+          fs.writeFileSync(configPath, JSON.stringify(extConfig, null, 2), "utf-8");
+        } catch { /* ignore */ }
+      }
+      // 从 .mcp.json 中移除非标准字段并重写
+      const cleanMcp: Record<string, unknown> = { mcpServers };
+      try {
+        fs.writeFileSync(mcpPath, JSON.stringify(cleanMcp, null, 2), "utf-8");
+      } catch { /* ignore */ }
+      console.log(`[MCP] Migrated disabled/_apiKeys from .mcp.json to .mcp-config.json in [${dirSegments.join("/")}]`);
+    }
+
+    return { mcpServers, disabled, _apiKeys };
   }
 
+  /**
+   * 写入 MCP 配置：mcpServers → .mcp.json（标准格式），disabled/_apiKeys → .mcp-config.json（私有扩展）。
+   */
   function write(config: object, dirSegments: string[]): void {
-    const configPath = path.join(getDataRoot(), ...dirSegments, ".mcp.json");
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), "utf-8");
+    const dir = path.join(getDataRoot(), ...dirSegments);
+    const mcpPath = path.join(dir, ".mcp.json");
+    const configPath = path.join(dir, ".mcp-config.json");
+
+    const cfg = config as Record<string, unknown>;
+    const mcpServers = (cfg.mcpServers && typeof cfg.mcpServers === "object"
+      ? cfg.mcpServers : {}) as Record<string, unknown>;
+    const disabled = (cfg.disabled && typeof cfg.disabled === "object"
+      ? cfg.disabled : {}) as Record<string, unknown>;
+    const _apiKeys = (cfg._apiKeys && typeof cfg._apiKeys === "object"
+      ? cfg._apiKeys : {}) as Record<string, string>;
+
+    // .mcp.json：仅保留标准 mcpServers
+    fs.writeFileSync(mcpPath, JSON.stringify({ mcpServers }, null, 2), "utf-8");
+
+    // .mcp-config.json：存储 disabled 和 _apiKeys（仅在有内容时写入）
+    const extConfig: Record<string, unknown> = { disabled, _apiKeys };
+    if (Object.keys(disabled).length > 0 || Object.keys(_apiKeys).length > 0) {
+      fs.writeFileSync(configPath, JSON.stringify(extConfig, null, 2), "utf-8");
+    } else if (fs.existsSync(configPath)) {
+      // disabled 和 _apiKeys 都为空时清理文件
+      fs.unlinkSync(configPath);
+    }
   }
 
   return { read, write };
-}
-
-// ────────────────────────────────────────────────────────────
-// 辅助函数: 查找用户作为成员的实体 ID (DB 优先 + 文件回退)
-// ────────────────────────────────────────────────────────────
-
-/**
- * 文件系统扫描回退逻辑 — 遍历所有用户目录查找成员关系。
- * 仅当 DB 查询失败或返回空时调用。
- */
-function scanFilesystemForMembers(userId: string, entityDir: string, metaFileName: string): string[] {
-  const dataRoot = getDataRoot();
-  const personalDir = path.join(dataRoot, "personal");
-  if (!fs.existsSync(personalDir)) return [];
-
-  const result: string[] = [];
-  const ownerDirs = fs.readdirSync(personalDir, { withFileTypes: true })
-    .filter((d) => d.isDirectory());
-
-  for (const ownerDir of ownerDirs) {
-    const entityPath = path.join(personalDir, ownerDir.name, entityDir);
-    if (!fs.existsSync(entityPath)) continue;
-
-    const entities = fs.readdirSync(entityPath, { withFileTypes: true })
-      .filter((d) => d.isDirectory() || d.isSymbolicLink());
-
-    for (const entity of entities) {
-      const metaPath = path.join(entityPath, entity.name, metaFileName);
-      if (!fs.existsSync(metaPath)) continue;
-      try {
-        const raw = fs.readFileSync(metaPath, "utf-8");
-        const meta = JSON.parse(raw) as ProjectMeta;
-        if (meta.members?.some((m) => m.userId === userId)) {
-          result.push(meta.id);
-        }
-      } catch {
-        // skip invalid meta
-      }
-    }
-  }
-
-  return result;
-}
-
-/**
- * 异步回填 DB 索引 — 将文件系统扫描结果写入 entity_members 表。
- */
-async function repairMemberIndex(
-  userId: string,
-  entityType: string,
-  entityIds: string[]
-): Promise<void> {
-  for (const entityId of entityIds) {
-    try {
-      db.insert(entityMembers)
-        .values({
-          entityId,
-          entityType,
-          memberId: `repaired-${entityId}-${userId}`,
-          userId,
-          accountName: "repaired",
-          ownerId: "unknown",
-          addedAt: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-        })
-        .onConflictDoNothing()
-        .run();
-    } catch {
-      // duplicate or DB error — skip
-    }
-  }
-}
-
-/**
- * 查找指定用户作为成员的所有实体（项目/工作空间）ID。
- *
- * 优先查询 DB (entity_members 表)，如果 DB 为空则回退到文件系统扫描，
- * 并在文件扫描发现数据时异步回填 DB。
- */
-export function findMemberEntityIds(userId: string, entityDir: string, metaFileName: string): string[] {
-  const entityType = ENTITY_DIR_TO_TYPE[entityDir];
-
-  // Phase 1: 尝试 DB 查询
-  if (entityType) {
-    try {
-      const rows = db
-        .select({ entityId: entityMembers.entityId })
-        .from(entityMembers)
-        .where(
-          and(
-            eq(entityMembers.userId, userId),
-            eq(entityMembers.entityType, entityType)
-          )
-        )
-        .all();
-
-      if (rows.length > 0) {
-        return rows.map((r) => r.entityId);
-      }
-    } catch (e) {
-      console.warn("[MemberDB] DB query failed, falling back to filesystem:", e);
-    }
-  }
-
-  // Phase 2: 回退到文件系统扫描
-  const result = scanFilesystemForMembers(userId, entityDir, metaFileName);
-
-  // Phase 3: 文件系统有数据但 DB 为空 → 异步回填
-  if (result.length > 0 && entityType) {
-    repairMemberIndex(userId, entityType, result).catch(() => {});
-  }
-
-  return result;
 }
 
 // ────────────────────────────────────────────────────────────
@@ -482,11 +617,12 @@ function syncMemberToDb(dirSegments: string[], member: ProjectMember): void {
   }
 }
 
-function removeMemberFromDb(dirSegments: string[], memberId: string): void {
+function removeMemberFromDb(dirSegments: string[], memberId: string, userId?: string): void {
   const info = extractEntityInfo(dirSegments);
   if (!info) return;
   try {
-    db.delete(entityMembers)
+    // 优先按 memberId 精确删除
+    const result = db.delete(entityMembers)
       .where(
         and(
           eq(entityMembers.entityId, info.entityId),
@@ -495,6 +631,18 @@ function removeMemberFromDb(dirSegments: string[], memberId: string): void {
         )
       )
       .run();
+    // 兆底：如果 memberId 不匹配（如 repaired- 前缀），按 userId + entityId 删除
+    if (result.changes === 0 && userId) {
+      db.delete(entityMembers)
+        .where(
+          and(
+            eq(entityMembers.entityId, info.entityId),
+            eq(entityMembers.entityType, info.entityType),
+            eq(entityMembers.userId, userId)
+          )
+        )
+        .run();
+    }
   } catch (e) {
     console.warn("[MemberDB] Failed to remove member from DB:", e);
   }

@@ -25,6 +25,7 @@ export interface ProjectMeta {
   createdAt: string;
   accountId: string;
   accountType: string;
+  ownerId: string;     // 创建者的用户 ID（Owner 权限标识）
   sortOrder: number;
   repositories?: Repository[];
   sandbox?: SandboxStatus;

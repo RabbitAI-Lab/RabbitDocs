@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/useAuth";
 import {
   Card,
@@ -21,6 +22,7 @@ const { Text } = Typography;
 export default function ProfilePage() {
   const { user, authFetch } = useAuth();
   const { message } = App.useApp();
+  const t = useTranslations('profilePage');
   const [nameForm] = Form.useForm();
   const [loadingName, setLoadingName] = useState(false);
 
@@ -39,13 +41,13 @@ export default function ProfilePage() {
         body: JSON.stringify(values),
       });
       if (res.ok) {
-        message.success("Name updated");
+        message.success(t('nameUpdated'));
       } else {
         const data = await res.json();
-        message.error(data.error || "Update failed");
+        message.error(data.error || t('updateFailed'));
       }
     } catch {
-      message.error("Update failed");
+      message.error(t('updateFailed'));
     } finally {
       setLoadingName(false);
     }
@@ -57,9 +59,9 @@ export default function ProfilePage() {
     <div className="max-w-4xl mx-auto p-6 sm:p-8">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Your public profile visible to other users
+          {t('subtitle')}
         </p>
       </div>
 
@@ -75,7 +77,7 @@ export default function ProfilePage() {
                 </h2>
                 <Text type="secondary">{user.email}</Text>
                 {user.emailVerified && (
-                  <Tag color="green" className="ml-2">Verified</Tag>
+                  <Tag color="green" className="ml-2">{t('verified')}</Tag>
                 )}
               </div>
             </div>
@@ -88,21 +90,21 @@ export default function ProfilePage() {
             >
               <Form.Item
                 name="name"
-                label="Name"
-                rules={[{ required: true, message: "Please enter your name" }]}
+                label={t('name')}
+                rules={[{ required: true, message: t('nameRequired') }]}
                 className="flex-1 mr-4"
               >
-                <Input placeholder="Name" />
+                <Input placeholder={t('namePlaceholder')} />
               </Form.Item>
               <Form.Item>
                 <Button htmlType="submit" loading={loadingName}>
-                  Save
+                  {t('save')}
                 </Button>
               </Form.Item>
             </Form>
             <Descriptions column={2} size="small" className="!mt-2">
-              <Descriptions.Item label="Account Type">{user.accountType}</Descriptions.Item>
-              <Descriptions.Item label="User ID">
+              <Descriptions.Item label={t('accountType')}>{user.accountType}</Descriptions.Item>
+              <Descriptions.Item label={t('userId')}>
                 <Text copyable className="text-xs">
                   {user.id}
                 </Text>

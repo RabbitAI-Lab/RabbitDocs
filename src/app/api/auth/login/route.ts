@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { verifyPassword } from "@/lib/auth/password";
 import { generateTokenPair } from "@/lib/auth/tokens";
 import { isEmailVerificationRequired, isAdmin } from "@/lib/auth/settings";
+import { getApiT } from "@/lib/i18n-api";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -13,6 +14,7 @@ const loginSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const t = await getApiT();
   try {
     const body = await req.json();
     const parsed = loginSchema.safeParse(body);
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { error: "Invalid email or password" },
+        { error: t('api.auth.invalidCredentials') },
         { status: 401 }
       );
     }
@@ -44,7 +46,7 @@ export async function POST(req: NextRequest) {
     const validPassword = await verifyPassword(password, user.passwordHash);
     if (!validPassword) {
       return NextResponse.json(
-        { error: "Invalid email or password" },
+        { error: t('api.auth.invalidCredentials') },
         { status: 401 }
       );
     }
@@ -52,7 +54,7 @@ export async function POST(req: NextRequest) {
     // 检查账号是否被禁用
     if (user.disabled === 1) {
       return NextResponse.json(
-        { error: "Account has been disabled. Please contact the administrator." },
+        { error: t('api.auth.accountDisabled') },
         { status: 403 }
       );
     }
@@ -61,7 +63,7 @@ export async function POST(req: NextRequest) {
     if (isEmailVerificationRequired() && user.emailVerified !== 1) {
       return NextResponse.json(
         {
-          error: "Email verification required",
+          error: t('api.auth.emailVerificationRequired'),
           needVerification: true,
         },
         { status: 403 }
@@ -101,7 +103,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("[auth] Login error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: t('api.internalError') },
       { status: 500 }
     );
   }

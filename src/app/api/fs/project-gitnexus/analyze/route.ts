@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth/session";
 import { readProjectMeta } from "@/lib/fs";
 import { runGitNexus } from "@/lib/gitnexus-service";
 import { logOperation, extractProjectId } from "@/lib/operation-log";
+import { getApiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
@@ -12,17 +13,18 @@ export const dynamic = "force-dynamic";
 //       --force 与 --skip-git 由 API 强制启用，不再由前端传入。
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+  const t = await getApiT();
   const body = await req.json();
   const { dirSegments } = body;
 
   if (!dirSegments) {
-    return NextResponse.json({ error: "dirSegments is required" }, { status: 400 });
+    return NextResponse.json({ error: t('api.dirSegmentsRequired') }, { status: 400 });
   }
 
   try {
     const meta = readProjectMeta(dirSegments);
     if (!meta) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+      return NextResponse.json({ error: t('api.projectNotFound') }, { status: 404 });
     }
 
     const result = runGitNexus({
@@ -36,17 +38,17 @@ export async function POST(req: NextRequest) {
     if (!result.started) {
       if (result.reason === "already_running") {
         return NextResponse.json(
-          { error: "Analyze already running", status: result.status },
+          { error: t('api.gitnexus.analyzeAlreadyRunning'), status: result.status },
           { status: 409 }
         );
       }
       if (result.reason === "path_not_found") {
         return NextResponse.json(
-          { error: "Project root directory not found" },
+          { error: t('api.gitnexus.projectRootNotFound') },
           { status: 400 }
         );
       }
-      return NextResponse.json({ error: "Failed to start analyze" }, { status: 500 });
+      return NextResponse.json({ error: t('api.gitnexus.failedToStartAnalyze') }, { status: 500 });
     }
 
     logOperation({
