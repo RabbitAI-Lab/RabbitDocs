@@ -24,7 +24,7 @@ RUN pnpm config set ignore-scripts true && pnpm prune --prod
 # Stage 3: 运行时
 FROM node:20-bookworm-slim AS runner
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 make g++ \
+    python3 make g++ bubblewrap socat \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

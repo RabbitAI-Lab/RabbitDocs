@@ -4,7 +4,7 @@ RUN corepack enable && corepack prepare pnpm@10.14.0 --activate
 
 # better-sqlite3 等原生模块的编译依赖
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 make g++ \
+    python3 make g++ bubblewrap socat \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
