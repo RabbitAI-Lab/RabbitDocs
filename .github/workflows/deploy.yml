@@ -152,12 +152,12 @@ jobs:
             fi
 
             # MCP 端口（4001）：TCP 探测
-            for i in $(seq 1 6); do
+            for i in $(seq 1 10); do
               if (echo > /dev/tcp/127.0.0.1/4001) 2>/dev/null; then
                 echo "[Deploy] MCP (4001) OK"
                 break
               fi
-              echo "[Deploy] Waiting for MCP... attempt $i/6"
+              echo "[Deploy] Waiting for MCP... attempt $i/10"
               sleep 5
             done
 
@@ -169,3 +169,7 @@ jobs:
 
             echo "[Deploy] All services healthy!"
             docker compose ps
+
+            # ===== Phase 4: 清理旧镜像 =====
+            echo "[Deploy] Cleaning up unused Docker images..."
+            docker system prune -f 2>/dev/null || true

@@ -9,6 +9,7 @@ import { registerTemplateTools } from "./tools/template";
 import { validateApiKey } from "@/lib/auth/api-key";
 
 const PORT = parseInt(process.env.MCP_PORT || "4001");
+const HOST = process.env.MCP_HOST || "127.0.0.1";
 const transports = new Map<string, NodeStreamableHTTPServerTransport>();
 
 function createMcpServer(): McpServer {
@@ -21,7 +22,7 @@ function createMcpServer(): McpServer {
 }
 
 export function startMcpServer() {
-  const app = createMcpExpressApp({ host: "127.0.0.1" });
+  const app = createMcpExpressApp({ host: HOST });
 
   // POST /mcp — 处理 MCP 请求（新 session 或已有 session）
   app.post("/mcp", async (req, res) => {
@@ -80,9 +81,9 @@ export function startMcpServer() {
     res.status(204).end();
   });
 
-  app.listen(PORT, "127.0.0.1", () => {
+  app.listen(PORT, HOST, () => {
     console.log(
-      `[MCP] RabbitDocs MCP Server running on http://127.0.0.1:${PORT}/mcp`
+      `[MCP] RabbitDocs MCP Server running on http://${HOST}:${PORT}/mcp`
     );
   });
 }
