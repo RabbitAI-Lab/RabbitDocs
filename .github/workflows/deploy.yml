@@ -87,7 +87,7 @@ jobs:
             # 镜像包需在 GHCR 设为 Public，pull 阶段无需登录
 
             # 创建部署目录
-            mkdir -p /home/"$USER"/deploy/data
+            mkdir -p /home/"$USER"/deploy/rabbitdocs/data
 
       - name: Copy docker-compose.yml
         uses: appleboy/scp-action@v0.1.4
@@ -96,7 +96,7 @@ jobs:
           username: ${{ matrix.server.user }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "docker/docker-compose.prod.yml"
-          target: "/home/${{ matrix.server.user }}/deploy"
+          target: "/home/${{ matrix.server.user }}/deploy/rabbitdocs"
 
       - name: Deploy service
         uses: appleboy/ssh-action@v1
@@ -109,7 +109,7 @@ jobs:
           script: |
             set -e
             REGISTRY_OWNER=$(echo "$REGISTRY_OWNER" | tr '[:upper:]' '[:lower:]')
-            cd /home/"$USER"/deploy
+            cd /home/"$USER"/deploy/rabbitdocs
 
             # 归位 compose 文件
             cp docker/docker-compose.prod.yml docker-compose.yml 2>/dev/null || true
