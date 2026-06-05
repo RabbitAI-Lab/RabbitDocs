@@ -11,8 +11,8 @@ import type { WorkspaceMeta, ProjectMeta } from "@/lib/fs";
 const CherryEditor = dynamic(() => import("@/components/editor/CherryEditor"), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-64 text-gray-400">
-      <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-blue-600 mr-2" />
+    <div className="flex items-center justify-center h-64 text-gray-400 dark:text-gray-500">
+      <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 dark:border-zinc-600 border-t-blue-600 dark:border-t-blue-400 mr-2" />
       Loading editor...
     </div>
   ),
@@ -21,8 +21,8 @@ const CherryEditor = dynamic(() => import("@/components/editor/CherryEditor"), {
 const HtmlEditor = dynamic(() => import("@/components/editor/HtmlEditor"), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-64 text-gray-400">
-      <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-blue-600 mr-2" />
+    <div className="flex items-center justify-center h-64 text-gray-400 dark:text-gray-500">
+      <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 dark:border-zinc-600 border-t-blue-600 dark:border-t-blue-400 mr-2" />
       Loading editor...
     </div>
   ),
@@ -112,9 +112,9 @@ export default function WorkspaceEditorArea({
           {/* Workspace header */}
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
                 <svg
-                  className="w-5 h-5 text-indigo-600"
+                  className="w-5 h-5 text-indigo-600 dark:text-indigo-400"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -125,10 +125,10 @@ export default function WorkspaceEditorArea({
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-semibold text-gray-800">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
                   {workspaceMeta.name}
                 </h2>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {workspaceMeta.description || "No description"}
                 </p>
               </div>
@@ -203,8 +203,8 @@ export default function WorkspaceEditorArea({
               defaultModel="editOnly"
             />
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-400">
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-t-blue-600 mr-2" />
+            <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500">
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 dark:border-zinc-600 border-t-blue-600 dark:border-t-blue-400 mr-2" />
               <span className="text-sm">Loading...</span>
             </div>
           )}

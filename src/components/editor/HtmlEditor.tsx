@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTheme } from "next-themes";
 import Editor from "@monaco-editor/react";
 import ShareHtmlButton from "@/components/project/ShareHtmlButton";
 
@@ -38,6 +39,7 @@ export default function HtmlEditor({
   // Snapshot of the last persisted content, used to compute the dirty flag.
   const persistedRef = useRef<string>(initialValue);
   const lastLoadedRef = useRef<string | null>(null);
+  const { resolvedTheme } = useTheme();
   const fileName = filePath.split("/").pop() || filePath;
 
   // When the parent finishes loading or reloads external content, sync our state.
@@ -80,8 +82,8 @@ export default function HtmlEditor({
 
   if (!loaded) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-400">
-        <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-t-blue-600 mr-2" />
+      <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500">
+        <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 dark:border-zinc-600 border-t-blue-600 dark:border-t-blue-400 mr-2" />
         <span className="text-sm">加载中...</span>
       </div>
     );
@@ -182,7 +184,7 @@ export default function HtmlEditor({
             defaultLanguage="html"
             value={content}
             onChange={handleChange}
-            theme="vs"
+            theme={resolvedTheme === "dark" ? "vs-dark" : "vs"}
             options={{
               minimap: { enabled: false },
               fontSize: 13,
@@ -193,8 +195,8 @@ export default function HtmlEditor({
               automaticLayout: true,
             }}
             loading={
-              <div className="flex items-center justify-center h-full text-gray-400">
-                <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-blue-600 mr-2" />
+              <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500">
+                <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 dark:border-zinc-600 border-t-blue-600 dark:border-t-blue-400 mr-2" />
                 Monaco 加载中...
               </div>
             }

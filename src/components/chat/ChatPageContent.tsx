@@ -311,7 +311,7 @@ export default function ChatPageContent({
               projectId={projectId}
               projectName={projectName || projectId}
               projectMeta={projectMeta ?? null}
-              projectPath={`personal/${user.id}/projects/${projectId}`}
+              projectPath={`personal/${user?.id ?? ''}/projects/${projectId}`}
               recentChats={recentChats || []}
               recentDocuments={recentDocuments || []}
               onSwitchToChat={chatSwitching.handleSwitchToChat}

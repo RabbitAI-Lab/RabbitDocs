@@ -36,7 +36,7 @@ export default function NewChatWorkspace() {
 
   // Project selection state
   const [projects, setProjects] = useState<ProjectMeta[]>([]);
-  const { authFetch } = useAuth();
+  const { authFetch, user } = useAuth();
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedProjectName, setSelectedProjectName] = useState("");
   const [mentionFile, setMentionFile] = useState<string | null>(null);
@@ -47,7 +47,7 @@ export default function NewChatWorkspace() {
   const [recentDocuments, setRecentDocuments] = useState<DocumentActivity[]>([]);
 
   const projectPath = selectedProjectId
-    ? `personal/default/projects/${selectedProjectId}/docs`
+    ? `personal/${user.id}/projects/${selectedProjectId}/docs`
     : "";
 
   const autoSelectedRef = useRef(false);
@@ -118,7 +118,7 @@ export default function NewChatWorkspace() {
 
     // Load file tree for the selected project
     fileTree.setTreeLoading(true);
-    const prefix = `personal/default/projects/${project.id}/docs`;
+    const prefix = `personal/${user.id}/projects/${project.id}/docs`;
     try {
       const res = await authFetch(`/api/fs/tree?path=${prefix}`);
       const data = await res.json();
@@ -345,8 +345,8 @@ export default function NewChatWorkspace() {
                     onClick={() => tabSystem.setActiveTabId(tab.filePath)}
                     className={`group flex items-center gap-1.5 h-full px-3 text-xs font-medium whitespace-nowrap border-b-2 transition-colors ${
                       tabSystem.activeTabId === tab.filePath
-                        ? "bg-white text-blue-600 border-blue-600"
-                        : "text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-100"
+                        ? "bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400"
+                        : "text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-700"
                     }`}
                   >
                     <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -377,7 +377,7 @@ export default function NewChatWorkspace() {
                   projectId={selectedProjectId}
                   projectName={selectedProjectName}
                   projectMeta={projectMeta}
-                  projectPath={`personal/default/projects/${selectedProjectId}`}
+                  projectPath={`personal/${user.id}/projects/${selectedProjectId}`}
                   recentChats={recentChats}
                   recentDocuments={recentDocuments}
                   onSwitchToChat={chatSwitching.handleSwitchToChat}
