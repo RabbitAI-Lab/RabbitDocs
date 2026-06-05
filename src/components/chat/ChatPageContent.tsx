@@ -169,7 +169,7 @@ export default function ChatPageContent({
   if (!projectId) {
     return (
       <div className="flex flex-col h-full">
-        <div className="flex items-center h-[41px] bg-gray-50 border-b border-gray-200 overflow-x-auto shrink-0">
+        <div className="flex items-center h-[41px] bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-700 overflow-x-auto shrink-0">
           <TabButton
             active={tabSystem.activeTabId === CHAT_TAB}
             onClick={() => tabSystem.setActiveTabId(CHAT_TAB)}
@@ -260,7 +260,7 @@ export default function ChatPageContent({
       {/* Right Panel - Tab System */}
       <div className="flex-1 h-full flex flex-col overflow-hidden">
         {/* Tab Bar */}
-        <div className="flex items-center h-[41px] bg-gray-50 border-b border-gray-200 overflow-x-auto shrink-0">
+        <div className="flex items-center h-[41px] bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-700 overflow-x-auto shrink-0">
           <TabButton
             active={tabSystem.activeTabId === PROJECT_INFO_TAB}
             onClick={() => tabSystem.setActiveTabId(PROJECT_INFO_TAB)}

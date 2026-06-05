@@ -111,11 +111,12 @@ export function useProjectFileTree({
       return;
     }
 
-    // For files, ensure the extension is preserved if user removed it
+    // For files, ensure a valid extension is present
     let finalName = trimmedName;
     if (node.type === "file") {
-      const ext = node.name.match(/\.(md|html)$/)?.[0];
-      if (ext && !finalName.endsWith(ext)) {
+      const hasValidExt = /\.(md|html)$/.test(finalName);
+      if (!hasValidExt) {
+        const ext = node.name.match(/\.(md|html)$/)?.[0] ?? ".md";
         finalName = `${finalName}${ext}`;
       }
     }
