@@ -121,13 +121,14 @@ export default function EmailPageClient() {
   }, [load]);
 
   const dirty = useMemo(() => {
-    if (!smtp || !draft) return false;
+    if (!draft) return false;
+    const baseline = smtp ?? emptySmtpDraft();
     if (
-      smtp.host !== draft.host ||
-      smtp.port !== draft.port ||
-      smtp.user !== draft.user ||
-      smtp.fromEmail !== draft.fromEmail ||
-      smtp.secure !== draft.secure
+      baseline.host !== draft.host ||
+      baseline.port !== draft.port ||
+      baseline.user !== draft.user ||
+      baseline.fromEmail !== draft.fromEmail ||
+      baseline.secure !== draft.secure
     ) {
       return true;
     }
