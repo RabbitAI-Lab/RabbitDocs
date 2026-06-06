@@ -102,7 +102,27 @@ export default function ChatPageContent({
   });
 
   // File tree
-  const fileTree = useProjectFileTree({
+  const {
+    tree: fileTreeData,
+    rootTree,
+    treeLoading,
+    renamingPath,
+    renamingName,
+    setRenamingName,
+    renameInputRef,
+    refreshTree,
+    refreshRootTree,
+    handleCreateFile,
+    handleCreateDir,
+    handleRenameConfirm,
+    handleRenameCancel,
+    handleStartRename,
+    handleDeleteDir,
+    handleDeleteFile,
+    triggerUpload,
+    uploadInputRef,
+    handleUploadChange,
+  } = useProjectFileTree({
     projectId: projectId ?? null,
     projectPath,
     message,
@@ -120,12 +140,12 @@ export default function ChatPageContent({
   // Lazy-load root tree when switching to workspace view
   const handleViewChange = useCallback((view: TreeViewMode) => {
     setTreeView(view);
-    if (view === "workspace" && fileTree.rootTree.length === 0) {
-      fileTree.refreshRootTree();
+    if (view === "workspace" && rootTree.length === 0) {
+      refreshRootTree();
     }
-  }, [fileTree]);
+  }, [rootTree, refreshRootTree]);
 
-  const displayTree = treeView === "docs" ? fileTree.tree : fileTree.rootTree;
+  const displayTree = treeView === "docs" ? fileTreeData : rootTree;
 
   // Chat switching
   const chatSwitching = useChatSwitching({
@@ -163,11 +183,11 @@ export default function ChatPageContent({
 
   const handleToolCall = useCallback(({ toolName, args }: { toolName: string; args: Record<string, unknown> }) => {
     if (toolName === "refresh_file_tree") {
-      fileTree.refreshTree();
+      refreshTree();
     } else if (toolName === "refresh_file_content" && args && typeof args.path === "string") {
       tabSystem.refreshFileContent(args.path);
     }
-  }, [fileTree, tabSystem]);
+  }, [refreshTree, tabSystem]);
 
   // --- Shared tab bar helpers ---
 
@@ -228,12 +248,12 @@ export default function ChatPageContent({
     <div className="flex h-full">
       {/* Hidden upload input */}
       <input
-        ref={fileTree.uploadInputRef}
+        ref={uploadInputRef}
         type="file"
         accept=".md,.html,.txt"
         multiple
         className="hidden"
-        onChange={fileTree.handleUploadChange}
+        onChange={handleUploadChange}
       />
       {/* Left Panel - File Tree */}
       <div className="w-[240px] h-full flex flex-col border-r border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900 shrink-0">
@@ -242,12 +262,12 @@ export default function ChatPageContent({
             {projectName || projectId} {t("tabs.documents")}
           </h3>
           <button
-            onClick={() => fileTree.refreshTree()}
-            disabled={fileTree.treeLoading}
+            onClick={() => refreshTree()}
+            disabled={treeLoading}
             className="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shrink-0"
             title={tc("refresh")}
           >
-            <svg className={`w-3.5 h-3.5 ${fileTree.treeLoading ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className={`w-3.5 h-3.5 ${treeLoading ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="23 4 23 10 17 10" />
               <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
             </svg>
@@ -255,13 +275,13 @@ export default function ChatPageContent({
         </div>
 
         <FileTreeToolbar
-          onCreateFile={() => fileTree.handleCreateFile("")}
-          onCreateDir={() => fileTree.handleCreateDir("")}
-          onUpload={() => fileTree.triggerUpload("")}
-          disabled={fileTree.renamingPath !== null}
+          onCreateFile={() => handleCreateFile("")}
+          onCreateDir={() => handleCreateDir("")}
+          onUpload={() => triggerUpload("")}
+          disabled={renamingPath !== null}
         />
 
-        {fileTree.treeLoading ? (
+        {treeLoading ? (
           <div className="flex-1 flex items-center justify-center py-8 text-gray-400 dark:text-gray-500">
             <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 dark:border-zinc-600 border-t-blue-600 dark:border-t-blue-400 mr-2" />
             <span className="text-xs">{tc("loading")}</span>
@@ -272,10 +292,10 @@ export default function ChatPageContent({
             mode="editable"
             selectedPath={tabSystem.activeTabId !== CHAT_TAB && tabSystem.activeTabId !== PROJECT_INFO_TAB ? tabSystem.activeTabId : null}
             onFileClick={(node) => tabSystem.handleFileClick(node)}
-            onNewDirectory={(parentPath) => fileTree.handleCreateDir(parentPath)}
-            onNewFile={(parentPath) => fileTree.handleCreateFile(parentPath)}
-            onDeleteDirectory={(dirPath) => fileTree.handleDeleteDir(dirPath)}
-            onDeleteFile={(filePath) => fileTree.handleDeleteFile(filePath)}
+            onNewDirectory={(parentPath) => handleCreateDir(parentPath)}
+            onNewFile={(parentPath) => handleCreateFile(parentPath)}
+            onDeleteDirectory={(dirPath) => handleDeleteDir(dirPath)}
+            onDeleteFile={(filePath) => handleDeleteFile(filePath)}
             onMentionFile={(node) => {
               if (floatingChatOpen && !floatingChatMinimized) {
                 setFloatingMentionFile(node.path);
@@ -284,14 +304,14 @@ export default function ChatPageContent({
                 tabSystem.setActiveTabId(CHAT_TAB);
               }
             }}
-            renamingPath={fileTree.renamingPath}
-            renamingName={fileTree.renamingName}
-            onRenamingNameChange={fileTree.setRenamingName}
-            onRenameConfirm={fileTree.handleRenameConfirm}
-            onRenameCancel={fileTree.handleRenameCancel}
-            renameInputRef={fileTree.renameInputRef}
-            onStartRename={fileTree.handleStartRename}
-            onUpload={(parentPath) => fileTree.triggerUpload(parentPath)}
+            renamingPath={renamingPath}
+            renamingName={renamingName}
+            onRenamingNameChange={setRenamingName}
+            onRenameConfirm={handleRenameConfirm}
+            onRenameCancel={handleRenameCancel}
+            renameInputRef={renameInputRef}
+            onStartRename={handleStartRename}
+            onUpload={(parentPath) => triggerUpload(parentPath)}
           />
         )}
 
@@ -379,7 +399,7 @@ export default function ChatPageContent({
                 fileName: t.filePath.split("/").pop() || t.filePath,
                 filePath: t.filePath,
               }))}
-              onDocumentSaved={fileTree.refreshTree}
+              onDocumentSaved={refreshTree}
               mentionFile={mentionFile}
               onMentionConsumed={() => setMentionFile(null)}
               onToolCall={handleToolCall}
