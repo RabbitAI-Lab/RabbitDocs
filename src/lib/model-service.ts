@@ -122,8 +122,11 @@ export async function* streamModelResponse(
     includePartialMessages: true,
     // Layer 2: 只允许显式预批准的操作，其余一律拒绝
     permissionMode: "dontAsk",
-    // 不加载任何文件系统 settings，防止被注入宽松规则
-    settingSources: [],
+    // 加载项目级 settings（.claude/settings.json + CLAUDE.md）
+    // 不含 'user'（~/.claude/settings.json）和 'local'（.claude/settings.local.json）
+    settingSources: ['project'],
+    // 启用项目中已安装的所有 skills
+    skills: 'all',
     // 只使用 SDK 传入的 MCP servers，忽略 .mcp.json 等外部配置
     strictMcpConfig: true,
     cwd,
@@ -287,6 +290,7 @@ export async function* streamModelResponse(
   console.log("[AgentSDK] permissionMode:", sdkOptions.permissionMode);
   console.log("[AgentSDK] maxTurns:", sdkOptions.maxTurns);
   console.log("[AgentSDK] settingSources:", sdkOptions.settingSources);
+  console.log("[AgentSDK] skills:", sdkOptions.skills);
   console.log("[AgentSDK] sandbox:", JSON.stringify(sdkOptions.sandbox));
   console.log("[AgentSDK] systemPrompt (from options):", options?.systemPrompt ? `(length: ${options.systemPrompt.length})` : "(none)");
   console.log("[AgentSDK] messages[0] system content:", hasSystemMessage ? `(length: ${messages[0].content.length})` : "(none)");
