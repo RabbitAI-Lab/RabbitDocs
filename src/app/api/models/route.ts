@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
   const t = await getApiT();
   const body = await req.json();
-  const { provider, name, baseUrl, apiKey, modelName, protocol, extraEnvJson } = body;
+  const { provider, name, baseUrl, apiKey, modelName, protocol, extraEnvJson, backend } = body;
 
   if (!provider || !name || !baseUrl || !apiKey || !modelName) {
     return NextResponse.json(
@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
       apiKey,
       modelName,
       extraEnvJson: resolvedExtraEnvJson,
+      backend: backend || "sdk",
       createdAt: now,
       updatedAt: now,
     })

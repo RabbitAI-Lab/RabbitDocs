@@ -20,6 +20,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@agentclientprotocol/sdk": "^0.25.0",
     "@ant-design/icons": "^6.2.5",
     "@ant-design/x": "^2.7.0",
     "@ant-design/x-markdown": "^2.7.0",

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
+import { requireFeature } from "@/lib/auth/feature-gate";
 import { listWorkspaces, createWorkspace, deleteWorkspace, readWorkspaceMeta, writeWorkspaceMeta } from "@/lib/fs";
 import { getApiT } from "@/lib/i18n-api";
 
@@ -18,6 +19,11 @@ export async function GET(req: NextRequest) {
 // POST /api/fs/workspaces - create workspace
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
+
+  // 功能门控：workspace 功能需要订阅包含该 feature 的套餐
+  const featureErr = requireFeature(auth, "workspace");
+  if (featureErr) return featureErr;
+
   const t = await getApiT();
   const body = await req.json();
   const { type = "personal", accountId = auth.id, name, orgId } = body;

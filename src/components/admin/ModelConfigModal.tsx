@@ -175,6 +175,7 @@ export default function ModelConfigModal({
         apiKey: values.apiKey,
         modelName: values.modelName,
         extraEnvJson,
+        backend: values.backend || "sdk",
       });
     } catch {
       // validation failed, antd will show errors
@@ -244,6 +245,20 @@ export default function ModelConfigModal({
             </Form.Item>
           </Col>
         </Row>
+        {/* Backend selection: only show for anthropic protocol */}
+        {form.getFieldValue("protocol") === "anthropic" && (
+          <Form.Item
+            label="Backend"
+            name="backend"
+            tooltip="SDK: direct Agent SDK call (default). ACP: use ACP protocol with long-lived agent subprocess."
+            initialValue="sdk"
+          >
+            <Select>
+              <Select.Option value="sdk">SDK (Direct)</Select.Option>
+              <Select.Option value="acp">ACP (Agent Protocol)</Select.Option>
+            </Select>
+          </Form.Item>
+        )}
         {form.getFieldValue("provider") === CUSTOM_PROVIDER_KEY && (
           <Form.Item
             label={t('modelConfigModal.labelCustomProviderName')}

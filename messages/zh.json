@@ -76,7 +76,9 @@
   "workspaces": {
     "header": "工作空间",
     "newWorkspace": "新建工作空间",
-    "defaultWorkspaceName": "新工作空间"
+    "defaultWorkspaceName": "新工作空间",
+    "upgradeToUnlock": "升级以解锁",
+    "upgradeRequired": "请升级套餐以使用工作空间"
   },
   "chatsHistory": {
     "title": "对话历史",

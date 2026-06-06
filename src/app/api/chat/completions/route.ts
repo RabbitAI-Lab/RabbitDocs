@@ -16,8 +16,10 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
   const t = await getApiT();
-  const body: Partial<ChatCompletionRequest> = await req.json();
+  const body: Partial<ChatCompletionRequest & { workspaceId?: string; chatId?: number }> = await req.json();
   const { modelId, messages, projectId } = body;
+  const workspaceId = (body as Record<string, unknown>).workspaceId as string | undefined;
+  const chatId = (body as Record<string, unknown>).chatId as number | undefined;
   const _systemPrompt = body.systemPrompt; // reserved for future per-request override
   void _systemPrompt;
 
@@ -88,6 +90,9 @@ export async function POST(req: NextRequest) {
         const generator = streamModelResponse(modelId, messages, {
           cwd,
           projectId,
+          userId: auth.id,
+          workspaceId,
+          chatId,
         });
 
         for await (const event of generator) {

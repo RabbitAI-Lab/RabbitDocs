@@ -31,6 +31,9 @@ async function streamAiResponse(params: {
   abortControllerRef: React.MutableRefObject<AbortController | null>;
   selectedModelId: number;
   selectedProject: string | undefined;
+  selectedWorkspace?: string;
+  workspaceId?: string;
+  chatId?: number | null;
   onToolCall?: (toolCall: { toolName: string; args: Record<string, unknown> }) => void;
   t: (key: string, params?: Record<string, string | number>) => string;
 }): Promise<{ aiContent: string; aiThinking: string; aiSignature: string | undefined; hasError: boolean }> {
@@ -42,6 +45,9 @@ async function streamAiResponse(params: {
     abortControllerRef,
     selectedModelId,
     selectedProject,
+    selectedWorkspace,
+    workspaceId,
+    chatId,
     onToolCall,
     t,
   } = params;
@@ -62,6 +68,8 @@ async function streamAiResponse(params: {
         modelId: selectedModelId,
         messages: chatMessages,
         projectId: selectedProject,
+        workspaceId: selectedWorkspace ?? workspaceId,
+        chatId: chatId,
       }),
       signal: abortController.signal,
     });
@@ -326,6 +334,9 @@ export function useChatMessages({
       abortControllerRef,
       selectedModelId,
       selectedProject,
+      selectedWorkspace,
+      workspaceId,
+      chatId: currentChatId,
       onToolCall,
       t,
     });
@@ -426,6 +437,9 @@ export function useChatMessages({
       abortControllerRef,
       selectedModelId,
       selectedProject,
+      selectedWorkspace,
+      workspaceId,
+      chatId: effectiveChatId,
       onToolCall,
       t,
     });

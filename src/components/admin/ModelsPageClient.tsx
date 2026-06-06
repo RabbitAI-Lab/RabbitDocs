@@ -132,6 +132,7 @@ export default function ModelsPageClient({ initialModels }: Props) {
       baseUrl: model.baseUrl,
       apiKey: model.apiKey,
       modelName: model.modelName,
+      backend: model.backend || "sdk",
       disableAdaptive: envFields.disableAdaptive,
       defaultThinking: envFields.defaultThinking,
       customEnvList: envFields.customEnvList,

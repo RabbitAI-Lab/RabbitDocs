@@ -21,6 +21,8 @@ interface AuthContextType {
   user: User | null;
   accessToken: string | null;
   isLoading: boolean;
+  features: string[];
+  hasFeature: (key: string) => boolean;
   login: (
     email: string,
     password: string
@@ -71,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [features, setFeatures] = useState<string[]>([]);
   const accessTokenRef = useRef<string | null>(null);
 
   // 同步 ref 辅助函数 - 同时更新 state 和 ref
@@ -113,6 +116,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(data.user);
       localStorage.setItem("refreshToken", data.refreshToken);
       setIsLoading(false);
+
+      // 登录/刷新成功后拉取用户功能列表
+      fetchFeatures(data.accessToken);
+
       return data.accessToken;
     } catch {
       // 网络错误不清除 token，下次重试
@@ -132,8 +139,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAccessToken(data.accessToken);
       setUser(data.user);
       localStorage.setItem("refreshToken", data.refreshToken);
+      // 登录成功后拉取功能列表
+      fetchFeatures(data.accessToken);
     },
     []
+  );
+
+  // 拉取用户功能列表
+  const fetchFeatures = useCallback((token: string) => {
+    fetch("/api/features", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : { features: [] }))
+      .then((data) => setFeatures(data.features || []))
+      .catch(() => setFeatures([]));
+  }, []);
+
+  const hasFeature = useCallback(
+    (key: string) => features.includes(key),
+    [features]
   );
 
   const login = useCallback(
@@ -195,6 +219,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     accessTokenRef.current = null;
     setAccessToken(null);
+    setFeatures([]);
     localStorage.removeItem("refreshToken");
     pendingRequests.clear();
 
@@ -237,6 +262,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         accessToken,
         isLoading,
+        features,
+        hasFeature,
         login,
         register,
         logout,

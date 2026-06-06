@@ -19,9 +19,10 @@ type ModelConfigRow = {
   apiKey: string;
   modelName: string;
   extraEnvJson: string;
+  backend: string; // "sdk" | "acp"
 };
 
-function resolveModelConfig(modelId: number): ModelConfigRow {
+export function resolveModelConfig(modelId: number): ModelConfigRow {
   const config = db
     .select()
     .from(modelConfigs)
@@ -46,7 +47,7 @@ function resolveModelConfig(modelId: number): ModelConfigRow {
   return config as ModelConfigRow;
 }
 
-function readMcpServers(): Record<string, McpServerConfig> | undefined {
+export function readMcpServers(): Record<string, McpServerConfig> | undefined {
   const config = db.select().from(mcpConfig).get();
   if (!config?.configJson || config.configJson === "{}") return undefined;
   try {
@@ -67,9 +68,25 @@ export async function* streamModelResponse(
     systemPrompt?: string;
     cwd?: string;
     projectId?: string;
+    userId?: string;
+    workspaceId?: string;
+    chatId?: number;
   }
 ): AsyncGenerator<StreamEvent> {
   const config = resolveModelConfig(modelId);
+
+  // ACP 后端分流
+  if (config.backend === "acp" && options?.userId && options?.chatId) {
+    const { streamAcpModelResponse } = await import("./acp-model-service");
+    yield* streamAcpModelResponse(modelId, messages, {
+      userId: options.userId,
+      projectId: options.projectId,
+      workspaceId: options.workspaceId,
+      chatId: options.chatId,
+      cwd: options.cwd,
+    });
+    return;
+  }
 
   // Format conversation as prompt text
   const promptParts: string[] = [];

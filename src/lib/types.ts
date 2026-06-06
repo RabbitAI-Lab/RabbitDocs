@@ -38,6 +38,8 @@ export type ChatCompletionRequest = {
   /** @deprecated 由前端 system 消息替代 */
   systemPrompt?: string;
   projectId?: string;
+  workspaceId?: string;
+  chatId?: number;
 };
 
 // 文档活动日志

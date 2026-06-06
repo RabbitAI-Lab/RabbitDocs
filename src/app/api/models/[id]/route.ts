@@ -32,7 +32,7 @@ export async function PATCH(
   const t = await getApiT();
   const { id } = await params;
   const body = await req.json();
-  const { provider, name, baseUrl, apiKey, modelName, protocol, isDefault, extraEnvJson } = body;
+  const { provider, name, baseUrl, apiKey, modelName, protocol, isDefault, extraEnvJson, backend } = body;
 
   const updateData: Record<string, unknown> = {
     updatedAt: new Date().toISOString(),
@@ -58,6 +58,10 @@ export async function PATCH(
     // 客户端按表单状态重新生成 extraEnvJson 后再传过来
     // 二次规范化（去空 key、确保 string value）保证 DB 存的是合法 JSON
     updateData.extraEnvJson = serializeExtraEnv(parseExtraEnv(extraEnvJson));
+  }
+
+  if (backend !== undefined) {
+    updateData.backend = backend;
   }
 
   if (isDefault !== undefined) {

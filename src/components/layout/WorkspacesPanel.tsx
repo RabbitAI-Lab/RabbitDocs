@@ -30,7 +30,7 @@ export default function WorkspacesPanel() {
   const router = useRouter();
   const pathname = usePathname();
   const { collapsed } = useSidebar();
-  const { user, isLoading, authFetch } = useAuth();
+  const { user, isLoading, authFetch, hasFeature } = useAuth();
   const [workspaces, setWorkspaces] = useState<WorkspaceMeta[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -89,6 +89,8 @@ export default function WorkspacesPanel() {
     fetchWorkspaces();
   };
 
+  const canCreateWorkspace = hasFeature("workspace");
+
   const handleCreateWorkspace = async () => {
     const name = computeDefaultName(workspaces, t);
     const res = await authFetch("/api/fs/workspaces", {
@@ -96,7 +98,17 @@ export default function WorkspacesPanel() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type: "personal", accountId: user!.id, name }),
     });
-    if (!res.ok) return;
+    if (!res.ok) {
+      // 403 = 功能门控：需要升级套餐
+      if (res.status === 403) {
+        const data = await res.json().catch(() => ({}));
+        if (data.upgradeRequired) {
+          router.push("/billing");
+          return;
+        }
+      }
+      return;
+    }
     const meta = await res.json();
     await fetchWorkspaces();
     setEditingId(meta.id);
@@ -188,16 +200,29 @@ export default function WorkspacesPanel() {
       {/* Header */}
       <div className="flex items-center gap-1.5 px-3 py-1.5">
         <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('header')}</span>
-        <button
-          onClick={handleCreateWorkspace}
-          className="ml-auto p-0.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-          title={t('newWorkspace')}
-        >
-          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-        </button>
+        {canCreateWorkspace ? (
+          <button
+            onClick={handleCreateWorkspace}
+            className="ml-auto p-0.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            title={t('newWorkspace')}
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
+        ) : (
+          <button
+            onClick={() => router.push("/billing")}
+            className="ml-auto p-0.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            title={t('upgradeToUnlock')}
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Content */}

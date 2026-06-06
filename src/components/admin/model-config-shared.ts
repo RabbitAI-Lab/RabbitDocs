@@ -14,6 +14,7 @@ export interface ModelConfig {
   apiKey: string;
   modelName: string;
   extraEnvJson: string;
+  backend?: string;
   createdAt: string;
   updatedAt: string;
   isDefault: number;
@@ -27,6 +28,7 @@ export interface ModelConfigSubmitData {
   apiKey: string;
   modelName: string;
   extraEnvJson: string;
+  backend?: string;
 }
 
 export const CUSTOM_PROVIDER_KEY = "__custom__";

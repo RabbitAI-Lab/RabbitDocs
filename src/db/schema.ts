@@ -78,6 +78,8 @@ export const modelConfigs = sqliteTable("model_configs", {
   // 包含两个预定义开关（CLAUDE_CODE_DISABLE_ADAPTIVE / CLAUDE_CODE_DEFAULT_THINKING）
   // 以及任意用户自定义 key/value
   extraEnvJson: text("extra_env_json").notNull().default("{}"),
+  // 模型后端类型："sdk" = 当前 SDK 直调模式，"acp" = ACP 长连接池模式
+  backend: text("backend").notNull().default("sdk"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
   isDefault: integer("is_default").notNull().default(0),

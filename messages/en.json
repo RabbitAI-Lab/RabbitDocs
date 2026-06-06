@@ -76,7 +76,9 @@
   "workspaces": {
     "header": "Workspaces",
     "newWorkspace": "New Workspace",
-    "defaultWorkspaceName": "New Workspace"
+    "defaultWorkspaceName": "New Workspace",
+    "upgradeToUnlock": "Upgrade to unlock",
+    "upgradeRequired": "Please upgrade your plan to use workspace"
   },
   "chatsHistory": {
     "title": "Chat History",
