@@ -67,7 +67,30 @@ export default function NewChatWorkspace() {
 
   const tabSystem = useFileTabSystem({ projectId: selectedProjectId, projectPath });
 
-  const fileTree = useProjectFileTree({
+  const {
+    tree: fileTreeData,
+    setTree,
+    rootTree,
+    treeLoading,
+    setTreeLoading,
+    renamingPath,
+    renamingName,
+    setRenamingName,
+    renameInputRef,
+    refreshTree,
+    refreshRootTree,
+    handleCreateFile,
+    handleCreateDir,
+    handleRenameConfirm,
+    handleRenameCancel,
+    handleStartRename,
+    handleDeleteDir,
+    handleDeleteFile,
+    triggerUpload,
+    uploadInputRef,
+    handleUploadChange,
+    reset: resetFileTree,
+  } = useProjectFileTree({
     projectId: selectedProjectId,
     projectPath,
     message,
@@ -80,12 +103,12 @@ export default function NewChatWorkspace() {
   // Lazy-load root tree when switching to workspace view
   const handleViewChange = useCallback((view: TreeViewMode) => {
     setTreeView(view);
-    if (view === "workspace" && fileTree.rootTree.length === 0) {
-      fileTree.refreshRootTree();
+    if (view === "workspace" && rootTree.length === 0) {
+      refreshRootTree();
     }
-  }, [fileTree]);
+  }, [rootTree, refreshRootTree]);
 
-  const displayTree = treeView === "docs" ? fileTree.tree : fileTree.rootTree;
+  const displayTree = treeView === "docs" ? fileTreeData : rootTree;
 
   // --- Refresh recent chats & documents ---
 
@@ -121,16 +144,16 @@ export default function NewChatWorkspace() {
     setProjectMeta(project);
 
     // Load file tree for the selected project
-    fileTree.setTreeLoading(true);
+    setTreeLoading(true);
     const prefix = `projects/${project.id}/docs`;
     try {
       const res = await authFetch(`/api/fs/tree?path=${prefix}`);
       const data = await res.json();
-      fileTree.setTree(Array.isArray(data) ? stripTreePrefix(data, prefix) : []);
+      setTree(Array.isArray(data) ? stripTreePrefix(data, prefix) : []);
     } catch {
-      fileTree.setTree([]);
+      setTree([]);
     }
-    fileTree.setTreeLoading(false);
+    setTreeLoading(false);
 
     // Reset sub-systems
     tabSystem.reset();
@@ -140,7 +163,7 @@ export default function NewChatWorkspace() {
     refreshRecentChats(project.id);
     refreshRecentDocuments(project.id);
     router.push(`/project/${project.id}`);
-  }, [authFetch, fileTree, tabSystem, chatSwitching, refreshRecentChats, refreshRecentDocuments, router]);
+  }, [authFetch, setTreeLoading, setTree, tabSystem, chatSwitching, refreshRecentChats, refreshRecentDocuments, router]);
 
   // Keep ref in sync with latest handleSelectProject on every render
   useEffect(() => {
@@ -172,7 +195,7 @@ export default function NewChatWorkspace() {
     setProjectMeta(null);
     setRecentChats([]);
     setRecentDocuments([]);
-    fileTree.reset();
+    resetFileTree();
     tabSystem.reset();
     chatSwitching.reset();
     window.history.replaceState(null, "", "/chat/new");
@@ -207,12 +230,12 @@ export default function NewChatWorkspace() {
     <div className="flex h-full">
       {/* Hidden upload input */}
       <input
-        ref={fileTree.uploadInputRef}
+        ref={uploadInputRef}
         type="file"
         accept=".md,.html,.txt"
         multiple
         className="hidden"
-        onChange={fileTree.handleUploadChange}
+        onChange={handleUploadChange}
       />
       {/* Left Panel */}
       <div className="w-[240px] h-full flex flex-col border-r border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900 shrink-0">
@@ -233,12 +256,12 @@ export default function NewChatWorkspace() {
                 <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{selectedProjectName} {t("tabs.documents")}</h3>
               </div>
               <button
-                onClick={() => fileTree.refreshTree()}
-                disabled={fileTree.treeLoading}
+                onClick={() => refreshTree()}
+                disabled={treeLoading}
                 className="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shrink-0"
                 title={tc("refresh")}
               >
-                <svg className={`w-3.5 h-3.5 ${fileTree.treeLoading ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className={`w-3.5 h-3.5 ${treeLoading ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="23 4 23 10 17 10" />
                   <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                 </svg>
@@ -248,8 +271,8 @@ export default function NewChatWorkspace() {
             {/* File tree toolbar */}
             <div className="px-2 py-1.5 border-b border-gray-100 dark:border-zinc-700 flex gap-0.5 justify-center">
               <button
-                onClick={() => fileTree.handleCreateFile("")}
-                disabled={fileTree.renamingPath !== null}
+                onClick={() => handleCreateFile("")}
+                disabled={renamingPath !== null}
                 className="flex items-center gap-1 px-1.5 py-1 text-xs text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -260,8 +283,8 @@ export default function NewChatWorkspace() {
                 {t('document')}
               </button>
               <button
-                onClick={() => fileTree.handleCreateDir("")}
-                disabled={fileTree.renamingPath !== null}
+                onClick={() => handleCreateDir("")}
+                disabled={renamingPath !== null}
                 className="flex items-center gap-1 px-1.5 py-1 text-xs text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -272,8 +295,8 @@ export default function NewChatWorkspace() {
                 {t('folder')}
               </button>
               <button
-                onClick={() => fileTree.triggerUpload("")}
-                disabled={fileTree.renamingPath !== null}
+                onClick={() => triggerUpload("")}
+                disabled={renamingPath !== null}
                 className="flex items-center gap-1 px-1.5 py-1 text-xs text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -286,7 +309,7 @@ export default function NewChatWorkspace() {
             </div>
 
             {/* File tree */}
-            {fileTree.treeLoading ? (
+            {treeLoading ? (
               <div className="flex-1 flex items-center justify-center py-8 text-gray-400 dark:text-gray-500">
                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 dark:border-zinc-600 border-t-blue-600 dark:border-t-blue-400 mr-2" />
                 <span className="text-xs">{tc("loading")}</span>
@@ -297,10 +320,10 @@ export default function NewChatWorkspace() {
                 mode="editable"
                 selectedPath={tabSystem.activeTabId !== CHAT_TAB && tabSystem.activeTabId !== PROJECT_INFO_TAB ? tabSystem.activeTabId : null}
                 onFileClick={(node) => tabSystem.handleFileClick(node)}
-                onNewDirectory={(parentPath) => fileTree.handleCreateDir(parentPath)}
-                onNewFile={(parentPath) => fileTree.handleCreateFile(parentPath)}
-                onDeleteDirectory={(dirPath) => fileTree.handleDeleteDir(dirPath)}
-                onDeleteFile={(filePath) => fileTree.handleDeleteFile(filePath)}
+                onNewDirectory={(parentPath) => handleCreateDir(parentPath)}
+                onNewFile={(parentPath) => handleCreateFile(parentPath)}
+                onDeleteDirectory={(dirPath) => handleDeleteDir(dirPath)}
+                onDeleteFile={(filePath) => handleDeleteFile(filePath)}
                 onMentionFile={(node) => {
                   if (floatingChatOpen && !floatingChatMinimized) {
                     setFloatingMentionFile(node.path);
@@ -309,14 +332,14 @@ export default function NewChatWorkspace() {
                     tabSystem.setActiveTabId(CHAT_TAB);
                   }
                 }}
-                renamingPath={fileTree.renamingPath}
-                renamingName={fileTree.renamingName}
-                onRenamingNameChange={fileTree.setRenamingName}
-                onRenameConfirm={fileTree.handleRenameConfirm}
-                onRenameCancel={fileTree.handleRenameCancel}
-                renameInputRef={fileTree.renameInputRef}
-                onStartRename={fileTree.handleStartRename}
-                onUpload={(parentPath) => fileTree.triggerUpload(parentPath)}
+                renamingPath={renamingPath}
+                renamingName={renamingName}
+                onRenamingNameChange={setRenamingName}
+                onRenameConfirm={handleRenameConfirm}
+                onRenameCancel={handleRenameCancel}
+                renameInputRef={renameInputRef}
+                onStartRename={handleStartRename}
+                onUpload={(parentPath) => triggerUpload(parentPath)}
               />
             )}
 
@@ -470,11 +493,11 @@ export default function NewChatWorkspace() {
                     fileName: t.filePath.split("/").pop() || t.filePath,
                     filePath: t.filePath,
                   }))}
-                  onDocumentSaved={fileTree.refreshTree}
+                  onDocumentSaved={refreshTree}
                   mentionFile={mentionFile}
                   onMentionConsumed={() => setMentionFile(null)}
                   onToolCall={({ toolName, args }) => {
-                    if (toolName === "refresh_file_tree") fileTree.refreshTree();
+                    if (toolName === "refresh_file_tree") refreshTree();
                     else if (toolName === "refresh_file_content" && args && typeof args.path === "string") tabSystem.refreshFileContent(args.path);
                   }}
                   onChatCreated={handleChatCreated}
