@@ -14,11 +14,11 @@ export default async function ProjectPage({
   searchParams,
 }: {
   params: Promise<{ path: string[] }>;
-  searchParams: Promise<{ file?: string; chatId?: string; tab?: string }>;
+  searchParams: Promise<{ file?: string; chatId?: string; tab?: string; openChat?: string }>;
 }) {
   const { path: rawPath } = await params;
   const path = rawPath.map(decodeURIComponent);
-  const { file: rawFile, chatId: chatIdParam, tab: rawTab } = await searchParams;
+  const { file: rawFile, chatId: chatIdParam, tab: rawTab, openChat: rawOpenChat } = await searchParams;
 
   // 验证用户身份（从 cookie 获取 access token）
   const cookieStore = await cookies();
@@ -174,6 +174,7 @@ export default async function ProjectPage({
       ownerUser={ownerUser}
       initialChatId={chatIdParam ? parseInt(chatIdParam) : undefined}
       initialSubTab={initialSubTab}
+      autoOpenChat={rawOpenChat === "true"}
     />
   );
 }

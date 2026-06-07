@@ -271,7 +271,7 @@ export default function WorkspacesPanel() {
                 !isDragging && isActive && "bg-gray-100 dark:bg-zinc-700 text-gray-900 dark:text-gray-100 font-medium",
                 !isDragging && !isActive && "text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-zinc-700",
               )}
-              onClick={() => router.push(workspacePath)}
+              onClick={() => router.push(`${workspacePath}?openChat=true`)}
             >
               {/* Drop indicator line */}
               {isDragTarget && dropPosition === "before" && (

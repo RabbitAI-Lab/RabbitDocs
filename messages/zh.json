@@ -52,7 +52,7 @@
     "retry": "重试"
   },
   "sidebar": {
-    "newChat": "新建对话",
+    "newChat": "新建文档",
     "chats": "对话",
     "templates": "模板",
     "todo": "待办事项",
@@ -723,9 +723,6 @@
       "shareCancelled": "已取消分享"
     },
     "newChatWorkspace": {
-      "selectProject": "选择项目",
-      "noProjects": "暂无项目，请先在侧边栏创建",
-      "backToProjectList": "返回项目列表",
       "pleaseSelectProject": "请先在左侧选择一个项目",
       "noProjectHint": "还没有项目，创建一个开始吧",
       "createFirstProject": "新建项目",

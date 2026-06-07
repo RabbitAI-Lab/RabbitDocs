@@ -120,7 +120,6 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
   // Expose ref methods
   useImperativeHandle(ref, () => ({
     handleNewChat: navigation.handleNewChat,
-    handleClear: messagesApi.handleClear,
     handleHistorySelect: navigation.handleHistorySelect,
     handleShare: share.handleShare,
     get effectiveChatId() { return effectiveChatId; },
@@ -131,7 +130,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
     handleCopyLink: share.handleCopyLink,
     handleRegenerateLink: share.handleRegenerateLink,
     handleCancelShare: share.handleCancelShare,
-  }), [effectiveChatId, share.shareOpen, share.shareToken, share.shareLoading, share.handleShare, share.setShareOpen, share.handleCopyLink, share.handleRegenerateLink, share.handleCancelShare, navigation.handleNewChat, navigation.handleHistorySelect, messagesApi.handleClear]);
+  }), [effectiveChatId, share.shareOpen, share.shareToken, share.shareLoading, share.handleShare, share.setShareOpen, share.handleCopyLink, share.handleRegenerateLink, share.handleCancelShare, navigation.handleNewChat, navigation.handleHistorySelect]);
 
   // Notify parent of state changes for floating window
   useEffect(() => {
@@ -186,7 +185,6 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
           onRegenerateLink={share.handleRegenerateLink}
           onCancelShare={share.handleCancelShare}
           onHistorySelect={navigation.handleHistorySelect}
-          onClear={messagesApi.handleClear}
         />
       )}
 

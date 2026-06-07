@@ -27,6 +27,8 @@ interface WorkspaceDetailProps {
   initialChatId?: number;
   /** URL 参数传入的子Tab初始值 */
   initialSubTab?: string;
+  /** URL 参数 ?openChat=true 控制是否自动打开 Chat tab */
+  autoOpenChat?: boolean;
   tree: TreeNode[];
   rootTree: TreeNode[];
   docsPath: string;
@@ -44,6 +46,7 @@ export default function WorkspaceDetail({
   accountId,
   initialChatId,
   initialSubTab,
+  autoOpenChat,
   tree: initialTree,
   rootTree: initialRootTree,
   docsPath,
@@ -69,7 +72,7 @@ export default function WorkspaceDetail({
   const [tabs, setTabs] = useState<FileTab[]>(initTab);
   const { authFetch } = useAuth();
   const [activeTabId, setActiveTabId] = useState<string>(
-    initialChatId ? CHAT_TAB : (selectedFile ? selectedFile : WORKSPACE_INFO_TAB)
+    (initialChatId || autoOpenChat) ? CHAT_TAB : (selectedFile ? selectedFile : WORKSPACE_INFO_TAB)
   );
   const contentCache = useRef<Record<string, string>>(
     selectedFile && initialContent !== undefined ? { [selectedFile]: initialContent } : {}
@@ -96,6 +99,17 @@ export default function WorkspaceDetail({
 
   // workspacePath: "workspace/{workspaceId}"
   const workspacePath = `workspace/${workspaceMeta.id}`;
+
+  // 清理 URL 中的 ?openChat=true 参数，避免刷新时重复打开 Chat tab
+  useEffect(() => {
+    if (autoOpenChat && typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("openChat")) {
+        url.searchParams.delete("openChat");
+        window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+      }
+    }
+  }, [autoOpenChat]);
 
   // Sync tree when server props change (after router.refresh())
   useEffect(() => {

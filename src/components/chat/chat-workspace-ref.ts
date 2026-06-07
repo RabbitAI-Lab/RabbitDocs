@@ -37,7 +37,6 @@ export interface ChatWorkspaceProps {
 
 export interface ChatWorkspaceRef {
   handleNewChat: () => void;
-  handleClear: () => void;
   handleHistorySelect: (chatId: number) => void;
   handleShare: () => void;
   effectiveChatId: number | null;

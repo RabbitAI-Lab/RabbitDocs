@@ -29,6 +29,7 @@ export default function ProjectWorkspace({
   ownerUser,
   initialChatId,
   initialSubTab,
+  autoOpenChat,
 }: ProjectWorkspaceProps) {
   const t = useTranslations('project');
   const router = useRouter();
@@ -78,7 +79,9 @@ export default function ProjectWorkspace({
       }]
     : [];
   const [tabs, setTabs] = useState<FileTab[]>(initTab);
-  const [activeTabId, setActiveTabId] = useState<string>(PROJECT_INFO_TAB);
+  const [activeTabId, setActiveTabId] = useState<string>(
+    autoOpenChat ? CHAT_TAB : PROJECT_INFO_TAB
+  );
   const contentCache = useRef<Record<string, string>>(
     selectedFile && initialContent !== undefined ? { [selectedFile]: initialContent } : {}
   );
@@ -486,6 +489,17 @@ export default function ProjectWorkspace({
       Promise.resolve().then(() => handleSwitchToChat(initialChatId));
     }
   }, [initialChatId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 清理 URL 中的 ?openChat=true 参数，避免刷新时重复打开 Chat tab
+  useEffect(() => {
+    if (autoOpenChat && typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("openChat")) {
+        url.searchParams.delete("openChat");
+        window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+      }
+    }
+  }, [autoOpenChat]);
 
   return (
     <div className="flex h-full">

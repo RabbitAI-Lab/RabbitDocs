@@ -30,7 +30,13 @@ export default function EditorToolbar({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ path: docPath }),
     });
-    router.push("/chat/new");
+    // 尝试跳转回当前项目的 Chat tab
+    const projectId = pathSegments[1]; // pathSegments = ["projects", "{projectId}", "docs", ...]
+    if (projectId) {
+      router.push(`/project/${projectId}?openChat=true`);
+    } else {
+      router.push("/chat/new");
+    }
   };
 
   const handlePublish = async () => {

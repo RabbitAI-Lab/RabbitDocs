@@ -64,4 +64,6 @@ export interface ProjectWorkspaceProps {
   initialChatId?: number;
   /** URL 参数传入的子Tab，用于恢复上次的子Tab选择 */
   initialSubTab?: string;
+  /** URL 参数 ?openChat=true 控制是否自动打开 Chat tab */
+  autoOpenChat?: boolean;
 }

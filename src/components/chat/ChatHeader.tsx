@@ -10,7 +10,6 @@ import {
   CopyOutlined,
   ReloadOutlined,
   StopOutlined,
-  ClearOutlined,
 } from "@ant-design/icons";
 import ChatHistoryPopover from "./ChatHistoryPopover";
 
@@ -29,7 +28,6 @@ interface ChatHeaderProps {
   onRegenerateLink: () => void;
   onCancelShare: () => void;
   onHistorySelect: (chatId: number) => void;
-  onClear: () => void;
 }
 
 export default function ChatHeader({
@@ -47,7 +45,6 @@ export default function ChatHeader({
   onRegenerateLink,
   onCancelShare,
   onHistorySelect,
-  onClear,
 }: ChatHeaderProps) {
   const t = useTranslations("chat");
   return (
@@ -139,14 +136,6 @@ export default function ChatHeader({
           currentChatId={effectiveChatId}
           onSelect={onHistorySelect}
         />
-        <Tooltip title={t("header.clear")}>
-          <Button
-            type="text"
-            icon={<ClearOutlined />}
-            size="small"
-            onClick={onClear}
-          />
-        </Tooltip>
       </Space>
     </div>
   );

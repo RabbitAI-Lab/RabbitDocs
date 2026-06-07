@@ -130,9 +130,9 @@ export function useChatNavigation({
       setMessages([]);
       setInputValue("");
     } else if (selectedProject) {
-      router.push(`/project/${selectedProject}`);
+      router.push(`/project/${selectedProject}?openChat=true`);
     } else if (selectedWorkspace) {
-      router.push(`/workspace/${selectedWorkspace}`);
+      router.push(`/workspace/${selectedWorkspace}?openChat=true`);
     } else {
       router.push("/chat/new");
     }

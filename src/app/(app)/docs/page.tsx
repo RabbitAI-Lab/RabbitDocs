@@ -10,7 +10,7 @@ export default function DocsRedirectPage() {
     try {
       const lastProjectId = localStorage.getItem("last-selected-project");
       if (lastProjectId) {
-        router.replace(`/project/${lastProjectId}`);
+        router.replace(`/project/${lastProjectId}?openChat=true`);
         return;
       }
     } catch { /* ignore */ }

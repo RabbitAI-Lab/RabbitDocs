@@ -12,7 +12,6 @@ import {
   CopyOutlined,
   ReloadOutlined,
   StopOutlined,
-  ClearOutlined,
   MinusOutlined,
 } from "@ant-design/icons";
 import ChatWorkspace, { ChatWorkspaceRef } from "./ChatWorkspace";
@@ -354,15 +353,6 @@ export default function FloatingChatWindow() {
             currentChatId={wsState.effectiveChatId}
             onSelect={(chatId: number) => workspaceRef.current?.handleHistorySelect(chatId)}
           />
-          {/* Clear */}
-          <Tooltip title={t("header.clear")}>
-            <Button
-              icon={<ClearOutlined />}
-              size="small"
-              type="text"
-              onClick={() => workspaceRef.current?.handleClear()}
-            />
-          </Tooltip>
         </Space>
         <Button
           type="text"

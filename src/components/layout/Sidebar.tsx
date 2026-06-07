@@ -22,7 +22,7 @@ export default function Sidebar({ initialWidth, initialCollapsed, brandName }: S
   const t = useTranslations("sidebar");
   return (
     <SidebarShell initialWidth={initialWidth} initialCollapsed={initialCollapsed} brandName={brandName}>
-      {/* New Chat Button */}
+      {/* New Document Button */}
       <div className="px-2 pt-2 pb-1">
         <NewChatButton />
       </div>

@@ -235,7 +235,7 @@ export default function ProjectsPanel() {
                 !isDragging && isActive && "bg-gray-100 dark:bg-zinc-700 text-gray-900 dark:text-gray-100 font-medium",
                 !isDragging && !isActive && "text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-zinc-700",
               )}
-              onClick={() => router.push(projectPath)}
+              onClick={() => router.push(`${projectPath}?openChat=true`)}
             >
               {isDragTarget && dropPosition === "before" && (
                 <div className="absolute top-0 left-2 right-2 h-[2px] bg-blue-500 rounded-full" />

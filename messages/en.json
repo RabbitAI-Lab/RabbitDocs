@@ -52,7 +52,7 @@
     "retry": "Retry"
   },
   "sidebar": {
-    "newChat": "New Chat",
+    "newChat": "New Document",
     "chats": "Chats",
     "templates": "Templates",
     "todo": "To-Do",
@@ -723,9 +723,6 @@
       "shareCancelled": "Share cancelled"
     },
     "newChatWorkspace": {
-      "selectProject": "Select a project",
-      "noProjects": "No projects yet. Please create one in the sidebar first.",
-      "backToProjectList": "Back to project list",
       "pleaseSelectProject": "Please select a project on the left first",
       "noProjectHint": "No projects yet, create one to get started",
       "createFirstProject": "Create Project",

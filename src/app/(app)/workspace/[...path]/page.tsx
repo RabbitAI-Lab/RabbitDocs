@@ -14,10 +14,10 @@ export default async function WorkspacePage({
   searchParams,
 }: {
   params: Promise<{ path: string[] }>;
-  searchParams: Promise<{ chatId?: string; file?: string; tab?: string }>;
+  searchParams: Promise<{ chatId?: string; file?: string; tab?: string; openChat?: string }>;
 }) {
   const { path: rawPath } = await params;
-  const { chatId: chatIdParam, file: rawFile, tab: rawTab } = await searchParams;
+  const { chatId: chatIdParam, file: rawFile, tab: rawTab, openChat: rawOpenChat } = await searchParams;
   const urlPath = rawPath.map(decodeURIComponent);
 
   // 验证用户身份（从 cookie 获取 access token）
@@ -163,6 +163,7 @@ export default async function WorkspacePage({
       accountId={workspaceMeta?.accountId || workspaceId}
       initialChatId={chatIdParam ? parseInt(chatIdParam) : undefined}
       initialSubTab={initialSubTab}
+      autoOpenChat={rawOpenChat === "true"}
       tree={tree}
       rootTree={rootTree}
       docsPath={docsPrefix}
