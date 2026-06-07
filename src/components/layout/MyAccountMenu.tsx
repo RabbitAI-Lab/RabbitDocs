@@ -47,6 +47,7 @@ export default function MyAccountMenu() {
 
   const menuItems = [
     { label: t('profile'), href: "/profile" },
+    { label: t('myModels'), href: "/my-models" },
     { label: t('billing'), href: "/billing" },
     { label: t('docs'), href: "/docs" },
     { label: t('account'), href: "/settings" },

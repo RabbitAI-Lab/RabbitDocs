@@ -146,6 +146,8 @@ export default function ProjectEditorArea({
           mentionFile={mentionFile}
           onMentionConsumed={onMentionConsumed}
           onToolCall={onToolCall}
+          onNewChat={onNewChat}
+          onSwitchToChat={onSwitchToChat}
         />
       </div>
 

@@ -32,6 +32,26 @@ export default function AdminSidebar() {
           </svg>
         ),
       },
+      {
+        href: "/admin/appearance",
+        label: t('sidebar.menuAppearance'),
+        icon: (
+          <svg
+            className="w-4 h-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="13.5" cy="6.5" r="2.5" />
+            <path d="M17.2 21H3.8a.8.8 0 0 1-.8-.8V5.8a.8.8 0 0 1 .8-.8h3.4" />
+            <path d="M12 14l-2 2" />
+            <path d="M20.5 9.5L16 14l-2-2" />
+          </svg>
+        ),
+      },
     ],
   },
   {
@@ -270,9 +290,9 @@ export default function AdminSidebar() {
 ];
 
   return (
-    <div className="w-[200px] h-full flex flex-col border-r border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shrink-0">
+    <div className="w-[200px] h-full flex flex-col border-r border-gray-200 dark:border-[var(--sidebar-border)] bg-white dark:bg-[var(--sidebar-bg)] shrink-0">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-100 dark:border-zinc-700">
+      <div className="px-4 py-3 border-b border-[var(--sidebar-border-subtle)] dark:border-[var(--sidebar-border)]">
         <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">{t('sidebar.headerTitle')}</h2>
       </div>
 
@@ -303,7 +323,7 @@ export default function AdminSidebar() {
                       !isActive && "hover:bg-gray-50 dark:hover:bg-zinc-700/50"
                     )}
                   >
-                    <span className={cn("text-blue-500")}>{item.icon}</span>
+                    <span className={cn("text-blue-400")}>{item.icon}</span>
                     {item.label}
                   </div>
                 );

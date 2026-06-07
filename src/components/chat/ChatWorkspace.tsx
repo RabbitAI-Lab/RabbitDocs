@@ -17,6 +17,7 @@ import { useAuth } from "@/components/auth/useAuth";
 import { mapMessagesToBubbleItems } from "./ChatBubbleItem";
 import ChatInputFooter from "./ChatInputFooter";
 import ChatHeader from "./ChatHeader";
+import ChatWelcome from "./ChatWelcome";
 import SaveToDocumentModal from "./SaveToDocumentModal";
 
 const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function ChatWorkspace({
@@ -35,6 +36,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
   onMentionConsumed,
   onToolCall,
   onSwitchToChat,
+  onNewChat,
   onChatCreated,
   floating = false,
   showProjectSelector = false,
@@ -43,7 +45,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
 }, ref) {
   const router = useRouter();
   const t = useTranslations("chat");
-  const { user } = useAuth();
+  const { user, authFetch } = useAuth();
   const [effectiveChatId, setEffectiveChatId] = useState<number | null>(chatId ?? null);
   const [effectiveChatTitle, setEffectiveChatTitle] = useState<string>(chatTitle);
 
@@ -99,6 +101,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
     floating,
     router,
     onSwitchToChat,
+    authFetch,
   });
 
   // Save to document modal state
@@ -137,12 +140,29 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
     onRefStateChange?.({ effectiveChatId, shareOpen: share.shareOpen, shareToken: share.shareToken, shareLoading: share.shareLoading });
   }, [onRefStateChange, effectiveChatId, share.shareOpen, share.shareToken, share.shareLoading]);
 
+  // Resolve display names for the welcome context strip
+  const effectiveProjectName =
+    (selectors.selectedProject
+      ? selectors.projects.find((p) => p.id === selectors.selectedProject)?.name
+      : undefined) ??
+    (selectors.selectedWorkspace
+      ? selectors.workspaces.find((w) => w.id === selectors.selectedWorkspace)?.name
+      : undefined) ??
+    projectName;
+  const effectiveModelName = selectors.selectedModelId
+    ? (typeof selectors.selectedModelId === 'string' && selectors.selectedModelId.startsWith('byok_')
+        ? selectors.userModels.find((m) => `byok_${m.id}` === selectors.selectedModelId)?.modelName
+        : selectors.models.find((m) => m.id === selectors.selectedModelId)?.modelName)
+    : undefined;
+  const isEmpty = messagesApi.messages.length === 0 && !floating;
+
   // Footer renderer
   const renderFooter = ChatInputFooter({
     floating,
     embedded,
     showProjectSelector,
     models: selectors.models,
+    userModels: selectors.userModels,
     projects: selectors.projects,
     workspaces: selectors.workspaces,
     templates: selectors.templates,
@@ -175,7 +195,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
           effectiveChatId={effectiveChatId}
           embedded={embedded}
           onBack={onBack}
-          onNewChat={navigation.handleNewChat}
+          onNewChat={onNewChat ?? navigation.handleNewChat}
           shareOpen={share.shareOpen}
           setShareOpen={share.setShareOpen}
           shareToken={share.shareToken}
@@ -190,31 +210,30 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        {/* Spacer - 空对话时撑开，把输入框推到中间；有消息时收缩 */}
-        <div
-          style={{
-            flex: messagesApi.messages.length === 0 && !floating ? '1 1 0%' : '0 0 0px',
-            minHeight: 0,
-            transition: 'flex 0.5s ease',
-          }}
-        />
-
-        {/* Messages area */}
-        <div
-          style={{
-            flex: messagesApi.messages.length === 0 && !floating ? '0 0 0px' : '1 1 0%',
-            minHeight: 0,
-            overflow: 'hidden',
-            transition: 'flex 0.5s ease',
-          }}
-        >
-          <Bubble.List
-            style={{ height: "100%", maxWidth: '48rem', margin: '0 auto' }}
-            items={bubbleItems}
-            role={roles}
-            autoScroll
-          />
-        </div>
+        {/* Welcome surface — only when chat is empty (and not floating) */}
+        {isEmpty ? (
+          <div className="flex-1 min-h-0">
+            <ChatWelcome
+              projectName={effectiveProjectName}
+              hasProject={Boolean(selectors.selectedProject || selectors.selectedWorkspace || projectName)}
+              hasModel={Boolean(selectors.selectedModelId)}
+              modelName={effectiveModelName}
+              onPromptSelect={(prompt) => messagesApi.setInputValue(prompt)}
+            />
+          </div>
+        ) : (
+          <>
+            {/* Messages area */}
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <Bubble.List
+                style={{ height: "100%", maxWidth: '48rem', margin: '0 auto' }}
+                items={bubbleItems}
+                role={roles}
+                autoScroll
+              />
+            </div>
+          </>
+        )}
 
         {/* Input */}
         <div className="px-4 py-3 shrink-0">
@@ -333,12 +352,13 @@ const ChatWorkspace = forwardRef<ChatWorkspaceRef, ChatWorkspaceProps>(function 
           </div>
         </div>
 
-        {/* Bottom spacer */}
+        {/* Bottom spacer — small fixed gap in empty state, collapses once conversation starts */}
         <div
           style={{
-            flex: messagesApi.messages.length === 0 && !floating ? '1 1 0%' : '0 0 0px',
+            flex: isEmpty ? '0 0 0px' : '0 0 0px',
+            height: isEmpty ? 0 : 0,
             minHeight: 0,
-            transition: 'flex 0.5s ease',
+            transition: 'height 0.5s ease',
           }}
         />
       </div>

@@ -106,6 +106,13 @@
       "when": 1780900000000,
       "tag": "0034_add_entities_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1781000000000,
+      "tag": "0040_add_user_model_configs",
+      "breakpoints": true
     }
   ]
 }

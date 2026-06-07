@@ -18,6 +18,7 @@ import {
   isSmtpConfigured,
 } from "@/lib/auth/mail";
 import { getApiT } from "@/lib/i18n-api";
+import { createSystemKey } from "@/lib/auth/api-key";
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -110,6 +111,9 @@ export async function POST(req: NextRequest) {
         updatedAt: now,
       })
       .run();
+
+    // 自动创建 MCP API Key
+    createSystemKey(userId);
 
     // 认领邀请码（原子操作）—— 通用秘钥可重复使用，不需标记
     if (hasInviteCode) {

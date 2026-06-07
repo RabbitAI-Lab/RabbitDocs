@@ -70,7 +70,7 @@ export default function WorkspaceDetail({
       }]
     : [];
   const [tabs, setTabs] = useState<FileTab[]>(initTab);
-  const { authFetch } = useAuth();
+  const { authFetch, isLoading: authLoading, user } = useAuth();
   const [activeTabId, setActiveTabId] = useState<string>(
     (initialChatId || autoOpenChat) ? CHAT_TAB : (selectedFile ? selectedFile : WORKSPACE_INFO_TAB)
   );
@@ -521,10 +521,35 @@ export default function WorkspaceDetail({
 
   // 如果从 URL 参数传入 chatId，自动加载该 chat
   useEffect(() => {
-    if (initialChatId) {
-      Promise.resolve().then(() => handleSwitchToChat(initialChatId, null));
-    }
-  }, [initialChatId]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (authLoading || !user || !initialChatId) return;
+    void (async () => {
+      try {
+        const [chatRes, msgRes] = await Promise.all([
+          authFetch(`/api/chats/${initialChatId}`),
+          authFetch(`/api/chats/${initialChatId}/messages`),
+        ]);
+        const chatData = await chatRes.json();
+        const msgData = await msgRes.json();
+
+        setActiveChatId(initialChatId);
+        setActiveChatTitle(chatData.title || "New Chat");
+        setActiveChatMessages(
+          (Array.isArray(msgData) ? msgData : []).map((m: Record<string, unknown>) => ({
+            id: m.id as number,
+            role: m.role as "user" | "assistant",
+            content: m.content as string,
+            isError: !!m.isError,
+          }))
+        );
+        setActiveChatModelId(chatData.modelId);
+        setActiveChatTemplateId(chatData.templateId);
+        setChatKey((k) => k + 1);
+        setActiveTabId(CHAT_TAB);
+      } catch {
+        setActiveTabId(CHAT_TAB);
+      }
+    })();
+  }, [initialChatId, authLoading, user, authFetch]);
 
   // --- Derived state ---
 

@@ -14,6 +14,10 @@
   --popup-header-bg: rgba(249, 250, 251, 0.5);
   --sender-bg: #ffffff;
 
+  /* 按钮色系 */
+  --color-primary: #3B82F6;
+  --color-primary-hover: #2563EB;
+
   /* 营销站语义令牌(与产品内部解耦,后续可独立主题化) */
   --marketing-bg: #ffffff;
   --marketing-fg: #0a0a0a;
@@ -39,6 +43,10 @@
   --popup-border: #27272a;
   --popup-header-bg: rgba(24, 24, 27, 0.5);
   --sender-bg: #18181b;
+
+  /* 按钮色系 */
+  --color-primary: #60a5fa;
+  --color-primary-hover: #3B82F6;
 
   --marketing-bg: #0a0a0a;
   --marketing-fg: #fafafa;
@@ -84,6 +92,203 @@ body {
 .animate-float-gentle { animation: float-gentle 3s ease-in-out infinite; }
 .animate-glow-soft { animation: glow-soft 3s ease-in-out infinite; }
 .animate-arrow-glide { animation: arrow-glide 2s ease-in-out infinite; }
+
+/* Chat welcome entrance — staggered fade/slide on first mount */
+@keyframes chat-welcome-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chat-welcome[data-mounted="false"] .chat-welcome__strip,
+.chat-welcome[data-mounted="false"] .chat-welcome__greeting,
+.chat-welcome[data-mounted="false"] .chat-welcome__title,
+.chat-welcome[data-mounted="false"] .chat-welcome__subtitle,
+.chat-welcome[data-mounted="false"] .chat-welcome__footer {
+  opacity: 0;
+}
+
+.chat-welcome[data-mounted="true"] .chat-welcome__strip {
+  animation: chat-welcome-rise 420ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+  animation-delay: 0ms;
+}
+.chat-welcome[data-mounted="true"] .chat-welcome__greeting {
+  animation: chat-welcome-rise 480ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+  animation-delay: 60ms;
+}
+.chat-welcome[data-mounted="true"] .chat-welcome__title {
+  animation: chat-welcome-rise 520ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+  animation-delay: 120ms;
+}
+.chat-welcome[data-mounted="true"] .chat-welcome__subtitle {
+  animation: chat-welcome-rise 540ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+  animation-delay: 200ms;
+}
+.chat-welcome[data-mounted="true"] .chat-welcome__card {
+  animation: chat-welcome-rise 520ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+.chat-welcome[data-mounted="true"] .chat-welcome__footer {
+  animation: chat-welcome-rise 540ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+  animation-delay: 420ms;
+}
+
+/* ChatWelcome scoped Safari fallbacks */
+.chat-welcome {
+  --chat-welcome-card-bg: #ffffff;
+  --chat-welcome-card-border: rgba(228, 228, 231, 0.8);
+  --chat-welcome-card-ring: rgba(228, 228, 231, 0.6);
+  --chat-welcome-emph-from: #18181b;
+  --chat-welcome-emph-to: #71717a;
+}
+
+.dark .chat-welcome {
+  --chat-welcome-card-bg: rgba(24, 24, 27, 0.6);
+  --chat-welcome-card-border: #27272a;
+  --chat-welcome-card-ring: rgba(39, 39, 42, 0.8);
+  --chat-welcome-emph-from: #fafafa;
+  --chat-welcome-emph-to: #a1a1aa;
+}
+
+.chat-welcome__grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.75rem;
+  grid-auto-flow: row dense;
+  grid-auto-rows: auto;
+}
+
+@media (min-width: 640px) {
+  .chat-welcome__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.875rem;
+  }
+}
+
+.chat-welcome__emph {
+  background-image: linear-gradient(to bottom right, #18181b, #71717a);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.dark .chat-welcome__emph {
+  background-image: linear-gradient(to bottom right, #fafafa, #a1a1aa);
+}
+
+/* ContextChip — Safari 安全网
+   unlayered !important 覆盖 @layer utilities 中的 Tailwind v4 dark 变体,
+   确保 background-color / color / ring-color 三组属性在 Safari 中正确切换 */
+
+/* ── 亮色 ── */
+.chat-welcome__strip .bg-emerald-50 { background-color: #ecfdf5 !important; }
+.chat-welcome__strip .bg-blue-50    { background-color: #eff6ff !important; }
+.chat-welcome__strip .bg-zinc-100   { background-color: #f4f4f5 !important; }
+
+.chat-welcome__strip .text-emerald-700 { color: #047857 !important; }
+.chat-welcome__strip .text-blue-700    { color: #1d4ed8 !important; }
+.chat-welcome__strip .text-zinc-500    { color: #71717a !important; }
+
+.chat-welcome__strip .ring-emerald-200\/70 { --tw-ring-color: rgba(164, 244, 207, 0.7) !important; }
+.chat-welcome__strip .ring-blue-200\/70    { --tw-ring-color: rgba(190, 219, 255, 0.7) !important; }
+.chat-welcome__strip .ring-zinc-200        { --tw-ring-color: #e4e4e7 !important; }
+
+/* ── 暗色 ── */
+.dark .chat-welcome__strip .bg-emerald-500\/10,
+.chat-welcome__strip .dark\:bg-emerald-500\/10 {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+}
+.dark .chat-welcome__strip .bg-blue-500\/10,
+.chat-welcome__strip .dark\:bg-blue-500\/10 {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+.dark .chat-welcome__strip .bg-zinc-800\/60,
+.chat-welcome__strip .dark\:bg-zinc-800\/60 {
+  background-color: rgba(39, 39, 42, 0.6) !important;
+}
+
+.dark .chat-welcome__strip .text-emerald-300,
+.chat-welcome__strip .dark\:text-emerald-300 {
+  color: #6ee7b7 !important;
+}
+.dark .chat-welcome__strip .text-blue-300,
+.chat-welcome__strip .dark\:text-blue-300 {
+  color: #93c5fd !important;
+}
+.dark .chat-welcome__strip .text-zinc-400,
+.chat-welcome__strip .dark\:text-zinc-400 {
+  color: #a1a1aa !important;
+}
+
+.dark .chat-welcome__strip .ring-emerald-500\/20,
+.chat-welcome__strip .dark\:ring-emerald-500\/20 {
+  --tw-ring-color: rgba(16, 185, 129, 0.2) !important;
+}
+.dark .chat-welcome__strip .ring-blue-500\/20,
+.chat-welcome__strip .dark\:ring-blue-500\/20 {
+  --tw-ring-color: rgba(59, 130, 246, 0.2) !important;
+}
+.dark .chat-welcome__strip .ring-zinc-700,
+.chat-welcome__strip .dark\:ring-zinc-700 {
+  --tw-ring-color: #3f3f46 !important;
+}
+
+.chat-welcome__card {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: var(--chat-welcome-card-bg) !important;
+  border-color: var(--chat-welcome-card-border);
+}
+
+/* Ensure bento span classes survive Safari CSS ordering */
+.chat-welcome__span-wide {
+  grid-column: span 1;
+}
+.chat-welcome__span-tall {
+  grid-row: span 1;
+  min-height: 180px;
+}
+@media (min-width: 640px) {
+  .chat-welcome__span-wide {
+    grid-column: span 2 !important;
+    grid-row: span 1;
+  }
+  .chat-welcome__span-tall {
+    grid-column: span 1;
+    grid-row: span 2 !important;
+    min-height: 200px;
+  }
+}
+
+/* Gradient text — Safari requires -webkit-text-fill-color with bg-clip-text */
+.bg-clip-text {
+  -webkit-text-fill-color: transparent;
+}
+
+/* Safari: appearance: button 导致原生渲染覆盖自定义背景色
+   必须放在 @layer base 内以覆盖 Tailwind preflight 的 appearance: button */
+@layer base {
+  button {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-welcome[data-mounted="true"] .chat-welcome__strip,
+  .chat-welcome[data-mounted="true"] .chat-welcome__greeting,
+  .chat-welcome[data-mounted="true"] .chat-welcome__title,
+  .chat-welcome[data-mounted="true"] .chat-welcome__subtitle,
+  .chat-welcome[data-mounted="true"] .chat-welcome__card,
+  .chat-welcome[data-mounted="true"] .chat-welcome__footer {
+    animation: none;
+  }
+}
 
 /* 蓝色呼吸灯边框：用于引导用户选择项目 */
 @keyframes blue-breathing {

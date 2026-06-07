@@ -204,7 +204,7 @@ export default function WorkspaceLogPanel({
             onClick={() => handleCategoryChange(filterKey)}
             className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
               selectedCategory === filterKey
-                ? "bg-blue-600 text-white"
+                ? "bg-[var(--color-primary)] text-white"
                 : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200"
             }`}
           >

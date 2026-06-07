@@ -5,7 +5,8 @@ import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import ThemeRoot from "@/components/layout/ThemeRoot";
 import { AuthProvider } from "@/components/auth/AuthProvider";
-import { getBrandName } from "@/lib/auth/settings";
+import { getBrandName, getSetting } from "@/lib/auth/settings";
+import { parseColorScheme } from "@/lib/color-scheme";
 
 const geistSans = localFont({
   src: [
@@ -86,6 +87,10 @@ export default async function RootLayout({
   const locale = await getLocale();
   const msgs = await getMessages();
 
+  // Read color scheme for FOUC-free injection via ThemeRoot
+  const colorSchemeRaw = getSetting("color_scheme");
+  const colorScheme = colorSchemeRaw ? parseColorScheme(colorSchemeRaw) : null;
+
   return (
     <html
       lang={locale}
@@ -94,7 +99,7 @@ export default async function RootLayout({
     >
       <body className="h-full bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
         <NextIntlClientProvider locale={locale} messages={msgs}>
-          <ThemeRoot>
+          <ThemeRoot colorScheme={colorScheme}>
             <AuthProvider>{children}</AuthProvider>
           </ThemeRoot>
         </NextIntlClientProvider>

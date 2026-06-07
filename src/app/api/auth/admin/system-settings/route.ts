@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/session";
-import { bulkSetSettings, getSetting } from "@/lib/auth/settings";
+import { bulkSetSettings, getSetting, setSetting } from "@/lib/auth/settings";
 import { getApiT } from "@/lib/i18n-api";
+import { parseColorScheme, mergeColorScheme, type ColorScheme } from "@/lib/color-scheme";
+
+const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/);
+const colorModeSchema = z.object({
+  primaryBtn: hexColor.optional(),
+  primaryBtnHover: hexColor.optional(),
+  accent: hexColor.optional(),
+  sidebarBg: hexColor.optional(),
+  mainBg: hexColor.optional(),
+  foreground: hexColor.optional(),
+  background: hexColor.optional(),
+  senderBg: hexColor.optional(),
+});
 
 const updateSettingsSchema = z.object({
   openRegistration: z.boolean().optional(),
@@ -13,6 +26,7 @@ const updateSettingsSchema = z.object({
   passkeyRpName: z.string().trim().max(128).optional(),
   brandName: z.string().trim().max(64).optional(),
   siteUrl: z.string().trim().max(253).optional(),
+  adminEmail: z.string().trim().max(254).email().optional().or(z.literal("")),
   emailTemplates: z
     .object({
       verifySubject: z.string().trim().max(500).optional(),
@@ -32,6 +46,12 @@ const updateSettingsSchema = z.object({
         .optional()
         .or(z.literal("")),
       secure: z.boolean().optional(),
+    })
+    .optional(),
+  colorScheme: z
+    .object({
+      light: colorModeSchema.optional(),
+      dark: colorModeSchema.optional(),
     })
     .optional(),
 });
@@ -73,12 +93,14 @@ export async function GET(req: NextRequest) {
     passkeyRpId: getSetting("passkey_rp_id") ?? "",
     passkeyRpName: getSetting("passkey_rp_name") ?? "",
     siteUrl: getSetting("site_url") ?? "",
+    adminEmail: getSetting("admin_email") ?? "",
     brandName: getSetting("brand_name") || "RabbitDocs",
     emailTemplates: {
       verifySubject: getSetting("email_verify_subject") || "",
       verifyHtml: getSetting("email_verify_html") || "",
     },
     smtp: readSmtpConfig(),
+    colorScheme: parseColorScheme(getSetting("color_scheme")),
   });
 }
 
@@ -147,6 +169,11 @@ export async function PATCH(req: NextRequest) {
       updates.push({ key: "brand_name", value: parsed.data.brandName });
     }
 
+    // Admin email
+    if (parsed.data.adminEmail !== undefined) {
+      updates.push({ key: "admin_email", value: parsed.data.adminEmail });
+    }
+
     // Email templates
     if (parsed.data.emailTemplates) {
       const tpl = parsed.data.emailTemplates;
@@ -185,11 +212,19 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
+    // Color scheme
+    if (parsed.data.colorScheme) {
+      const existingRaw = getSetting("color_scheme");
+      const existing = existingRaw ? parseColorScheme(existingRaw) : null;
+      const merged = mergeColorScheme(existing, parsed.data.colorScheme as Partial<ColorScheme>);
+      setSetting("color_scheme", JSON.stringify(merged));
+    }
+
     if (updates.length > 0) {
       bulkSetSettings(updates);
     }
 
-    return NextResponse.json({ success: true, updated: updates.length });
+    return NextResponse.json({ success: true, updated: updates.length + (parsed.data.colorScheme ? 1 : 0) });
   } catch (error) {
     console.error("[auth] Update system settings error:", error);
     return NextResponse.json({ error: t('api.internalError') }, { status: 500 });

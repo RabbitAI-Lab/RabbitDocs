@@ -199,7 +199,8 @@ MCP configuration:
 {
   "rabbit-docs-mcp": {
     "type": "http",
-    "url": "http://127.0.0.1:4001/mcp"
+    "url": "http://127.0.0.1:4001/mcp",
+    "headers": { "Authorization": "Bearer ${"user-api-key"}" }
   }
 }`,
       description: null,

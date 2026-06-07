@@ -47,7 +47,7 @@ export type StreamEvent =
 
 // API 请求类型
 export type ChatCompletionRequest = {
-  modelId: number;
+  modelId: number | string;  // number = 管理员模型, "byok_N" = BYOK 用户模型
   messages: Array<{ role: "system" | "user" | "assistant"; content: string }>;
   /** @deprecated 由前端 system 消息替代 */
   systemPrompt?: string;

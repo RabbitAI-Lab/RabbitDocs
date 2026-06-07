@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Sender } from "@ant-design/x";
 import { Dropdown } from "antd";
 import { RobotOutlined, FolderOutlined, AppstoreOutlined, ProfileOutlined } from "@ant-design/icons";
-import type { ModelItem, ProjectItem, WorkspaceItem, TemplateItem } from "./useChatSelectors";
+import type { ModelItem, UserModelItem, ProjectItem, WorkspaceItem, TemplateItem } from "./useChatSelectors";
 import { switchStyles } from "./chat-constants";
 
 interface ChatInputFooterProps {
@@ -13,14 +13,15 @@ interface ChatInputFooterProps {
   embedded: boolean;
   showProjectSelector: boolean;
   models: ModelItem[];
+  userModels: UserModelItem[];
   projects: ProjectItem[];
   workspaces: WorkspaceItem[];
   templates: TemplateItem[];
-  selectedModelId: number | undefined;
+  selectedModelId: number | string | undefined;
   selectedProject: string | undefined;
   selectedWorkspace: string | undefined;
   selectedTemplateId: number | undefined;
-  onModelChange: (id: number | undefined) => void;
+  onModelChange: (id: number | string | undefined) => void;
   onProjectChange: (id: string | undefined) => void;
   onWorkspaceChange: (id: string | undefined) => void;
   onTemplateChange: (id: number | undefined) => void;
@@ -31,6 +32,7 @@ export default function ChatInputFooter({
   embedded,
   showProjectSelector,
   models,
+  userModels,
   projects,
   workspaces,
   templates,
@@ -54,13 +56,25 @@ export default function ChatInputFooter({
           menu={{
             items: [
               ...(selectedModelId ? [{ key: '__clear_model__', label: t('input.clearSelection') }] : []),
-              ...models.map((m) => ({ key: String(m.id), label: `${m.provider} / ${m.modelName}` })),
+              // 管理员模型组
+              ...(models.length > 0
+                ? [{ type: 'group' as const, key: 'admin-models', label: t('input.adminModels'), children:
+                    models.map((m) => ({ key: String(m.id), label: `${m.provider} / ${m.modelName}` }))
+                }]
+                : []),
+              // 用户 BYOK 模型组
+              ...(userModels.length > 0
+                ? [{ type: 'group' as const, key: 'user-models', label: t('input.myModels'), children:
+                    userModels.map((m) => ({ key: `byok_${m.id}`, label: `${m.provider} / ${m.modelName}` }))
+                }]
+                : []),
             ],
             onClick: ({ key }) => {
               if (key === '__clear_model__') {
                 onModelChange(undefined);
               } else {
-                onModelChange(Number(key));
+                // BYOK 模型 key 格式为 "byok_N"，管理员模型为数字字符串
+                onModelChange(key.startsWith('byok_') ? key : Number(key));
               }
             },
             selectedKeys: selectedModelId ? [String(selectedModelId)] : [],

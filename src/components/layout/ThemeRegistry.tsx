@@ -6,11 +6,12 @@ import { useTheme } from "next-themes";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import zhCN from "antd/locale/zh_CN";
 import enUS from "antd/locale/en_US";
+import { type ColorScheme } from "@/lib/color-scheme";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const antLocales: Record<string, any> = { zh: zhCN, en: enUS };
 
-function AntdThemeSync({ children, locale }: { children: ReactNode; locale: string }) {
+function AntdThemeSync({ children, locale, colorScheme }: { children: ReactNode; locale: string; colorScheme?: ColorScheme | null }) {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -20,6 +21,13 @@ function AntdThemeSync({ children, locale }: { children: ReactNode; locale: stri
 
   const antdLocale = useMemo(() => antLocales[locale] || zhCN, [locale]);
 
+  const colorPrimary = useMemo(() => {
+    if (!colorScheme) return undefined;
+    return resolvedTheme === "dark"
+      ? colorScheme.dark.primaryBtn
+      : colorScheme.light.primaryBtn;
+  }, [colorScheme, resolvedTheme]);
+
   return (
     <ConfigProvider
       locale={antdLocale}
@@ -28,6 +36,7 @@ function AntdThemeSync({ children, locale }: { children: ReactNode; locale: stri
           mounted && resolvedTheme === "dark"
             ? antdTheme.darkAlgorithm
             : antdTheme.defaultAlgorithm,
+        ...(colorPrimary ? { token: { colorPrimary } } : {}),
       }}
     >
       <AntApp className="h-full w-full">{children}</AntApp>
@@ -35,7 +44,7 @@ function AntdThemeSync({ children, locale }: { children: ReactNode; locale: stri
   );
 }
 
-export default function ThemeRegistry({ children, locale }: { children: ReactNode; locale: string }) {
+export default function ThemeRegistry({ children, locale, colorScheme }: { children: ReactNode; locale: string; colorScheme?: ColorScheme | null }) {
   return (
     <NextThemesProvider
       attribute="class"
@@ -43,7 +52,7 @@ export default function ThemeRegistry({ children, locale }: { children: ReactNod
       enableSystem
       disableTransitionOnChange
     >
-      <AntdThemeSync locale={locale}>{children}</AntdThemeSync>
+      <AntdThemeSync locale={locale} colorScheme={colorScheme}>{children}</AntdThemeSync>
     </NextThemesProvider>
   );
 }

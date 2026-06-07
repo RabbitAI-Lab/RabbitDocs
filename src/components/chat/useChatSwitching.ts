@@ -23,9 +23,10 @@ interface UseChatSwitchingOptions {
   onNewChatNavigate?: () => void;
   userId?: string;
   embedded?: boolean;
+  authFetch: (url: string, options?: RequestInit) => Promise<Response>;
 }
 
-export function useChatSwitching({ setActiveTabId, projectId, router, onNewChatNavigate, userId, embedded }: UseChatSwitchingOptions) {
+export function useChatSwitching({ setActiveTabId, projectId, router, onNewChatNavigate, userId, embedded, authFetch }: UseChatSwitchingOptions) {
   const [activeChatId, setActiveChatId] = useState<number | null>(null);
   const [activeChatTitle, setActiveChatTitle] = useState("New Conversation");
   const [activeChatMessages, setActiveChatMessages] = useState<Array<{ id: number; role: "user" | "assistant"; content: string }>>([]);
@@ -49,7 +50,7 @@ export function useChatSwitching({ setActiveTabId, projectId, router, onNewChatN
   const handleSwitchToChat = useCallback(async (targetChatId: number) => {
     try {
       // Fetch chat metadata to check project association
-      const chatRes = await fetch(`/api/chats/${targetChatId}`);
+      const chatRes = await authFetch(`/api/chats/${targetChatId}`);
       const chatData = await chatRes.json();
       const targetProjectId = chatData.projectId || undefined;
 
@@ -61,7 +62,7 @@ export function useChatSwitching({ setActiveTabId, projectId, router, onNewChatN
       }
 
       // Same project (or both no project) — fast client-side switch
-      const msgRes = await fetch(`/api/chats/${targetChatId}/messages`);
+      const msgRes = await authFetch(`/api/chats/${targetChatId}/messages`);
       const msgData = await msgRes.json();
 
       setActiveChatId(targetChatId);
@@ -91,7 +92,7 @@ export function useChatSwitching({ setActiveTabId, projectId, router, onNewChatN
       const chatUrl = getChatUrl({ chatId: targetChatId, userId: userId ?? '' });
       router?.push(chatUrl || `/chat/${targetChatId}`);
     }
-  }, [setActiveTabId, projectId, router, embedded, userId]);
+  }, [setActiveTabId, projectId, router, embedded, userId, authFetch]);
 
   const handleNewChat = useCallback(() => {
     if (onNewChatNavigate) {

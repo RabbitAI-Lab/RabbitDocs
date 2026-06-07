@@ -206,7 +206,12 @@ export default function ProjectInfoTab({
           </div>
           <button
             onClick={onNewChat}
-            className="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shrink-0"
+            className="inline-flex appearance-none items-center gap-2 px-5 py-2 text-sm font-medium text-white !bg-[var(--color-primary)] hover:!bg-[var(--color-primary-hover)] rounded-lg transition-colors shrink-0"
+            style={{
+              WebkitAppearance: "none",
+              appearance: "none",
+              backgroundColor: "var(--color-primary, #3B82F6)",
+            }}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />

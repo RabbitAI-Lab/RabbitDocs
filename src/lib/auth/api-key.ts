@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { apiKeys } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
 
 const MAX_KEYS_PER_USER = 5;
@@ -105,6 +105,47 @@ export function deleteApiKey(id: string, userId: string): boolean {
 
   db.delete(apiKeys).where(eq(apiKeys.id, id)).run();
   return true;
+}
+
+/**
+ * Get the system API key for a user. Returns the full row or null.
+ */
+export function getSystemKey(userId: string) {
+  return db
+    .select()
+    .from(apiKeys)
+    .where(and(eq(apiKeys.userId, userId), eq(apiKeys.isSystem, 1)))
+    .get() ?? null;
+}
+
+/**
+ * Regenerate the system API key for a user: delete old → create new.
+ * Returns the new key info (full key shown only once).
+ */
+export function regenerateSystemKey(userId: string): { key: string; prefix: string; createdAt: string } {
+  // Delete existing system key
+  db.delete(apiKeys)
+    .where(and(eq(apiKeys.userId, userId), eq(apiKeys.isSystem, 1)))
+    .run();
+
+  // Create new system key
+  const key = `atm_${crypto.randomUUID().replace(/-/g, "")}`;
+  const prefix = key.slice(0, 8);
+  const now = new Date().toISOString();
+
+  db.insert(apiKeys)
+    .values({
+      id: crypto.randomUUID(),
+      name: "System Key (MCP)",
+      keyField: key,
+      prefix,
+      userId,
+      isSystem: 1,
+      createdAt: now,
+    })
+    .run();
+
+  return { key, prefix, createdAt: now };
 }
 
 /**

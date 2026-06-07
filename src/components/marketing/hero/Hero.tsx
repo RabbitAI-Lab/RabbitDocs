@@ -58,7 +58,7 @@ export default function Hero({
             <div className="mt-9 flex flex-col sm:flex-row gap-3">
               <Link
                 href="/register"
-                className="group relative inline-flex items-center justify-center gap-2 rounded-md bg-blue-500 px-5 py-3 text-sm font-medium text-white shadow-lg shadow-blue-500/20 transition-all duration-200 hover:bg-blue-600 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--marketing-bg)] animate-blue-breathing"
+                className="group relative inline-flex items-center justify-center gap-2 rounded-md bg-[var(--color-primary)] px-5 py-3 text-sm font-medium text-white shadow-lg shadow-[var(--color-primary)]/20 transition-all duration-200 hover:bg-[var(--color-primary-hover)] hover:shadow-xl hover:shadow-[var(--color-primary)]/30 hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--marketing-bg)] animate-blue-breathing"
               >
                 {ctaPrimary}
                 <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">→</span>

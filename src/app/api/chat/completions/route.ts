@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
-import { streamModelResponse } from "@/lib/model-service";
+import { streamModelResponse, streamUserModelResponse } from "@/lib/model-service";
 import type { ChatCompletionRequest } from "@/lib/types";
 import { ModelError } from "@/lib/types";
 import path from "node:path";
+import fs from "node:fs";
 import { getDataRoot } from "@/lib/fs";
 import { db } from "@/db";
 import { systemPrompts } from "@/db/schema";
@@ -16,25 +17,34 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req); if (auth instanceof NextResponse) return auth;
   const t = await getApiT();
-  const body: Partial<ChatCompletionRequest & { workspaceId?: string; chatId?: number }> = await req.json();
+  const body: Partial<ChatCompletionRequest & { workspaceId?: string; chatId?: number; userModelId?: number }> = await req.json();
   const { modelId, messages, projectId } = body;
   const workspaceId = (body as Record<string, unknown>).workspaceId as string | undefined;
   const chatId = (body as Record<string, unknown>).chatId as number | undefined;
-  console.log("[Route] /api/chat/completions modelId=", modelId, "userId=", auth.id, "projectId=", projectId ?? "(none)", "workspaceId=", workspaceId ?? "(none)", "chatId=", chatId ?? "(none)");
+  const userModelId = (body as Record<string, unknown>).userModelId as number | undefined;
+  console.log("[Route] /api/chat/completions modelId=", modelId, "userModelId=", userModelId ?? "(none)", "userId=", auth.id, "projectId=", projectId ?? "(none)", "workspaceId=", workspaceId ?? "(none)", "chatId=", chatId ?? "(none)");
   const _systemPrompt = body.systemPrompt; // reserved for future per-request override
   void _systemPrompt;
 
-  if (!modelId || !messages || messages.length === 0) {
+  if ((!modelId && !userModelId) || !messages || messages.length === 0) {
     return new Response(
       JSON.stringify({ error: t('api.chat.modelAndMessagesRequired') }),
       { status: 400, headers: { "Content-Type": "application/json" } }
     );
   }
 
-  // Construct cwd from DATA_ROOT and projectId
+  // Construct cwd from DATA_ROOT and projectId or workspaceId
   let cwd: string | undefined;
   if (projectId) {
     cwd = path.join(getDataRoot(), "projects", projectId);
+  } else if (workspaceId) {
+    cwd = path.join(getDataRoot(), "workspace", workspaceId);
+  }
+
+  // Ensure cwd directory exists (defensive: workspace/project dirs may not yet be created)
+  if (cwd && !fs.existsSync(cwd)) {
+    fs.mkdirSync(cwd, { recursive: true });
+    console.log("[Route] created missing cwd:", cwd);
   }
 
   // Inject cwd info into the system message
@@ -79,13 +89,34 @@ export async function POST(req: NextRequest) {
   const stream = new ReadableStream({
     async pull(controller) {
       try {
-        const generator = streamModelResponse(modelId, messages, {
-          cwd,
-          projectId,
-          userId: auth.id,
-          workspaceId,
-          chatId,
-        });
+        // BYOK 路由分发
+        let generator;
+        if (typeof modelId === 'string' && modelId.startsWith('byok_')) {
+          const userModelIdParsed = parseInt(modelId.replace('byok_', ''));
+          generator = streamUserModelResponse(userModelIdParsed, messages, {
+            cwd,
+            projectId,
+            userId: auth.id,
+            workspaceId,
+            chatId,
+          });
+        } else if (userModelId) {
+          generator = streamUserModelResponse(userModelId, messages, {
+            cwd,
+            projectId,
+            userId: auth.id,
+            workspaceId,
+            chatId,
+          });
+        } else {
+          generator = streamModelResponse(modelId as number, messages, {
+            cwd,
+            projectId,
+            userId: auth.id,
+            workspaceId,
+            chatId,
+          });
+        }
 
         for await (const event of generator) {
           const eventType = event.type === "text_delta" ? "delta" : event.type;

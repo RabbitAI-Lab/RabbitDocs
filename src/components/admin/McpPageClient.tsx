@@ -43,13 +43,13 @@ export default function McpPageClient({ initialConfig, brandName }: Props) {
         message.error(t('mcpPage.msgNotValidObject'));
         return;
       }
-      parsed["rabbit-docs-mcp"] = { type: "http", url: "http://127.0.0.1:4001/mcp" };
+      parsed["rabbit-docs-mcp"] = { type: "http", url: "http://127.0.0.1:4001/mcp", headers: { "Authorization": "Bearer ${user-api-key}" } };
       setConfigJson(JSON.stringify(parsed, null, 2));
       message.success(t('mcpPage.msgMcpConfigAdded', { brandName }));
     } catch {
       setConfigJson(
         JSON.stringify(
-          { "rabbit-docs-mcp": { type: "http", url: "http://127.0.0.1:4001/mcp" } },
+          { "rabbit-docs-mcp": { type: "http", url: "http://127.0.0.1:4001/mcp", headers: { "Authorization": "Bearer ${user-api-key}" } } },
           null,
           2
         )

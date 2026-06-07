@@ -38,7 +38,7 @@ export default function ProjectWorkspace({
 
   // Chat state
   const [chatKey, setChatKey] = useState(0);
-  const { authFetch } = useAuth();
+  const { authFetch, isLoading: authLoading, user } = useAuth();
   const [activeChatId, setActiveChatId] = useState<number | null>(null);
   const [activeChatTitle, setActiveChatTitle] = useState("New Chat");
   const [activeChatMessages, setActiveChatMessages] = useState<Array<{ id: number; role: "user" | "assistant"; content: string }>>([]);
@@ -485,10 +485,35 @@ export default function ProjectWorkspace({
 
   // 如果从 URL 参数传入 chatId，自动加载该 chat
   useEffect(() => {
-    if (initialChatId) {
-      Promise.resolve().then(() => handleSwitchToChat(initialChatId));
-    }
-  }, [initialChatId]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (authLoading || !user || !initialChatId) return;
+    void (async () => {
+      try {
+        const [chatRes, msgRes] = await Promise.all([
+          authFetch(`/api/chats/${initialChatId}`),
+          authFetch(`/api/chats/${initialChatId}/messages`),
+        ]);
+        const chatData = await chatRes.json();
+        const msgData = await msgRes.json();
+
+        setActiveChatId(initialChatId);
+        setActiveChatTitle(chatData.title || t('newChat'));
+        setActiveChatMessages(
+          (Array.isArray(msgData) ? msgData : msgData.messages || []).map((m: Record<string, unknown>) => ({
+            id: m.id as number,
+            role: m.role as "user" | "assistant",
+            content: m.content as string,
+            isError: !!m.isError,
+          }))
+        );
+        setActiveChatModelId(chatData.modelId);
+        setActiveChatTemplateId(chatData.templateId);
+        setChatKey((k) => k + 1);
+        setActiveTabId(CHAT_TAB);
+      } catch {
+        setActiveTabId(CHAT_TAB);
+      }
+    })();
+  }, [initialChatId, authLoading, user, authFetch, t]);
 
   // 清理 URL 中的 ?openChat=true 参数，避免刷新时重复打开 Chat tab
   useEffect(() => {

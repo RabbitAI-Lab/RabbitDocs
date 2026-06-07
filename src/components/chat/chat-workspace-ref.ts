@@ -28,6 +28,7 @@ export interface ChatWorkspaceProps {
   onMentionConsumed?: () => void;
   onToolCall?: (toolCall: { toolName: string; args: Record<string, unknown> }) => void;
   onSwitchToChat?: (chatId: number) => void;
+  onNewChat?: () => void;
   onChatCreated?: (chatId: number) => void;
   floating?: boolean;
   showProjectSelector?: boolean;

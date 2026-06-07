@@ -58,7 +58,7 @@ export default function MarketingNav() {
           <LanguageSwitcher />
           <Link
             href={isLoggedIn ? "/docs" : "/login"}
-            className="inline-flex items-center gap-1.5 rounded-md bg-blue-500 px-3.5 py-1.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-blue-600 hover:shadow-md hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--marketing-bg)]"
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--color-primary)] px-3.5 py-1.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-[var(--color-primary-hover)] hover:shadow-md hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--marketing-bg)]"
           >
             {isLoggedIn ? t("openApp") : t("loginNow")}
             {isLoggedIn && <span aria-hidden="true">→</span>}
@@ -98,7 +98,7 @@ export default function MarketingNav() {
               <Link
                 href={isLoggedIn ? "/docs" : "/login"}
                 onClick={() => setOpen(false)}
-                className="block w-full text-center rounded-md bg-blue-500 px-3.5 py-2 text-sm font-medium text-white"
+                className="block w-full text-center rounded-md bg-[var(--color-primary)] px-3.5 py-2 text-sm font-medium text-white"
               >
                 {isLoggedIn ? t("openApp") : t("loginNow")}
               </Link>

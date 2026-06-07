@@ -14,11 +14,13 @@ const DEFAULT_SITE_URL = "https://docs.rabbitai-lab.com";
 interface Props {
   initialBrandName: string;
   initialSiteUrl: string;
+  initialAdminEmail: string;
 }
 
-export default function GeneralSettingsPageClient({ initialBrandName, initialSiteUrl }: Props) {
+export default function GeneralSettingsPageClient({ initialBrandName, initialSiteUrl, initialAdminEmail }: Props) {
   const [brandName, setBrandName] = useState(initialBrandName || DEFAULT_BRAND_NAME);
   const [siteUrl, setSiteUrl] = useState(initialSiteUrl || DEFAULT_SITE_URL);
+  const [adminEmail, setAdminEmail] = useState(initialAdminEmail);
   const [isSaving, setIsSaving] = useState(false);
   const { authFetch } = useAuth();
   const { message } = App.useApp();
@@ -26,7 +28,8 @@ export default function GeneralSettingsPageClient({ initialBrandName, initialSit
 
   const dirty =
     brandName !== (initialBrandName || DEFAULT_BRAND_NAME) ||
-    siteUrl !== (initialSiteUrl || DEFAULT_SITE_URL);
+    siteUrl !== (initialSiteUrl || DEFAULT_SITE_URL) ||
+    adminEmail !== initialAdminEmail;
 
   const handleSave = async () => {
     const brandValue = brandName.trim();
@@ -40,7 +43,7 @@ export default function GeneralSettingsPageClient({ initialBrandName, initialSit
       const res = await authFetch("/api/auth/admin/system-settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brandName: brandValue, siteUrl: siteUrl.trim() }),
+        body: JSON.stringify({ brandName: brandValue, siteUrl: siteUrl.trim(), adminEmail: adminEmail.trim() }),
       });
       const data = await res.json();
 
@@ -124,6 +127,27 @@ export default function GeneralSettingsPageClient({ initialBrandName, initialSit
               onChange={(e) => setSiteUrl(e.target.value)}
               placeholder={DEFAULT_SITE_URL}
               allowClear
+              className="max-w-md"
+            />
+          </div>
+
+          {/* Admin Email */}
+          <div className="mt-6 mb-3">
+            <Text type="secondary" className="text-xs">
+              {t('adminEmailDesc')}
+            </Text>
+          </div>
+
+          <div className="mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              {t('adminEmailLabel')}
+            </label>
+            <Input
+              value={adminEmail}
+              onChange={(e) => setAdminEmail(e.target.value)}
+              placeholder="admin@example.com"
+              allowClear
+              type="email"
               className="max-w-md"
             />
           </div>

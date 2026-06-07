@@ -60,6 +60,7 @@
     "systemAdmin": "系统管理",
     "myAccount": "我的账号",
     "profile": "个人资料",
+    "myModels": "我的模型",
     "billing": "账单",
     "docs": "文档",
     "account": "账号设置",
@@ -188,7 +189,8 @@
       "menuUsers": "用户",
       "menuInviteCodes": "邀请码",
       "menuAuth": "认证",
-      "menuPlans": "套餐"
+      "menuPlans": "套餐",
+      "menuAppearance": "外观设置"
     },
     "usersPage": {
       "title": "用户管理",
@@ -583,10 +585,40 @@
       "brandNamePreview": "文档管理与发布",
       "siteUrlLabel": "站点 URL",
       "siteUrlDesc": "用于邮箱验证链接和其他系统生成 URL 的基础地址。",
+      "adminEmailLabel": "系统管理员邮箱",
+      "adminEmailDesc": "用于接收系统通知和作为用户联系管理员的邮箱地址。留空则不设置。",
       "msgBrandNameEmpty": "品牌名称不能为空",
       "msgSaveFailed": "保存失败",
       "msgSavedSuccess": "设置保存成功",
       "msgSaveFailedNetwork": "保存失败，请检查网络连接"
+    },
+    "appearancePage": {
+      "title": "外观设置",
+      "subtitle": "自定义亮色和暗色模式的颜色方案",
+      "btnSave": "保存",
+      "btnResetDefaults": "恢复默认",
+      "sectionLight": "亮色模式",
+      "sectionDark": "暗色模式",
+      "colorPrimaryBtn": "按钮颜色",
+      "colorPrimaryBtnDesc": "主要按钮的背景色",
+      "colorPrimaryBtnHover": "按钮悬停色",
+      "colorPrimaryBtnHoverDesc": "鼠标悬停时按钮背景色",
+      "colorAccent": "主强调色",
+      "colorAccentDesc": "链接和高亮的品牌色",
+      "colorSidebarBg": "侧边栏背景",
+      "colorSidebarBgDesc": "左侧导航栏背景色",
+      "colorMainBg": "主内容区背景",
+      "colorMainBgDesc": "主工作区背景色",
+      "colorForeground": "文字颜色",
+      "colorForegroundDesc": "全局文字色",
+      "colorBackground": "页面背景",
+      "colorBackgroundDesc": "页面主体背景色",
+      "colorSenderBg": "聊天气泡背景",
+      "colorSenderBgDesc": "聊天发送区域背景色",
+      "cssVarNote": "颜色通过 CSS 变量应用，保存后即时生效。",
+      "msgSaveFailed": "保存失败",
+      "msgSavedSuccess": "颜色方案保存成功",
+      "msgResetConfirm": "确认恢复所有颜色为默认值？"
     },
     "authSettingsPage": {
       "title": "系统设置",
@@ -668,6 +700,8 @@
     "input": {
       "clearSelection": "✕ 清除选择",
       "model": "模型",
+      "adminModels": "系统模型",
+      "myModels": "我的模型",
       "projectWorkspace": "项目/空间",
       "template": "模板",
       "project": "项目",
@@ -728,6 +762,61 @@
       "createFirstProject": "新建项目",
       "documentDeleted": "该文档已被删除",
       "loading": "加载中..."
+    },
+    "welcome": {
+      "greeting": {
+        "morning": "早安",
+        "afternoon": "下午好",
+        "evening": "晚上好",
+        "lateNight": "夜深了"
+      },
+      "headline": "今天想<emph>写</emph>点什么？",
+      "subtitle": {
+        "blank": "在左侧打开一个项目，把文件作为上下文交给 Agent；也可以直接打字，需要时我会再问。",
+        "withProject": "我会读取项目里所有的 Markdown 和 Git 跟踪文件。用 @ 引用具体文件，用 / 唤起命令。"
+      },
+      "context": {
+        "projectActive": "{name}",
+        "noProject": "未选择项目",
+        "modelActive": "{model}",
+        "noModel": "默认模型",
+        "mentionHint": "用 @ 引用文件"
+      },
+      "suggestionsAria": "推荐提示",
+      "cardPreviewLabel": "将发送",
+      "cardArrowLabel": "使用此提示",
+      "suggestions": {
+        "readme": {
+          "title": "生成 README",
+          "desc": "通读项目并写一份匹配实际结构的 README。"
+        },
+        "summarize": {
+          "title": "总结所有文档",
+          "desc": "列出文档清单，标出还待办的 TODO。"
+        },
+        "explore": {
+          "title": "带我浏览项目",
+          "desc": "解释目录结构，以及每个文件夹的用途。"
+        },
+        "fix": {
+          "title": "找出问题",
+          "desc": "扫描失效链接、过时段落和文档间矛盾。"
+        },
+        "draft": {
+          "title": "起草新文档",
+          "desc": "从主题开始新文档，我会挑合适的结构。"
+        },
+        "git": {
+          "title": "最近改了什么？",
+          "desc": "对比最近一次提交，给出对应的文档更新建议。"
+        }
+      },
+      "kbd": {
+        "send": "发送",
+        "newline": "换行",
+        "mention": "引用文件",
+        "command": "命令"
+      }
     },
     "previewHtml": {
       "onlyHtml": "preview_html 仅支持 .html 文件"
@@ -1332,6 +1421,21 @@
     "regKeyDisabled": "注册密钥已禁用",
     "failedToDisable": "禁用失败",
     "keyCopied": "密钥已复制",
+    "mcpApiKeySection": "MCP API 密钥",
+    "mcpApiKeyDesc": "用于 MCP 服务器认证的个人 API 密钥",
+    "mcpApiKeyUsage": "在 MCP 客户端配置中使用此密钥作为 Bearer token，连接地址：{url}",
+    "mcpApiKeyCopy": "复制密钥",
+    "mcpApiKeyCopied": "API 密钥已复制到剪贴板",
+    "mcpApiKeyShow": "显示",
+    "mcpApiKeyHide": "隐藏",
+    "mcpApiKeyCreated": "创建时间",
+    "mcpApiKeyLoading": "加载中...",
+    "mcpApiKeyError": "加载 MCP API 密钥失败",
+    "mcpApiKeyRegenerate": "重新生成",
+    "mcpApiKeyRegenerateConfirm": "确认重新生成 MCP API 密钥？",
+    "mcpApiKeyRegenerateDesc": "旧密钥将立即失效，请确保更新 MCP 客户端配置。",
+    "mcpApiKeyRegenerated": "已生成新的 API 密钥",
+    "mcpApiKeyRegenerateFailed": "重新生成密钥失败",
     "cliTokensSection": "CLI 令牌",
     "cliTokensDesc": "用于 CLI 工具的长期访问令牌",
     "cliTokens": "CLI 令牌",
@@ -1413,6 +1517,38 @@
     "verified": "已验证",
     "accountType": "账户类型",
     "userId": "用户 ID"
+  },
+  "myModelsPage": {
+    "title": "我的模型",
+    "subtitle": "配置您自己的 API Key，使用自己的模型额度",
+    "addModel": "添加模型",
+    "editModel": "编辑模型",
+    "deleteModel": "删除模型",
+    "deleteConfirm": "确定要删除模型 \"{name}\" 吗？删除后使用该模型的对话将无法继续。",
+    "emptyTitle": "还没有配置模型",
+    "emptyDesc": "添加您自己的 API Key，即可使用您自己的模型额度进行对话",
+    "provider": "厂商",
+    "modelName": "模型名称",
+    "apiKey": "API Key",
+    "name": "显示名称",
+    "namePlaceholder": "自定义名称（可选）",
+    "modelNamePlaceholder": "输入模型名称",
+    "apiKeyPlaceholder": "输入 API Key",
+    "protocol": "协议",
+    "protocolFixed": "Anthropic 兼容",
+    "baseUrl": "Base URL",
+    "backend": "Backend",
+    "created": "模型创建成功",
+    "updated": "模型更新成功",
+    "deleted": "模型已删除",
+    "operationFailed": "操作失败",
+    "verifying": "正在验证 API Key 连通性...",
+    "verifySuccess": "API Key 验证通过，模型已保存",
+    "testConnection": "测试连接",
+    "testSuccess": "连接成功，模型通信正常",
+    "testFailed": "连接测试失败",
+    "testRequest": "请求详情",
+    "testResponse": "响应详情"
   },
   "billingPage": {
     "title": "账单",
@@ -1563,6 +1699,12 @@
       "modelAndMessagesRequired": "modelId 和 messages 不能为空",
       "chatNotFound": "会话未找到",
       "roleAndContentRequired": "role 和 content 不能为空"
+    },
+    "userModels": {
+      "requiredFields": "provider、modelName 和 apiKey 不能为空",
+      "unsupportedProvider": "不支持的厂商",
+      "providerNoAnthropic": "该厂商不支持 Anthropic 协议",
+      "verifyFailed": "API Key 验证失败：{reason}"
     },
     "gitnexus": {
       "analyzeAlreadyRunning": "分析任务正在运行中",

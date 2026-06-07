@@ -23,6 +23,7 @@ import {
 import PasskeySection from "@/components/auth/PasskeySection";
 import CliTokensSection from "@/components/auth/CliTokensSection";
 import GeneralRegistrationKeySection from "@/components/auth/GeneralRegistrationKeySection";
+import McpApiKeySection from "@/components/auth/McpApiKeySection";
 
 const { Text } = Typography;
 
@@ -285,7 +286,18 @@ export default function AccountPage() {
         </section>
         )}
 
-        {/* ─── Section 5: CLI Tokens ─── */}
+        {/* ─── Section 5: MCP API Key ─── */}
+        <section>
+          <SectionHeader
+            title={t('mcpApiKeySection')}
+            description={t('mcpApiKeyDesc')}
+          />
+          <Card className="shadow-sm">
+            <McpApiKeySection />
+          </Card>
+        </section>
+
+        {/* ─── Section 6: CLI Tokens ─── */}
         <section>
           <SectionHeader
             title={t('cliTokensSection')}

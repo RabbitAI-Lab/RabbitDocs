@@ -12,7 +12,7 @@ export default function NewChatWorkspace() {
   const tp = useTranslations("projects");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { authFetch, user } = useAuth();
+  const { authFetch, user, isLoading: authLoading } = useAuth();
   const preselectProjectId = searchParams.get("project");
 
   const [projects, setProjects] = useState<ProjectMeta[]>([]);
@@ -42,7 +42,7 @@ export default function NewChatWorkspace() {
   // --- Project list fetch ---
 
   useEffect(() => {
-    if (!user) return;
+    if (authLoading || !user) return;
     authFetch(`/api/fs/projects?type=personal&accountId=${user.id}`)
       .then((r) => r.json())
       .then((data) => {
@@ -64,7 +64,7 @@ export default function NewChatWorkspace() {
         setProjects([]);
         setLoading(false);
       });
-  }, [authFetch, user, preselectProjectId, router]);
+  }, [authFetch, user, preselectProjectId, router, authLoading]);
 
   // --- Render ---
 
@@ -93,7 +93,7 @@ export default function NewChatWorkspace() {
           </p>
           <button
             onClick={handleCreateProject}
-            className="mt-5 inline-flex items-center gap-1.5 px-5 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 rounded-lg shadow-sm transition-colors"
+            className="mt-5 inline-flex items-center gap-1.5 px-5 py-2 text-sm font-medium text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] rounded-lg shadow-sm transition-colors"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="5" x2="12" y2="19" />

@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import {
   readDocument,
   writeDocument,
@@ -13,7 +13,7 @@ import {
   deleteHtmlDocument,
 } from "@/lib/fs";
 import { db } from "@/db";
-import { documentActivities, sharedHtmlFiles } from "@/db/schema";
+import { documentActivities, sharedHtmlFiles, users } from "@/db/schema";
 import { parsePath } from "../utils";
 import { getMcpUserId } from "../context";
 
@@ -364,6 +364,44 @@ export function registerFileTools(server: McpServer) {
       }
       return {
         content: [{ type: "text", text: `HTML file deleted: ${path}` }],
+      };
+    }
+  );
+
+  // ──────────── Recent documents ────────────
+
+  server.registerTool(
+    "list_recent_documents",
+    {
+      description:
+        "获取最近更新的文档列表，按操作时间倒序排列。可选按项目筛选，支持分页。",
+      inputSchema: z.object({
+        projectId: z.string().optional().describe("按项目 ID 筛选"),
+        limit: z.number().optional().describe("返回条数，默认 10"),
+        offset: z.number().optional().describe("偏移量，默认 0"),
+      }),
+    },
+    async ({ projectId, limit = 10, offset = 0 }) => {
+      const rows = db
+        .select({
+          id: documentActivities.id,
+          projectId: documentActivities.projectId,
+          documentPath: documentActivities.documentPath,
+          documentTitle: documentActivities.documentTitle,
+          action: documentActivities.action,
+          userId: documentActivities.userId,
+          userName: users.name,
+          createdAt: documentActivities.createdAt,
+        })
+        .from(documentActivities)
+        .leftJoin(users, eq(documentActivities.userId, users.id))
+        .where(projectId ? eq(documentActivities.projectId, projectId) : undefined)
+        .orderBy(desc(documentActivities.createdAt))
+        .limit(limit)
+        .offset(offset)
+        .all();
+      return {
+        content: [{ type: "text", text: JSON.stringify(rows, null, 2) }],
       };
     }
   );

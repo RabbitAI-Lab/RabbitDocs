@@ -168,7 +168,7 @@ export default function HtmlEditor({
             disabled={!isDirty || saving}
             className={`px-3 h-7 text-xs rounded-md transition-colors ${
               isDirty && !saving
-                ? "bg-blue-600 text-white hover:bg-blue-700"
+                ? "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)]"
                 : "bg-gray-100 dark:bg-zinc-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
             }`}
           >

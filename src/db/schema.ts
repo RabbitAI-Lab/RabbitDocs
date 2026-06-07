@@ -46,6 +46,7 @@ export const chats = sqliteTable("chats", {
   templateId: integer("template_id"),
   projectId: text("project_id"),
   workspaceId: text("workspace_id"),  // nullable，记录从哪个 workspace 发起
+  userModelId: integer("user_model_id"),  // BYOK 用户模型 ID（与 modelId 互斥）
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
   updatedBy: text("updated_by"),  // 最后修改者用户 ID
@@ -355,6 +356,21 @@ export const tokenUsageLogs = sqliteTable("token_usage_logs", {
   projectId: text("project_id"),
   workspaceId: text("workspace_id"),
   createdAt: text("created_at").notNull(),
+});
+
+// user_model_configs: 用户 BYOK 模型配置
+export const userModelConfigs = sqliteTable("user_model_configs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull(),
+  name: text("name").notNull(),
+  baseUrl: text("base_url").notNull(),
+  apiKeyEncrypted: text("api_key_encrypted").notNull(),
+  modelName: text("model_name").notNull(),
+  extraEnvJson: text("extra_env_json").notNull().default("{}"),
+  backend: text("backend").notNull().default("sdk"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
 });
 
 // entity_repositories: 仓库子表

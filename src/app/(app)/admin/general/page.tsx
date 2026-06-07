@@ -4,5 +4,6 @@ import GeneralSettingsPageClient from "@/components/admin/GeneralSettingsPageCli
 export default function GeneralSettingsPage() {
   const brandName = getBrandName();
   const siteUrl = getSetting("site_url") ?? "";
-  return <GeneralSettingsPageClient initialBrandName={brandName} initialSiteUrl={siteUrl} />;
+  const adminEmail = getSetting("admin_email") ?? "";
+  return <GeneralSettingsPageClient initialBrandName={brandName} initialSiteUrl={siteUrl} initialAdminEmail={adminEmail} />;
 }

@@ -30,7 +30,7 @@ async function streamAiResponse(params: {
   chatMessages: Array<{ role: "system" | "user" | "assistant"; content: string }>;
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   abortControllerRef: React.MutableRefObject<AbortController | null>;
-  selectedModelId: number;
+  selectedModelId: number | string;
   selectedProject: string | undefined;
   selectedWorkspace?: string;
   workspaceId?: string;
@@ -149,7 +149,7 @@ interface UseChatMessagesOptions {
   effectiveChatId: number | null;
   setEffectiveChatId: (id: number | null) => void;
   initialMessages: Message[];
-  selectedModelId: number | undefined;
+  selectedModelId: number | string | undefined;
   selectedProject: string | undefined;
   selectedWorkspace: string | undefined;
   workspaceId: string | undefined;

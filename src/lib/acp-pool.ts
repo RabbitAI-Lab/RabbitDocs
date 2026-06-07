@@ -16,6 +16,7 @@ import {
   ClientSideConnection,
   ndJsonStream,
   PROTOCOL_VERSION,
+  type McpServer,
 } from "@agentclientprotocol/sdk";
 import { ChatWikiAcpClient } from "./acp-client";
 import { parseExtraEnv } from "./model-env";
@@ -115,6 +116,7 @@ export async function getOrCreateSession(
   entry: AcpPoolEntry,
   chatId: string,
   cwd: string,
+  mcpServers?: Array<McpServer>,
 ): Promise<string> {
   // 已有 session → 复用
   const existingSessionId = entry.sessions.get(chatId);
@@ -127,17 +129,19 @@ export async function getOrCreateSession(
   const mcpPort = parseInt(process.env.MCP_PORT || "4001");
   const mcpHost = process.env.MCP_HOST || "127.0.0.1";
   console.log(`[ACP Pool] creating session: key=${entry.key} chatId=${chatId}`);
+
+  // 构建完整 mcpServers 列表：全局/项目 MCP + rabbitdocs_client
+  const rabbitdocsClient = {
+    type: "http" as const,
+    name: "rabbitdocs_client",
+    url: `http://${mcpHost}:${mcpPort}/mcp`,
+    headers: [] as Array<{ name: string; value: string }>,
+  };
+  const allMcpServers = [...(mcpServers || []), rabbitdocsClient];
+
   const { sessionId } = await entry.connection.newSession({
     cwd,
-    mcpServers: [
-      // ChatWiki MCP server（包含 refresh_file_tree、preview_html 等工具）
-      {
-        type: "http" as const,
-        name: "rabbitdocs_client",
-        url: `http://${mcpHost}:${mcpPort}/mcp`,
-        headers: [],
-      },
-    ],
+    mcpServers: allMcpServers,
   });
 
   entry.sessions.set(chatId, sessionId);

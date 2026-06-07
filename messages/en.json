@@ -60,6 +60,7 @@
     "systemAdmin": "System Admin",
     "myAccount": "My Account",
     "profile": "Profile",
+    "myModels": "My Models",
     "billing": "Billing",
     "docs": "Documents",
     "account": "Account Settings",
@@ -188,7 +189,8 @@
       "menuUsers": "Users",
       "menuInviteCodes": "Invite Codes",
       "menuAuth": "Authentication",
-      "menuPlans": "Plans"
+      "menuPlans": "Plans",
+      "menuAppearance": "Appearance"
     },
     "usersPage": {
       "title": "User Management",
@@ -583,10 +585,40 @@
       "brandNamePreview": "Document Management & Publishing",
       "siteUrlLabel": "Site URL",
       "siteUrlDesc": "The base URL used in email verification links and other system-generated URLs.",
+      "adminEmailLabel": "System Admin Email",
+      "adminEmailDesc": "The email address for receiving system notifications and as a contact for users. Leave empty to disable.",
       "msgBrandNameEmpty": "Brand name cannot be empty",
       "msgSaveFailed": "Save failed",
       "msgSavedSuccess": "Settings saved successfully",
       "msgSaveFailedNetwork": "Save failed, please check network connection"
+    },
+    "appearancePage": {
+      "title": "Appearance Settings",
+      "subtitle": "Customize colors for light and dark modes",
+      "btnSave": "Save",
+      "btnResetDefaults": "Reset to Defaults",
+      "sectionLight": "Light Mode",
+      "sectionDark": "Dark Mode",
+      "colorPrimaryBtn": "Button Color",
+      "colorPrimaryBtnDesc": "Primary button background color",
+      "colorPrimaryBtnHover": "Button Hover Color",
+      "colorPrimaryBtnHoverDesc": "Button background on hover",
+      "colorAccent": "Accent Color",
+      "colorAccentDesc": "Brand color for links and highlights",
+      "colorSidebarBg": "Sidebar Background",
+      "colorSidebarBgDesc": "Left sidebar background color",
+      "colorMainBg": "Main Background",
+      "colorMainBgDesc": "Main content area background",
+      "colorForeground": "Text Color",
+      "colorForegroundDesc": "Global text color",
+      "colorBackground": "Page Background",
+      "colorBackgroundDesc": "Body background color",
+      "colorSenderBg": "Chat Bubble Background",
+      "colorSenderBgDesc": "Chat sender area background",
+      "cssVarNote": "Colors are applied via CSS variables. Changes take effect immediately after saving.",
+      "msgSaveFailed": "Save failed",
+      "msgSavedSuccess": "Color scheme saved successfully",
+      "msgResetConfirm": "Reset all colors to defaults?"
     },
     "authSettingsPage": {
       "title": "System Settings",
@@ -668,6 +700,8 @@
     "input": {
       "clearSelection": "✕ Clear Selection",
       "model": "Model",
+      "adminModels": "System Models",
+      "myModels": "My Models",
       "projectWorkspace": "Project/Workspace",
       "template": "Template",
       "project": "Project",
@@ -728,6 +762,61 @@
       "createFirstProject": "Create Project",
       "documentDeleted": "This document has been deleted",
       "loading": "Loading..."
+    },
+    "welcome": {
+      "greeting": {
+        "morning": "Good morning",
+        "afternoon": "Good afternoon",
+        "evening": "Good evening",
+        "lateNight": "Still up"
+      },
+      "headline": "What do you want to <emph>write</emph> today?",
+      "subtitle": {
+        "blank": "Open a project on the left to give the agent your files as context, or just start typing — I'll ask if I need more.",
+        "withProject": "I'll read every Markdown and Git-tracked file in your project. Use @ to mention a specific file, or / for commands."
+      },
+      "context": {
+        "projectActive": "{name}",
+        "noProject": "No project selected",
+        "modelActive": "{model}",
+        "noModel": "Default model",
+        "mentionHint": "Use @ to reference a file"
+      },
+      "suggestionsAria": "Suggested prompts",
+      "cardPreviewLabel": "Will send",
+      "cardArrowLabel": "Use this prompt",
+      "suggestions": {
+        "readme": {
+          "title": "Generate a README",
+          "desc": "Read the project and write a README that matches its actual structure."
+        },
+        "summarize": {
+          "title": "Summarize the docs",
+          "desc": "List the documents and call out the open TODOs."
+        },
+        "explore": {
+          "title": "Walk me through the project",
+          "desc": "Explain the folder layout and what each directory is for."
+        },
+        "fix": {
+          "title": "Find what's broken",
+          "desc": "Scan for broken links, stale sections, and contradictions across files."
+        },
+        "draft": {
+          "title": "Draft a new document",
+          "desc": "Start a fresh document from a topic — I'll pick the right structure."
+        },
+        "git": {
+          "title": "What changed lately?",
+          "desc": "Diff against the last commit and suggest doc updates that match."
+        }
+      },
+      "kbd": {
+        "send": "send",
+        "newline": "new line",
+        "mention": "mention a file",
+        "command": "commands"
+      }
     },
     "previewHtml": {
       "onlyHtml": "preview_html only supports .html files"
@@ -1332,6 +1421,21 @@
     "regKeyDisabled": "Registration key disabled",
     "failedToDisable": "Failed to disable",
     "keyCopied": "Key copied",
+    "mcpApiKeySection": "MCP API Key",
+    "mcpApiKeyDesc": "Your personal API key for authenticating with the MCP server",
+    "mcpApiKeyUsage": "Use this key as the Bearer token when connecting MCP clients to {url}",
+    "mcpApiKeyCopy": "Copy Key",
+    "mcpApiKeyCopied": "API key copied to clipboard",
+    "mcpApiKeyShow": "Show",
+    "mcpApiKeyHide": "Hide",
+    "mcpApiKeyCreated": "Created",
+    "mcpApiKeyLoading": "Loading...",
+    "mcpApiKeyError": "Failed to load MCP API key",
+    "mcpApiKeyRegenerate": "Regenerate Key",
+    "mcpApiKeyRegenerateConfirm": "Regenerate MCP API Key?",
+    "mcpApiKeyRegenerateDesc": "The old key will be invalid immediately. Make sure to update your MCP client configuration.",
+    "mcpApiKeyRegenerated": "New API key generated",
+    "mcpApiKeyRegenerateFailed": "Failed to regenerate key",
     "cliTokensSection": "CLI Tokens",
     "cliTokensDesc": "Long-lived access tokens for CLI tools",
     "cliTokens": "CLI Tokens",
@@ -1413,6 +1517,38 @@
     "verified": "Verified",
     "accountType": "Account Type",
     "userId": "User ID"
+  },
+  "myModelsPage": {
+    "title": "My Models",
+    "subtitle": "Configure your own API Key and use your own model quota",
+    "addModel": "Add Model",
+    "editModel": "Edit Model",
+    "deleteModel": "Delete Model",
+    "deleteConfirm": "Are you sure you want to delete model \"{name}\"? Chats using this model will not be able to continue.",
+    "emptyTitle": "No models configured",
+    "emptyDesc": "Add your own API Key to start chatting with your own model quota",
+    "provider": "Provider",
+    "modelName": "Model Name",
+    "apiKey": "API Key",
+    "name": "Display Name",
+    "namePlaceholder": "Custom name (optional)",
+    "modelNamePlaceholder": "Enter model name",
+    "apiKeyPlaceholder": "Enter API Key",
+    "protocol": "Protocol",
+    "protocolFixed": "Anthropic Compatible",
+    "baseUrl": "Base URL",
+    "backend": "Backend",
+    "created": "Model created successfully",
+    "updated": "Model updated successfully",
+    "deleted": "Model deleted",
+    "operationFailed": "Operation failed",
+    "verifying": "Verifying API Key connectivity...",
+    "verifySuccess": "API Key verified, model saved",
+    "testConnection": "Test Connection",
+    "testSuccess": "Connection successful, model is reachable",
+    "testFailed": "Connection test failed",
+    "testRequest": "Request Details",
+    "testResponse": "Response Details"
   },
   "billingPage": {
     "title": "Billing",
@@ -1563,6 +1699,12 @@
       "modelAndMessagesRequired": "modelId and messages are required",
       "chatNotFound": "Chat not found",
       "roleAndContentRequired": "role and content are required"
+    },
+    "userModels": {
+      "requiredFields": "provider, modelName, and apiKey are required",
+      "unsupportedProvider": "Unsupported provider",
+      "providerNoAnthropic": "This provider does not support Anthropic protocol",
+      "verifyFailed": "API Key verification failed: {reason}"
     },
     "gitnexus": {
       "analyzeAlreadyRunning": "Analysis task is already running",

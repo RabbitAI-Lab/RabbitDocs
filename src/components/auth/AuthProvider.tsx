@@ -75,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [features, setFeatures] = useState<string[]>([]);
   const accessTokenRef = useRef<string | null>(null);
+  const refreshPromiseRef = useRef<Promise<string | null> | null>(null);
 
   // 同步 ref 辅助函数 - 同时更新 state 和 ref
   const _setToken = useCallback((token: string | null) => {
@@ -93,49 +94,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refreshAccessToken = useCallback(async (): Promise<string | null> => {
-    try {
-      const refreshToken = localStorage.getItem("refreshToken");
-      if (!refreshToken) {
-        setIsLoading(false);
-        return null;
-      }
-
-      const res = await fetch("/api/auth/refresh", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      if (res.status === 401) {
-        // refresh token 无效，清除
-        localStorage.removeItem("refreshToken");
-        setUser(null);
-        setAccessToken(null);
-        setIsLoading(false);
-        return null;
-      }
-
-      if (!res.ok) {
-        setIsLoading(false);
-        return null;
-      }
-
-      const data = await res.json();
-      accessTokenRef.current = data.accessToken;
-      setAccessToken(data.accessToken);
-      setUser(data.user);
-      localStorage.setItem("refreshToken", data.refreshToken);
-      setIsLoading(false);
-
-      // 登录/刷新成功后拉取用户功能列表
-      fetchFeatures(data.accessToken);
-
-      return data.accessToken;
-    } catch {
-      // 网络错误不清除 token，下次重试
-      setIsLoading(false);
-      return null;
+    // 并发去重：已有 refresh 在执行时复用同一个 Promise
+    if (refreshPromiseRef.current) {
+      return refreshPromiseRef.current;
     }
+
+    const promise = (async () => {
+      try {
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (!refreshToken) {
+          setIsLoading(false);
+          return null;
+        }
+
+        const res = await fetch("/api/auth/refresh", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        });
+
+        if (res.status === 401) {
+          // refresh token 无效，清除
+          localStorage.removeItem("refreshToken");
+          setUser(null);
+          setAccessToken(null);
+          setIsLoading(false);
+          return null;
+        }
+
+        if (!res.ok) {
+          setIsLoading(false);
+          return null;
+        }
+
+        const data = await res.json();
+        accessTokenRef.current = data.accessToken;
+        setAccessToken(data.accessToken);
+        setUser(data.user);
+        localStorage.setItem("refreshToken", data.refreshToken);
+        setIsLoading(false);
+
+        // 登录/刷新成功后拉取用户功能列表
+        fetchFeatures(data.accessToken);
+
+        return data.accessToken;
+      } catch {
+        // 网络错误不清除 token，下次重试
+        setIsLoading(false);
+        return null;
+      } finally {
+        refreshPromiseRef.current = null;
+      }
+    })();
+
+    refreshPromiseRef.current = promise;
+    return promise;
   }, [fetchFeatures]);
 
   // 初始化：尝试用 refresh token 恢复会话
@@ -156,7 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const hasFeature = useCallback(
-    (key: string) => features.includes(key),
+    (key: string) => features.includes(key) || features.some(f => f.toLowerCase().includes(key.toLowerCase())),
     [features]
   );
 

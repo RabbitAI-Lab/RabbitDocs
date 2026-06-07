@@ -178,6 +178,8 @@ export default function WorkspaceEditorArea({
           mentionFile={mentionFile}
           onMentionConsumed={onMentionConsumed}
           onToolCall={onToolCall}
+          onNewChat={onNewChat}
+          onSwitchToChat={(chatId) => onSwitchToChat(chatId, null)}
         />
       </div>
 

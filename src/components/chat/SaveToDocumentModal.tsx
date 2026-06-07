@@ -262,7 +262,7 @@ export default function SaveToDocumentModal({
             disabled={!canSave}
             className={`px-3 py-1.5 text-xs rounded transition-colors ${
               canSave
-                ? "bg-blue-600 text-white hover:bg-blue-700"
+                ? "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)]"
                 : "bg-gray-200 dark:bg-zinc-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
             }`}
           >

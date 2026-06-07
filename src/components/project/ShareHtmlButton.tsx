@@ -159,7 +159,7 @@ export default function ShareHtmlButton({
                   <button
                     type="button"
                     onClick={handleCopy}
-                    className="px-2.5 h-8 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                    className="px-2.5 h-8 text-xs bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-primary-hover)] transition-colors"
                   >
                     {copied ? t('shareHtml.copied') : t('shareHtml.copy')}
                   </button>
@@ -207,7 +207,7 @@ export default function ShareHtmlButton({
                 type="button"
                 onClick={handleCreateOrRotate}
                 disabled={busy}
-                className="px-3 h-8 text-xs text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors disabled:opacity-50"
+                className="px-3 h-8 text-xs text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] rounded transition-colors disabled:opacity-50"
               >
                 {busy ? t('shareHtml.processing') : t('shareHtml.regenerate')}
               </button>
@@ -225,7 +225,7 @@ export default function ShareHtmlButton({
                 type="button"
                 onClick={handleCreateOrRotate}
                 disabled={busy || loading}
-                className="px-3 h-8 text-xs text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors disabled:opacity-50"
+                className="px-3 h-8 text-xs text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] rounded transition-colors disabled:opacity-50"
               >
                 {busy ? t('shareHtml.generating') : t('shareHtml.generate')}
               </button>

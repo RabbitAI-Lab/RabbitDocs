@@ -10,12 +10,21 @@ interface PlanFeature {
 }
 
 /**
+ * 模糊匹配 feature key：精确匹配优先，不匹配时做 case-insensitive 的包含匹配
+ * 例如 key="workspace" 可匹配 "workspace"、"5 workspaces"、"Support Workspaces" 等
+ */
+function matchFeatureKey(featureName: string, key: string): boolean {
+  if (featureName === key) return true;
+  return featureName.toLowerCase().includes(key.toLowerCase());
+}
+
+/**
  * 检查用户是否拥有指定功能权限（纯逻辑判断，不返回 HTTP 响应）
  *
  * 逻辑：
  * 1. 查询用户活跃订阅（status=active）
  * 2. join plans 表获取 features JSON
- * 3. 解析 features，检查是否存在 name === featureKey && included === true
+ * 3. 解析 features，检查是否存在匹配 featureKey 的条目 && included === true
  * 4. 额外防护：plan 被禁用 或 订阅已过期 → 不通过
  */
 export function hasFeature(userId: string, featureKey: string): boolean {
@@ -50,7 +59,7 @@ export function hasFeature(userId: string, featureKey: string): boolean {
     return false;
   }
 
-  return features.some(f => f.name === featureKey && f.included === true);
+  return features.some(f => matchFeatureKey(f.name, featureKey) && f.included === true);
 }
 
 /**

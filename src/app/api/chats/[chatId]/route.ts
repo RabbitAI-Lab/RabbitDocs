@@ -35,7 +35,7 @@ export async function PATCH(
   if (!canAccessChat(auth, existing)) return NextResponse.json({ error: t('api.forbidden') }, { status: 403 });
 
   const body = await req.json();
-  const { title, modelId, templateId, projectId, workspaceId } = body;
+  const { title, modelId, templateId, projectId, workspaceId, userModelId } = body;
 
   const updates: Record<string, unknown> = {
     updatedAt: new Date().toISOString(),
@@ -46,6 +46,7 @@ export async function PATCH(
   if (templateId !== undefined) updates.templateId = templateId;
   if (projectId !== undefined) updates.projectId = projectId;
   if (workspaceId !== undefined) updates.workspaceId = workspaceId;
+  if (userModelId !== undefined) updates.userModelId = userModelId;
 
   db.update(chats).set(updates).where(eq(chats.id, parseInt(chatId))).run();
 

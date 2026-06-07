@@ -6,9 +6,20 @@
 import type { StreamEvent } from "./types";
 import type { ContentBlock, PromptResponse } from "@agentclientprotocol/sdk";
 import { getOrCreateEntry, getOrCreateSession, forceRecreateEntry, buildPoolKey, type AcpPoolConfig } from "./acp-pool";
-import { resolveModelConfig } from "./model-service";
+import { resolveModelConfig, resolveMcpServersForUser, convertToAcpMcpServers } from "./model-service";
 import { db } from "@/db";
 import { tokenUsageLogs } from "@/db/schema";
+
+type AcpModelConfig = {
+  id: number;
+  apiKey: string;
+  baseUrl: string;
+  modelName: string;
+  extraEnvJson: string;
+  backend: string;
+  provider: string;
+  protocol: string;
+};
 
 /** 检测是否为连接断开错误 */
 function isConnectionClosedError(err: unknown): boolean {
@@ -26,9 +37,11 @@ export async function* streamAcpModelResponse(
     chatId: number;
     cwd?: string;
   },
+  preResolvedConfig?: AcpModelConfig,
   _retryAttempted = false
 ): AsyncGenerator<StreamEvent> {
-  const config = resolveModelConfig(modelId);
+  // 如果已从 model-service 传入预解析的 config，直接使用（避免重复查询 DB）
+  const config = preResolvedConfig ?? resolveModelConfig(modelId);
 
   // 构建 pool key
   const key = buildPoolKey({
@@ -66,14 +79,19 @@ export async function* streamAcpModelResponse(
     const entry = await getOrCreateEntry(key, poolConfig);
     console.log("[ACP] 连接池 entry 就绪, key=", key, "closed=", entry.closed);
 
-    // 2. 获取或创建 session（按 chatId 复用）
+    // 2. 解析全局/项目 MCP 配置并替换 user-api-key 占位符
+    const resolvedMcpServers = resolveMcpServersForUser(options.userId, options.projectId);
+    const acpMcpServers = convertToAcpMcpServers(resolvedMcpServers);
+    console.log("[ACP] resolved MCP servers:", acpMcpServers.map((s) => (s as { name?: string }).name).join(", "));
+
+    // 3. 获取或创建 session（按 chatId 复用）
     const chatIdStr = String(options.chatId);
     const isNewSession = !entry.sessions.has(chatIdStr);
     console.log("[ACP] 获取 session, chatId=", chatIdStr, "isNewSession=", isNewSession);
-    const sessionId = await getOrCreateSession(entry, chatIdStr, poolConfig.cwd);
+    const sessionId = await getOrCreateSession(entry, chatIdStr, poolConfig.cwd, acpMcpServers);
     console.log("[ACP] sessionId=", sessionId);
 
-    // 3. 准备 prompt 消息
+    // 4. 准备 prompt 消息
     const isContinuation = !isNewSession;
     const promptMessages = buildPromptMessages(messages, isContinuation);
     console.log("[ACP] prompt 消息准备完毕, isContinuation=", isContinuation, "promptBlocks=", promptMessages.length);
@@ -186,26 +204,30 @@ export async function* streamAcpModelResponse(
         "source=", promptUsage ? "PromptResponse" : "UsageUpdate"
       );
 
-      try {
-        db.insert(tokenUsageLogs).values({
-          userId: options.userId,
-          modelId,
-          chatId: options.chatId,
-          backend: "acp",
-          inputTokens,
-          outputTokens,
-          cacheCreationInputTokens,
-          cacheReadInputTokens,
-          totalTokens,
-          costUsd,
-          contextSize: finalUsage?.size,
-          contextUsed: finalUsage?.used,
-          projectId: options.projectId,
-          workspaceId: options.workspaceId,
-          createdAt: new Date().toISOString(),
-        }).run();
-      } catch (err) {
-        console.error("[ACP TokenUsage] failed to log:", err);
+      // BYOK 模型不记录 token 用量（用户自付费）
+      const isByokModel = !!preResolvedConfig;
+      if (!isByokModel) {
+        try {
+          db.insert(tokenUsageLogs).values({
+            userId: options.userId,
+            modelId,
+            chatId: options.chatId,
+            backend: "acp",
+            inputTokens,
+            outputTokens,
+            cacheCreationInputTokens,
+            cacheReadInputTokens,
+            totalTokens,
+            costUsd,
+            contextSize: finalUsage?.size,
+            contextUsed: finalUsage?.used,
+            projectId: options.projectId,
+            workspaceId: options.workspaceId,
+            createdAt: new Date().toISOString(),
+          }).run();
+        } catch (err) {
+          console.error("[ACP TokenUsage] failed to log:", err);
+        }
       }
 
       // 向前端发送 usage 事件
@@ -237,7 +259,7 @@ export async function* streamAcpModelResponse(
       try {
         const newEntry = await forceRecreateEntry(key, poolConfig);
         console.log("[ACP] 重连成功, pid=", newEntry.child.pid);
-        yield* streamAcpModelResponse(modelId, messages, options, true);
+        yield* streamAcpModelResponse(modelId, messages, options, config, true);
         return;
       } catch (reconnectErr) {
         console.error("[ACP] 重连失败:", reconnectErr instanceof Error ? reconnectErr.message : String(reconnectErr));

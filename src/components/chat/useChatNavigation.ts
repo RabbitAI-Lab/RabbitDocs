@@ -11,7 +11,7 @@ interface UseChatNavigationOptions {
   setInputValue: (value: string) => void;
   selectedProject: string | undefined;
   selectedWorkspace: string | undefined;
-  setSelectedModelId: (id: number | undefined) => void;
+  setSelectedModelId: (id: number | string | undefined) => void;
   setSelectedTemplateId: (id: number | undefined) => void;
   setSelectedProject: (id: string | undefined) => void;
   setSelectedWorkspace: (id: string | undefined) => void;
@@ -19,6 +19,7 @@ interface UseChatNavigationOptions {
   floating: boolean;
   router: AppRouterInstance;
   onSwitchToChat?: (chatId: number) => void;
+  authFetch: (url: string, options?: RequestInit) => Promise<Response>;
 }
 
 export function useChatNavigation({
@@ -37,13 +38,14 @@ export function useChatNavigation({
   floating,
   router,
   onSwitchToChat,
+  authFetch,
 }: UseChatNavigationOptions) {
 
   const loadChat = async (targetChatId: number) => {
     try {
       const [chatRes, msgsRes] = await Promise.all([
-        fetch(`/api/chats/${targetChatId}`),
-        fetch(`/api/chats/${targetChatId}/messages`),
+        authFetch(`/api/chats/${targetChatId}`),
+        authFetch(`/api/chats/${targetChatId}/messages`),
       ]);
       if (!chatRes.ok || !msgsRes.ok) return;
       const chat = await chatRes.json();
@@ -59,6 +61,7 @@ export function useChatNavigation({
       );
       if (chat.title) setEffectiveChatTitle(chat.title);
       if (chat.modelId) setSelectedModelId(chat.modelId);
+      if (chat.userModelId) setSelectedModelId(`byok_${chat.userModelId}`);
       if (chat.templateId) setSelectedTemplateId(chat.templateId);
       if (chat.projectId) {
         setSelectedProject(chat.projectId);
@@ -80,7 +83,7 @@ export function useChatNavigation({
 
     // Check if the chat is workspace-only, then redirect to workspace page
     try {
-      const chatRes = await fetch(`/api/chats/${chatId}`);
+      const chatRes = await authFetch(`/api/chats/${chatId}`);
       if (chatRes.ok) {
         const chatData = await chatRes.json();
 

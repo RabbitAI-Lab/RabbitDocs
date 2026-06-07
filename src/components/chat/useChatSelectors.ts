@@ -10,6 +10,16 @@ export interface ModelItem {
   isDefault: number;
 }
 
+export interface UserModelItem {
+  id: number;
+  provider: string;
+  name: string;
+  modelName: string;
+  apiKeyMasked: string;
+  backend: string;
+  isByok: true;
+}
+
 export interface ProjectItem {
   id: string;
   name: string;
@@ -43,11 +53,12 @@ export function useChatSelectors({
   effectiveChatId,
 }: UseChatSelectorsOptions) {
   const [models, setModels] = useState<ModelItem[]>([]);
-  const { authFetch, user } = useAuth();
+  const [userModels, setUserModels] = useState<UserModelItem[]>([]);
+  const { authFetch, user, isLoading: authLoading } = useAuth();
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [workspaces, setWorkspaces] = useState<WorkspaceItem[]>([]);
   const [templates, setTemplates] = useState<TemplateItem[]>([]);
-  const [selectedModelId, setSelectedModelId] = useState<number | undefined>(initialModelId);
+  const [selectedModelId, setSelectedModelId] = useState<number | string | undefined>(initialModelId);
   const [selectedProject, setSelectedProject] = useState<string | undefined>(
     initialProjectId ?? undefined
   );
@@ -57,8 +68,17 @@ export function useChatSelectors({
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | undefined>(initialTemplateId);
 
   // Persist model/template selection to DB (only when chat exists)
-  const updateChatSelection = (field: string, value: number | undefined) => {
+  const updateChatSelection = (field: string, value: number | string | undefined) => {
     if (!effectiveChatId) return;
+    // BYOK 模型使用 userModelId 字段
+    if (field === "userModelId") {
+      authFetch(`/api/chats/${effectiveChatId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userModelId: value ?? null, modelId: null }),
+      });
+      return;
+    }
     authFetch(`/api/chats/${effectiveChatId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -66,9 +86,16 @@ export function useChatSelectors({
     });
   };
 
-  const handleModelChange = (id: number | undefined) => {
+  const handleModelChange = (id: number | string | undefined) => {
     setSelectedModelId(id);
-    updateChatSelection("modelId", id);
+    if (typeof id === 'string' && id.startsWith('byok_')) {
+      // BYOK 模型
+      const userModelId = parseInt(id.replace('byok_', ''));
+      updateChatSelection("userModelId", userModelId);
+    } else {
+      // 管理员模型
+      updateChatSelection("modelId", id as number | undefined);
+    }
   };
 
   const handleProjectChange = (id: string | undefined) => {
@@ -104,6 +131,7 @@ export function useChatSelectors({
   };
 
   useEffect(() => {
+    if (authLoading) return;
     authFetch("/api/models")
       .then((r) => r.json())
       .then((data) => {
@@ -115,6 +143,23 @@ export function useChatSelectors({
           }
         }
       });
+    // 并行请求用户 BYOK 模型
+    authFetch("/api/user-models")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setUserModels(data.map((m: Record<string, unknown>) => ({
+            id: m.id as number,
+            provider: m.provider as string,
+            name: m.name as string,
+            modelName: m.modelName as string,
+            apiKeyMasked: m.apiKeyMasked as string,
+            backend: m.backend as string,
+            isByok: true as const,
+          })));
+        }
+      })
+      .catch(() => { /* BYOK 可选，失败不阻塞 */ });
     if (user) {
       authFetch(`/api/fs/projects?type=personal&accountId=${user.id}`)
         .then((r) => r.json())
@@ -142,10 +187,11 @@ export function useChatSelectors({
           }
         }
       });
-  }, [authFetch, user, initialModelId, initialTemplateId]);
+  }, [authFetch, user, initialModelId, initialTemplateId, authLoading]);
 
   return {
     models,
+    userModels,
     projects,
     workspaces,
     templates,

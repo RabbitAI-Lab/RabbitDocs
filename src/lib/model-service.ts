@@ -3,6 +3,7 @@ import { query } from "@anthropic-ai/claude-agent-sdk";
 import type { Query, Options, McpServerConfig } from "@anthropic-ai/claude-agent-sdk";
 import { createClientToolsMcpServer, CLIENT_TOOL_PREFIX } from "./client-tools";
 import { parseExtraEnv } from "./model-env";
+import type { McpServer } from "@agentclientprotocol/sdk";
 import { db } from "@/db";
 import { modelConfigs, mcpConfig } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -10,6 +11,8 @@ import { ModelError } from "./types";
 import type { StreamEvent } from "./types";
 import { readProjectMcpConfig as readProjectMcpConfigFromFs } from "./fs";
 import { tokenUsageLogs } from "@/db/schema";
+import { getSystemKey } from "./auth/api-key";
+import { resolveUserModelConfig, type UserModelConfigRow } from "./user-model-service";
 
 type ModelConfigRow = {
   id: number;
@@ -22,6 +25,9 @@ type ModelConfigRow = {
   extraEnvJson: string;
   backend: string; // "sdk" | "acp"
 };
+
+/** 统一的模型配置接口（管理员模型 + BYOK 模型共用） */
+type UnifiedModelConfig = ModelConfigRow | UserModelConfigRow;
 
 export function resolveModelConfig(modelId: number): ModelConfigRow {
   const config = db
@@ -75,24 +81,63 @@ export async function* streamModelResponse(
   }
 ): AsyncGenerator<StreamEvent> {
   const config = resolveModelConfig(modelId);
+  yield* streamWithConfig(config, messages, options, modelId);
+}
+
+/** BYOK 用户模型流式响应入口 */
+export async function* streamUserModelResponse(
+  userModelId: number,
+  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
+  options?: {
+    systemPrompt?: string;
+    cwd?: string;
+    projectId?: string;
+    userId?: string;
+    workspaceId?: string;
+    chatId?: number;
+  }
+): AsyncGenerator<StreamEvent> {
+  if (!options?.userId) {
+    throw new ModelError("BYOK 模型需要用户认证", "INVALID_CONFIG");
+  }
+  const config = resolveUserModelConfig(userModelId, options.userId);
+  console.log("[ModelService] BYOK userModelId=", userModelId, "provider=", config.provider);
+  yield* streamWithConfig(config, messages, options, userModelId);
+}
+
+/** 共享的流式调用逻辑（管理员模型 + BYOK 模型共用） */
+async function* streamWithConfig(
+  config: UnifiedModelConfig,
+  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
+  options?: {
+    systemPrompt?: string;
+    cwd?: string;
+    projectId?: string;
+    userId?: string;
+    workspaceId?: string;
+    chatId?: number;
+  },
+  _modelIdForLog?: number
+): AsyncGenerator<StreamEvent> {
+  const modelIdForLog = _modelIdForLog ?? config.id;
 
   // ACP 后端分流
   console.log("[ModelService] backend=", config.backend, "userId=", options?.userId || "(none)", "chatId=", options?.chatId ?? "(none)");
   if (config.backend === "acp" && options?.userId && options?.chatId) {
     console.log("[ACP] ========== ACP 分流触发 ==========");
-    console.log("[ACP] modelId:", modelId, "provider:", config.provider, "modelName:", config.modelName);
+    console.log("[ACP] modelId:", modelIdForLog, "provider:", config.provider, "modelName:", config.modelName);
     console.log("[ACP] userId:", options.userId, "projectId:", options.projectId ?? "(none)", "workspaceId:", options.workspaceId ?? "(none)");
     console.log("[ACP] chatId:", options.chatId, "cwd:", options.cwd ?? process.cwd());
     console.log("[ACP] messages count:", messages.length);
     console.log("[ACP] ============================================");
     const { streamAcpModelResponse } = await import("./acp-model-service");
-    yield* streamAcpModelResponse(modelId, messages, {
+    yield* streamAcpModelResponse(modelIdForLog, messages, {
       userId: options.userId,
       projectId: options.projectId,
       workspaceId: options.workspaceId,
       chatId: options.chatId,
       cwd: options.cwd,
-    });
+    }, config);
     return;
   }
   console.log("[ModelService] 使用 SDK 直调模式 (backend=", config.backend, ")");
@@ -244,19 +289,7 @@ export async function* streamModelResponse(
   };
 
   // 注入 MCP 服务器配置（全局 MCP + 项目 MCP + 客户端 tool in-process MCP）
-  const globalMcpServers = readMcpServers();
-  let projectMcpServers: Record<string, McpServerConfig> | undefined;
-  if (options?.projectId) {
-    try {
-      const projectDirSegments = ["projects", options.projectId];
-      const projectConfig = readProjectMcpConfigFromFs(projectDirSegments);
-      if (projectConfig?.mcpServers && typeof projectConfig.mcpServers === "object") {
-        projectMcpServers = projectConfig.mcpServers as Record<string, McpServerConfig>;
-      }
-    } catch {
-      // 项目级 MCP 配置读取失败，忽略
-    }
-  }
+  const resolved = resolveMcpServersForUser(options?.userId, options?.projectId);
   const clientToolsServer = createClientToolsMcpServer();
   // 为所有 MCP 配置添加 alwaysLoad: true，确保 SDK 同步等待 MCP 连接完成再构建 prompt
   // 否则 stdio/sse 类型的 MCP 如果启动较慢，第一轮对话时工具尚未注册，会报 "no tool available"
@@ -267,8 +300,7 @@ export async function* streamModelResponse(
     );
   };
   sdkOptions.mcpServers = {
-    ...withAlwaysLoad(globalMcpServers),
-    ...withAlwaysLoad(projectMcpServers),
+    ...withAlwaysLoad(resolved),
     rabbitdocs_client: clientToolsServer,
   };
   sdkOptions.allowedTools = [
@@ -282,7 +314,7 @@ export async function* streamModelResponse(
 
   // 服务端日志：打印 Agent SDK 调用参数
   console.log("[AgentSDK] ========== 调用开始 ==========");
-  console.log("[AgentSDK] modelId:", modelId);
+  console.log("[AgentSDK] modelId:", modelIdForLog);
   console.log("[AgentSDK] provider:", config.provider);
   console.log("[AgentSDK] modelName:", config.modelName);
   console.log("[AgentSDK] baseUrl:", config.baseUrl);
@@ -412,27 +444,31 @@ export async function* streamModelResponse(
             "raw_usage=", JSON.stringify(usage),
             "raw_apiUsage=", JSON.stringify(apiUsage)
           );
-          // 持久化到 token_usage_logs
-          try {
-            db.insert(tokenUsageLogs).values({
-              userId: options?.userId || "unknown",
-              modelId,
-              chatId: options?.chatId,
-              backend: "sdk",
-              inputTokens: tokenUsage.input_tokens || 0,
-              outputTokens: tokenUsage.output_tokens || 0,
-              cacheCreationInputTokens: tokenUsage.cache_creation_input_tokens || 0,
-              cacheReadInputTokens: tokenUsage.cache_read_input_tokens || 0,
-              totalTokens,
-              costUsd: Math.round((totalCostUsd || 0) * 10000),
-              durationMs: durationMs || 0,
-              numTurns: numTurns || 1,
-              projectId: options?.projectId,
-              workspaceId: options?.workspaceId,
-              createdAt: new Date().toISOString(),
-            }).run();
-          } catch (err) {
-            console.error("[TokenUsage] failed to log usage:", err);
+          // BYOK 模型不记录 token 用量（用户自付费）
+          const isByokModel = "userId" in config;
+          if (!isByokModel) {
+            // 持久化到 token_usage_logs
+            try {
+              db.insert(tokenUsageLogs).values({
+                userId: options?.userId || "unknown",
+                modelId: modelIdForLog,
+                chatId: options?.chatId,
+                backend: "sdk",
+                inputTokens: tokenUsage.input_tokens || 0,
+                outputTokens: tokenUsage.output_tokens || 0,
+                cacheCreationInputTokens: tokenUsage.cache_creation_input_tokens || 0,
+                cacheReadInputTokens: tokenUsage.cache_read_input_tokens || 0,
+                totalTokens,
+                costUsd: Math.round((totalCostUsd || 0) * 10000),
+                durationMs: durationMs || 0,
+                numTurns: numTurns || 1,
+                projectId: options?.projectId,
+                workspaceId: options?.workspaceId,
+                createdAt: new Date().toISOString(),
+              }).run();
+            } catch (err) {
+              console.error("[TokenUsage] failed to log usage:", err);
+            }
           }
 
           // 向前端发送 usage 事件
@@ -531,4 +567,95 @@ export async function* streamModelResponse(
       code: "SDK_ERROR",
     };
   }
+}
+
+/**
+ * 合并全局 + 项目级 MCP 配置，并替换 headers 中的 `${user-api-key}` 占位符。
+ * 供 SDK 直调模式和 ACP 模式共用。
+ */
+export function resolveMcpServersForUser(
+  userId: string | undefined,
+  projectId: string | undefined,
+): Record<string, McpServerConfig> {
+  // 1. 读取全局 MCP
+  const globalMcpServers = readMcpServers();
+
+  // 2. 读取项目级 MCP
+  let projectMcpServers: Record<string, McpServerConfig> | undefined;
+  if (projectId) {
+    try {
+      const projectDirSegments = ["projects", projectId];
+      const projectConfig = readProjectMcpConfigFromFs(projectDirSegments);
+      if (projectConfig?.mcpServers && typeof projectConfig.mcpServers === "object") {
+        projectMcpServers = projectConfig.mcpServers as Record<string, McpServerConfig>;
+      }
+    } catch {
+      // 项目级 MCP 配置读取失败，忽略
+    }
+  }
+
+  // 3. 合并
+  const merged: Record<string, McpServerConfig> = {
+    ...globalMcpServers,
+    ...projectMcpServers,
+  };
+
+  // 4. 查询用户系统 Key（用于替换占位符）
+  const userApiKey = userId ? getSystemKey(userId)?.keyField : undefined;
+
+  // 5. 替换 headers 中的 ${user-api-key}
+  const PLACEHOLDER = "${user-api-key}";
+  for (const cfg of Object.values(merged)) {
+    const headers = (cfg as Record<string, unknown>).headers;
+    if (headers && typeof headers === "object" && userApiKey) {
+      for (const [key, val] of Object.entries(headers as Record<string, string>)) {
+        if (typeof val === "string" && val.includes(PLACEHOLDER)) {
+          (headers as Record<string, string>)[key] = val.replace(PLACEHOLDER, userApiKey);
+        }
+      }
+    }
+  }
+
+  return merged;
+}
+
+/**
+ * 将 SDK 格式的 MCP 配置转换为 ACP newSession 所需的 mcpServers 数组格式。
+ * ACP SDK headers 格式: Array<{name: string, value: string}>
+ * Claude SDK headers 格式: Record<string, string>
+ */
+export function convertToAcpMcpServers(
+  servers: Record<string, McpServerConfig>,
+): Array<McpServer> {
+  return Object.entries(servers).map(([name, cfg]) => {
+    const entry = cfg as Record<string, unknown>;
+    if (entry.type === "http" || entry.type === "sse") {
+      // HTTP/SSE 类型：转换 headers 格式
+      const sdkHeaders = entry.headers as Record<string, string> | undefined;
+      const acpHeaders = sdkHeaders
+        ? Object.entries(sdkHeaders).map(([hName, hValue]) => ({ name: hName, value: hValue }))
+        : [];
+      return {
+        type: entry.type,
+        name,
+        url: entry.url,
+        headers: acpHeaders,
+      } as McpServer;
+    } else if (entry.command) {
+      // stdio 类型
+      const env = entry.env as Record<string, string> | undefined;
+      const acpEnv = env
+        ? Object.entries(env).map(([eName, eValue]) => ({ name: eName, value: eValue }))
+        : [];
+      return {
+        type: "stdio",
+        name,
+        command: entry.command as string,
+        args: (entry.args as string[]) || [],
+        env: acpEnv,
+      } as McpServer;
+    }
+    // 其他类型直接返回
+    return { ...entry, name } as McpServer;
+  });
 }

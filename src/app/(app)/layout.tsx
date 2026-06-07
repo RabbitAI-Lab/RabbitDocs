@@ -5,7 +5,8 @@ import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import Sidebar from "@/components/layout/Sidebar";
 import FloatingChatProvider from "@/components/chat/FloatingChatProvider";
 import ThemeRegistry from "@/components/layout/ThemeRegistry";
-import { getBrandName } from "@/lib/auth/settings";
+import { getBrandName, getSetting } from "@/lib/auth/settings";
+import { parseColorScheme } from "@/lib/color-scheme";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("metadata");
@@ -28,9 +29,13 @@ export default async function AppLayout({
   const locale = await getLocale();
   const msgs = await getMessages();
 
+  // Read color scheme for antd theme sync
+  const colorSchemeRaw = getSetting("color_scheme");
+  const colorScheme = colorSchemeRaw ? parseColorScheme(colorSchemeRaw) : null;
+
   return (
     <NextIntlClientProvider locale={locale} messages={msgs}>
-      <ThemeRegistry locale={locale}>
+      <ThemeRegistry locale={locale} colorScheme={colorScheme}>
         <FloatingChatProvider>
           <div className="flex h-full">
             <div data-sidebar>

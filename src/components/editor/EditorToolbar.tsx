@@ -54,7 +54,7 @@ export default function EditorToolbar({
       <div className="flex items-center gap-2">
         <button
           onClick={onSave}
-          className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+          className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] rounded-lg transition-colors"
         >
           {saving ? (
             <>

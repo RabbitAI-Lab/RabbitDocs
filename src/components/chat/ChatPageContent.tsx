@@ -153,6 +153,7 @@ export default function ChatPageContent({
     projectId,
     router,
     onNewChatNavigate: useCallback(() => router.push("/chat/new"), [router]),
+    authFetch,
   });
 
   // Initialize chat state from server props

@@ -7,6 +7,7 @@ import { registerProjectTools } from "./tools/project";
 import { registerFileTools } from "./tools/file";
 import { registerDirectoryTools } from "./tools/directory";
 import { registerTemplateTools } from "./tools/template";
+import { registerTodoTools } from "./tools/todo";
 import { validateApiKey } from "@/lib/auth/api-key";
 import { runWithMcpContext } from "./context";
 
@@ -21,6 +22,7 @@ function createMcpServer(): McpServer {
   registerFileTools(server);
   registerDirectoryTools(server);
   registerTemplateTools(server);
+  registerTodoTools(server);
   // Client tools (refresh_file_tree, preview_html) — 供 ACP Agent 使用
   // 实际动作由前端通过 SSE tool_call 事件执行，这里只返回固定文本
   registerClientTools(server);
@@ -32,18 +34,25 @@ export function startMcpServer() {
 
   // POST /mcp — 处理 MCP 请求（新 session 或已有 session）
   app.post("/mcp", async (req, res) => {
-    // API Key 认证（可选：如果提供了 Bearer token 则验证）
+    // API Key 认证（支持多种 header 格式）
+    // 格式1: Authorization: Bearer atm_xxx
+    // 格式2: api-key: atm_xxx（旧格式兼容）
     const authHeader = req.headers["authorization"] as string | undefined;
-    let requestUserId: string | null = null;
+    const apiKeyHeader = req.headers["api-key"] as string | undefined;
+    let rawKey: string | undefined;
     if (authHeader?.startsWith("Bearer atm_")) {
-      const key = authHeader.slice(7);
-      const validated = validateApiKey(key);
+      rawKey = authHeader.slice(7);
+    } else if (apiKeyHeader?.startsWith("atm_")) {
+      rawKey = apiKeyHeader;
+    }
+    let requestUserId: string | null = null;
+    if (rawKey) {
+      const validated = validateApiKey(rawKey);
       if (!validated) {
         res.status(401).json({ error: "Invalid API key" });
         return;
       }
       requestUserId = validated.userId;
-      // 认证通过，继续处理
     }
 
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
