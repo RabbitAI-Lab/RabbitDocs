@@ -47,7 +47,7 @@ export default function CTASection({
               <Button
                 href={primaryHref}
                 size="lg"
-                className="animate-blue-breathing"
+                className="btn-cta-light"
               >
                 {ctaPrimary}
                 <span aria-hidden="true">→</span>
@@ -57,7 +57,7 @@ export default function CTASection({
                   href={secondaryHref}
                   variant="secondary"
                   size="lg"
-                  className="border-zinc-800 bg-zinc-900/50 text-zinc-100 hover:border-zinc-700"
+                  className="border-zinc-700 bg-zinc-900/60 text-zinc-300 hover:border-zinc-500 hover:text-zinc-100"
                 >
                   {ctaSecondary}
                 </Button>

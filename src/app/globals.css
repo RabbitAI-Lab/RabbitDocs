@@ -295,6 +295,65 @@ body {
   background-color: var(--color-primary-hover) !important;
 }
 
+/* 营销站主按钮 — Obsidian Premium
+   深色实体 + 内光质感，不靠渐变炫技 */
+.btn-primary-gradient {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #18181b !important;
+  color: #fafafa !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
+    0 1px 3px rgba(0, 0, 0, 0.12) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.btn-primary-gradient:hover {
+  background: #27272a !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.1) inset,
+    0 6px 16px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(59, 130, 246, 0.06) !important;
+}
+:where(.dark) .btn-primary-gradient {
+  background: #fafafa !important;
+  color: #18181b !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.2) inset,
+    0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+:where(.dark) .btn-primary-gradient:hover {
+  background: #f4f4f5 !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.3) inset,
+    0 6px 16px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(96, 165, 250, 0.1) !important;
+}
+
+/* 营销站副按钮 — Refined Glass
+   中性半透明，不夹带品牌色偏移 */
+.btn-secondary-glass {
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+:where(.dark) .btn-secondary-glass {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+.btn-secondary-glass:hover {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}
+:where(.dark) .btn-secondary-glass:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
 /* antd primary button fallback: 确保 CSS-in-JS 注入延迟时仍有背景色 */
 .ant-btn-primary:not(:disabled) {
   background-color: var(--color-primary, #1677ff) !important;
@@ -320,6 +379,26 @@ body {
   .chat-welcome[data-mounted="true"] .chat-welcome__footer {
     animation: none;
   }
+}
+
+/* CTA 区专用浅色按钮（用于深色背景上的反转效果） */
+.btn-cta-light {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #fafafa !important;
+  color: #18181b !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.3) inset,
+    0 1px 3px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.btn-cta-light:hover {
+  background: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.4) inset,
+    0 6px 20px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* 蓝色呼吸灯边框：用于引导用户选择项目 */

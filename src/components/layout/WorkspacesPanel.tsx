@@ -110,6 +110,7 @@ export default function WorkspacesPanel() {
       return;
     }
     const meta = await res.json();
+    try { localStorage.setItem("last-selected-location", `workspace/${meta.id}`); } catch { /* ignore */ }
     await fetchWorkspaces();
     setEditingId(meta.id);
     setEditName(meta.name);
@@ -271,7 +272,10 @@ export default function WorkspacesPanel() {
                 !isDragging && isActive && "bg-gray-100 dark:bg-[#171D38] text-gray-900 dark:text-gray-100 font-medium",
                 !isDragging && !isActive && "text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-[#1E2845]",
               )}
-              onClick={() => router.push(`${workspacePath}?openChat=true`)}
+              onClick={() => {
+                try { localStorage.setItem("last-selected-location", `workspace/${workspace.id}`); } catch { /* ignore */ }
+                router.push(`${workspacePath}?openChat=true`);
+              }}
             >
               {/* Drop indicator line */}
               {isDragTarget && dropPosition === "before" && (

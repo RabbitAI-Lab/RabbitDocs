@@ -144,7 +144,7 @@ export default async function PricingPage() {
             </div>
             <a
               href="mailto:mail@xujialiang.net"
-              className="inline-flex items-center gap-1.5 rounded-md border border-[var(--marketing-border)] bg-[var(--marketing-surface)] px-4 py-2 text-sm font-medium text-[var(--marketing-fg)] transition-colors hover:border-blue-500/50"
+              className="inline-flex items-center gap-1.5 rounded-md border border-[var(--marketing-border)] bg-[var(--marketing-surface)] px-4 py-2 text-sm font-medium text-[var(--marketing-fg)] transition-all duration-300 hover:border-zinc-400 dark:hover:border-zinc-500 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
             >
               {t("custom.cta")} <span aria-hidden="true">→</span>
             </a>

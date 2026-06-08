@@ -97,6 +97,7 @@ export default function ProjectsPanel() {
     });
     if (!res.ok) return;
     const meta = await res.json();
+    try { localStorage.setItem("last-selected-location", `project/${meta.id}`); } catch { /* ignore */ }
     await fetchProjects();
     setEditingId(meta.id);
     setEditName(meta.name);
@@ -235,7 +236,10 @@ export default function ProjectsPanel() {
                 !isDragging && isActive && "bg-gray-100 dark:bg-[#171D38] text-gray-900 dark:text-gray-100 font-medium",
                 !isDragging && !isActive && "text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-[#1E2845]",
               )}
-              onClick={() => router.push(`${projectPath}?openChat=true`)}
+              onClick={() => {
+                try { localStorage.setItem("last-selected-location", `project/${project.id}`); } catch { /* ignore */ }
+                router.push(`${projectPath}?openChat=true`);
+              }}
             >
               {isDragTarget && dropPosition === "before" && (
                 <div className="absolute top-0 left-2 right-2 h-[2px] bg-blue-500 rounded-full" />

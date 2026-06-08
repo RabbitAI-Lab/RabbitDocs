@@ -36,7 +36,7 @@ export default function NewChatWorkspace() {
     });
     if (!res.ok) return;
     const meta: ProjectMeta = await res.json();
-    try { localStorage.setItem("last-selected-project", meta.id); } catch { /* ignore */ }
+    try { localStorage.setItem("last-selected-location", `project/${meta.id}`); } catch { /* ignore */ }
     router.push(`/project/${meta.id}?openChat=true`);
   }, [authFetch, user?.id, projects, tp, router]);
 
@@ -56,7 +56,7 @@ export default function NewChatWorkspace() {
           const found = list.find((p: ProjectMeta) => p.id === preselectProjectId);
           if (found) {
             autoSelectedRef.current = true;
-            try { localStorage.setItem("last-selected-project", found.id); } catch { /* ignore */ }
+            try { localStorage.setItem("last-selected-location", `project/${found.id}`); } catch { /* ignore */ }
             router.replace(`/project/${found.id}?openChat=true`);
           }
         }

@@ -8,9 +8,10 @@ export default function DocsRedirectPage() {
 
   useEffect(() => {
     try {
-      const lastProjectId = localStorage.getItem("last-selected-project");
-      if (lastProjectId) {
-        router.replace(`/project/${lastProjectId}?openChat=true`);
+      const lastLocation = localStorage.getItem("last-selected-location");
+      if (lastLocation) {
+        // 支持格式: "project/{id}" 或 "workspace/{id}"
+        router.replace(`/${lastLocation}?openChat=true`);
         return;
       }
     } catch { /* ignore */ }

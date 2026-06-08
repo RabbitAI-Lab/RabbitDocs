@@ -49,9 +49,9 @@ export default function PricingTable({
             <div
               key={plan.name}
               className={clsx(
-                "relative flex flex-col rounded-2xl border p-6 transition-all duration-200",
+                "relative flex flex-col rounded-2xl border p-6 transition-all duration-300",
                 plan.highlight
-                  ? "border-blue-500 bg-gradient-to-b from-blue-500/5 to-transparent shadow-lg shadow-blue-500/10 -translate-y-1"
+                  ? "border-zinc-300 dark:border-zinc-600 bg-[var(--marketing-card)] shadow-[0_8px_30px_rgba(0,0,0,0.08)] -translate-y-2"
                   : "border-[var(--marketing-border)] bg-[var(--marketing-card)]"
               )}
             >
@@ -83,7 +83,7 @@ export default function PricingTable({
                     className="flex items-start gap-2.5 text-sm text-[var(--marketing-fg)]"
                   >
                     <Check
-                      className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500"
+                      className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500"
                       aria-hidden="true"
                     />
                     <span>{f}</span>
