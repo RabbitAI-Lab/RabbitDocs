@@ -92,19 +92,19 @@ export default function SidebarShell({ children, initialWidth, initialCollapsed,
         }`}
       >
         {/* Logo + collapse toggle */}
-        <div className={`flex items-center justify-between ${collapsed ? "px-0 py-2.5" : "px-3 py-3"}`}>
+        <div className={`sidebar-logo-area ${collapsed ? "sidebar-logo-area--collapsed" : ""}`}>
           {collapsed ? (
-            <span className="text-sm font-bold text-gray-800 dark:text-gray-200 mx-auto cursor-pointer select-none" onClick={toggleCollapsed}>🐰</span>
+            <span className="sidebar-logo-collapsed" onClick={toggleCollapsed}>🐰</span>
           ) : (
-            <Link href="/home" className="block">
-              <h1 className="text-lg font-bold text-gray-800 dark:text-gray-200">{brandName}</h1>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{t('documentManagementPublishing')}</p>
+            <Link href="/home" className="sidebar-logo-link">
+              <h1 className="sidebar-logo-name">{brandName}</h1>
+              <p className="sidebar-logo-subtitle">{t('documentManagementPublishing')}</p>
             </Link>
           )}
           {!collapsed && (
             <button
               onClick={toggleCollapsed}
-              className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-800 transition-colors"
+              className="sidebar-collapse-btn"
               title={t('collapseSidebar')}
             >
               <MenuOutlined style={{ fontSize: 14 }} />

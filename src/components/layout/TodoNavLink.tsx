@@ -38,7 +38,7 @@ export default function TodoNavLink() {
       badgeCount={pendingCount}
       icon={
         <svg
-          className="w-4 h-4 text-blue-400"
+          className="sidebar-icon-blue"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"

@@ -24,11 +24,9 @@ export default function NavLink({ href, icon, children, badgeCount }: NavLinkPro
       onClick={() => router.push(href)}
       title={collapsed ? String(children) : undefined}
       className={cn(
-        "flex items-center gap-2 w-full py-1.5 text-sm rounded-lg transition-colors cursor-pointer select-none",
-        collapsed ? "px-0 justify-center" : "px-3",
-        isActive
-          ? "bg-gray-100 dark:bg-[#171D38] text-gray-900 dark:text-gray-100 font-medium"
-          : "text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-[#1E2845]"
+        "sidebar-nav-link",
+        collapsed && "sidebar-nav-link--collapsed",
+        isActive && "sidebar-nav-link--active",
       )}
     >
       <span className="relative inline-flex">

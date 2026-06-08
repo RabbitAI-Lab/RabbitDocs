@@ -60,15 +60,13 @@ export default function MyAccountMenu() {
         ref={triggerRef}
         onClick={() => setOpen(!open)}
         className={cn(
-          "flex items-center gap-2 w-full py-1.5 text-sm rounded-lg transition-colors cursor-pointer select-none",
-          collapsed ? "px-0 justify-center" : "px-3",
-          open
-            ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-medium"
-            : "text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+          "sidebar-nav-link",
+          collapsed && "sidebar-nav-link--collapsed",
+          open && "sidebar-nav-link--active",
         )}
       >
         <svg
-          className="w-4 h-4 text-blue-400"
+          className="sidebar-icon-blue"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"

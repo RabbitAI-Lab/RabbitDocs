@@ -70,6 +70,357 @@ body {
 
 /* CherryMarkdown 布局修复由 CherryEditor 组件通过内联样式处理 */
 
+/* ── Sidebar Design System ── */
+
+/* Logo area */
+.sidebar-logo-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 14px 12px;
+}
+
+.sidebar-logo-area--collapsed {
+  padding: 14px 0 12px;
+  justify-content: center;
+}
+
+.sidebar-logo-collapsed {
+  font-size: 18px;
+  cursor: pointer;
+  user-select: none;
+  filter: grayscale(0.15);
+  transition: filter 0.2s;
+}
+
+.sidebar-logo-collapsed:hover {
+  filter: grayscale(0);
+}
+
+.sidebar-logo-link {
+  display: block;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.sidebar-logo-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #18181b;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.dark .sidebar-logo-name {
+  color: #fafafa;
+}
+
+.sidebar-logo-subtitle {
+  font-size: 11px;
+  color: #a1a1aa;
+  margin-top: 2px;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+}
+
+.dark .sidebar-logo-subtitle {
+  color: #52525b;
+}
+
+.sidebar-collapse-btn {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: #a1a1aa;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sidebar-collapse-btn:hover {
+  color: #71717a;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.dark .sidebar-collapse-btn:hover {
+  color: #a1a1aa;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* New Chat button — outlined, airy */
+.sidebar-new-chat-btn {
+  -webkit-appearance: none;
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 550;
+  border: 1.5px solid color-mix(in srgb, var(--color-primary) 45%, #c4c4c4);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebar-new-chat-btn:hover {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  box-shadow:
+    0 2px 8px -2px color-mix(in srgb, var(--color-primary) 20%, transparent);
+  transform: translateY(-1px);
+}
+
+.sidebar-new-chat-btn:active {
+  transform: translateY(0);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  box-shadow: none;
+}
+
+.dark .sidebar-new-chat-btn {
+  border-color: color-mix(in srgb, var(--color-primary) 40%, rgba(255, 255, 255, 0.15));
+  color: var(--color-primary);
+}
+
+.dark .sidebar-new-chat-btn:hover {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  box-shadow:
+    0 2px 8px -2px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+/* Nav links — blue-tinted warmth */
+.sidebar-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 450;
+  color: color-mix(in srgb, var(--color-primary) 40%, #52525b);
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.sidebar-nav-link:hover {
+  color: color-mix(in srgb, var(--color-primary) 60%, #3f3f46);
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+}
+
+.sidebar-nav-link--active {
+  color: color-mix(in srgb, var(--color-primary) 80%, #18181b);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  font-weight: 550;
+}
+
+.sidebar-nav-link--active:hover {
+  background: color-mix(in srgb, var(--color-primary) 13%, transparent);
+}
+
+.dark .sidebar-nav-link {
+  color: color-mix(in srgb, var(--color-primary) 30%, #a1a1aa);
+}
+
+.dark .sidebar-nav-link:hover {
+  color: color-mix(in srgb, var(--color-primary) 50%, #d4d4d8);
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+}
+
+.dark .sidebar-nav-link--active {
+  color: color-mix(in srgb, var(--color-primary) 70%, #fafafa);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.dark .sidebar-nav-link--active:hover {
+  background: color-mix(in srgb, var(--color-primary) 13%, transparent);
+}
+
+.sidebar-nav-link--collapsed {
+  padding: 7px 0;
+  justify-content: center;
+}
+
+/* Section header (Projects / Workspaces) */
+.sidebar-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 12px 12px 4px;
+}
+
+.dark .sidebar-section-header {
+  color: #52525b;
+}
+
+.sidebar-section-header svg {
+  opacity: 0.4;
+  width: 12px;
+  height: 12px;
+}
+
+.sidebar-section-header button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-left: auto;
+  padding: 2px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #a1a1aa;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-section-header button:hover {
+  color: var(--color-primary);
+  background: rgba(59, 130, 246, 0.06);
+}
+
+/* List items (projects / workspaces) — blue-tinted */
+.sidebar-list-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: color-mix(in srgb, var(--color-primary) 30%, #3f3f46);
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.sidebar-list-item:hover {
+  color: color-mix(in srgb, var(--color-primary) 55%, #18181b);
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+}
+
+.sidebar-list-item--active {
+  color: color-mix(in srgb, var(--color-primary) 70%, #18181b);
+  font-weight: 550;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.sidebar-list-item--active:hover {
+  background: color-mix(in srgb, var(--color-primary) 13%, transparent);
+}
+
+.dark .sidebar-list-item {
+  color: color-mix(in srgb, var(--color-primary) 25%, #a1a1aa);
+}
+
+.dark .sidebar-list-item:hover {
+  color: color-mix(in srgb, var(--color-primary) 45%, #e4e4e7);
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+}
+
+.dark .sidebar-list-item--active {
+  color: color-mix(in srgb, var(--color-primary) 65%, #fafafa);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.dark .sidebar-list-item--active:hover {
+  background: color-mix(in srgb, var(--color-primary) 13%, transparent);
+}
+
+/* List item icons — context-differentiated */
+.sidebar-list-item .sidebar-icon-project {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--color-primary);
+  opacity: 0.6;
+}
+
+.sidebar-list-item--active .sidebar-icon-project,
+.sidebar-list-item:hover .sidebar-icon-project {
+  opacity: 1;
+}
+
+.sidebar-list-item .sidebar-icon-workspace {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: #818cf8;
+  opacity: 0.6;
+}
+
+.sidebar-list-item--active .sidebar-icon-workspace,
+.sidebar-list-item:hover .sidebar-icon-workspace {
+  opacity: 1;
+}
+
+/* Drop indicator */
+.sidebar-list-item .drop-indicator {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  background: var(--color-primary);
+  border-radius: 1px;
+}
+
+/* Bottom section separator — blue-tinted */
+.sidebar-bottom-section {
+  border-top: 1px solid color-mix(in srgb, var(--color-primary) 8%, rgba(0, 0, 0, 0.05));
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dark .sidebar-bottom-section {
+  border-top-color: color-mix(in srgb, var(--color-primary) 8%, rgba(255, 255, 255, 0.04));
+}
+
+/* Nav icon colors — contextual, warmed */
+.sidebar-icon-blue {
+  width: 16px;
+  height: 16px;
+  color: var(--color-primary);
+  opacity: 0.6;
+}
+
+.sidebar-nav-link--active .sidebar-icon-blue,
+.sidebar-nav-link:hover .sidebar-icon-blue {
+  opacity: 1;
+}
+
+.sidebar-icon-muted {
+  width: 16px;
+  height: 16px;
+  color: color-mix(in srgb, var(--color-primary) 40%, #a1a1aa);
+  opacity: 0.65;
+}
+
+.sidebar-nav-link--active .sidebar-icon-muted,
+.sidebar-nav-link:hover .sidebar-icon-muted {
+  opacity: 0.95;
+}
+
 /* ── New Chat / Project Picker ── */
 
 .new-chat-page {
