@@ -154,7 +154,6 @@ export default function NewChatWorkspace() {
     );
   }
 
-  const hasWorkspaces = workspaces.length > 0;
   const showWorkspaces = hasFeature("workspace");
 
   // --- Render: Empty state (no projects, no workspaces) ---
