@@ -8,6 +8,13 @@
       "when": 1780876767617,
       "tag": "0000_supreme_jetstream",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1749532800000,
+      "tag": "0042_add_publish_status",
+      "breakpoints": true
     }
   ]
 }
