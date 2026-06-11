@@ -147,6 +147,7 @@ async function sendFeedbackNotification(data: {
   if (!transporter) return;
 
   const adminEmail =
+    (await getSetting("admin_email")) ||
     (await getSetting("smtp_from_email")) ||
     (await getSetting("smtp_user"));
   if (!adminEmail) return;

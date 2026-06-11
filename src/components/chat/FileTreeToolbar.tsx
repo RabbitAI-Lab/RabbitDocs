@@ -12,7 +12,7 @@ interface FileTreeToolbarProps {
 export default function FileTreeToolbar({ onCreateFile, onCreateDir, onUpload, disabled }: FileTreeToolbarProps) {
   const t = useTranslations("chat");
   return (
-    <div className="px-2 py-1.5 border-b border-gray-100 flex gap-0.5">
+    <div className="px-2 h-[38px] shrink-0 border-b border-gray-100 flex items-center gap-0.5">
       <button
         onClick={() => onCreateFile()}
         disabled={disabled}

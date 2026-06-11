@@ -108,6 +108,7 @@ export async function initDb(): Promise<void> {
       try {
         const patches = [
           "ALTER TABLE entities ADD COLUMN IF NOT EXISTS publish_status TEXT",
+          "ALTER TABLE todos ADD COLUMN IF NOT EXISTS sort_order integer DEFAULT 0 NOT NULL",
         ];
         for (const sql of patches) {
           await client.query(sql);

@@ -10,12 +10,16 @@ import {
   isOpenRegistration,
   isInviteCodeRequired,
   isValidGeneralRegistrationKey,
+  getSetting,
+  getBrandName,
 } from "@/lib/auth/settings";
 import { getAppUrl } from "@/lib/auth/env";
 import {
   sendVerificationEmail,
   generateVerificationCode,
   isSmtpConfigured,
+  getTransporter,
+  getFromAddress,
 } from "@/lib/auth/mail";
 import { getApiT } from "@/lib/i18n-api";
 import { createSystemKey } from "@/lib/auth/api-key";
@@ -112,6 +116,15 @@ export async function POST(req: NextRequest) {
     // 自动创建 MCP API Key
     await createSystemKey(userId);
 
+    // 异步通知管理员有新用户注册（不阻塞响应）
+    sendRegistrationNotification({
+      userEmail: email,
+      userName: name || null,
+      userId,
+    }).catch((err) => {
+      console.error("[auth] Failed to send registration notification:", err);
+    });
+
     // 认领邀请码（原子操作）—— 通用秘钥可重复使用，不需标记
     if (hasInviteCode) {
       await db.update(inviteCodes)
@@ -166,4 +179,50 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * 异步发送新用户注册通知邮件给管理员
+ */
+async function sendRegistrationNotification(data: {
+  userEmail: string;
+  userName: string | null;
+  userId: string;
+}) {
+  // 检查是否启用了注册通知
+  const enabled = (await getSetting("notify_admin_on_registration")) === "true";
+  if (!enabled) return;
+
+  const transporter = await getTransporter();
+  if (!transporter) return;
+
+  const adminEmail =
+    (await getSetting("admin_email")) ||
+    (await getSetting("smtp_from_email")) ||
+    (await getSetting("smtp_user"));
+  if (!adminEmail) return;
+
+  const brandName = await getBrandName();
+  const displayName = data.userName || data.userEmail;
+  const now = new Date().toISOString();
+
+  const subject = `[${brandName}] New User Registration`;
+  const html = `
+    <div style="max-width:600px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+      <h2 style="color:#333;margin-bottom:16px">New User Registered</h2>
+      <table style="width:100%;border-collapse:collapse">
+        <tr><td style="padding:8px 0;color:#888;width:120px">User:</td><td style="padding:8px 0">${displayName}</td></tr>
+        <tr><td style="padding:8px 0;color:#888">Email:</td><td style="padding:8px 0">${data.userEmail}</td></tr>
+        <tr><td style="padding:8px 0;color:#888">Time:</td><td style="padding:8px 0">${now}</td></tr>
+      </table>
+      <p style="color:#999;font-size:12px;margin-top:24px">This email was sent automatically by ${brandName}.</p>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: await getFromAddress(),
+    to: adminEmail,
+    subject,
+    html,
+  });
 }

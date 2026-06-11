@@ -21,6 +21,7 @@ const updateSettingsSchema = z.object({
   openRegistration: z.boolean().optional(),
   requireInviteCode: z.boolean().optional(),
   requireEmailVerification: z.boolean().optional(),
+  notifyAdminOnRegistration: z.boolean().optional(),
   passkeyEnabled: z.boolean().optional(),
   passkeyRpId: z.string().trim().max(253).optional(),
   passkeyRpName: z.string().trim().max(128).optional(),
@@ -89,6 +90,7 @@ export async function GET(req: NextRequest) {
     openRegistration: (await getSetting("open_registration")) !== "false",
     requireInviteCode: (await getSetting("require_invite_code")) === "true",
     requireEmailVerification: (await getSetting("require_email_verification")) === "true",
+    notifyAdminOnRegistration: (await getSetting("notify_admin_on_registration")) === "true",
     passkeyEnabled: (await getSetting("passkey_enabled")) === "true",
     passkeyRpId: (await getSetting("passkey_rp_id")) ?? "",
     passkeyRpName: (await getSetting("passkey_rp_name")) ?? "",
@@ -136,6 +138,12 @@ export async function PATCH(req: NextRequest) {
       updates.push({
         key: "require_email_verification",
         value: parsed.data.requireEmailVerification ? "true" : "false",
+      });
+    }
+    if (parsed.data.notifyAdminOnRegistration !== undefined) {
+      updates.push({
+        key: "notify_admin_on_registration",
+        value: parsed.data.notifyAdminOnRegistration ? "true" : "false",
       });
     }
     if (parsed.data.passkeyEnabled !== undefined) {

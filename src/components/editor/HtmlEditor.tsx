@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 import Editor from "@monaco-editor/react";
+import { useAuth } from "@/components/auth/useAuth";
 import ShareHtmlButton from "@/components/project/ShareHtmlButton";
 import { Button } from "antd";
 
@@ -34,12 +35,17 @@ export default function HtmlEditor({
   onSave,
   onContentChange,
 }: HtmlEditorProps) {
+  const { authFetch } = useAuth();
   const [content, setContent] = useState<string>(initialValue);
   const [mode, setMode] = useState<ViewMode>("preview");
   const [saving, setSaving] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  // 用于强制 iframe 重新挂载的 key，每次从隐藏变为可见时递增
+  const [iframeKey, setIframeKey] = useState(0);
+  // 容器 div 的 ref，供 IntersectionObserver 观察
+  const containerRef = useRef<HTMLDivElement>(null);
   // Snapshot of the last persisted content, used to compute the dirty flag.
   const persistedRef = useRef<string>(initialValue);
   const lastLoadedRef = useRef<string | null>(null);
@@ -65,11 +71,30 @@ export default function HtmlEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded, initialValue, filePath]);
 
+  // 检测容器从隐藏变为可见，强制 iframe 重新挂载
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    let wasVisible = false;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const isVisible = entry.isIntersecting;
+        if (isVisible && !wasVisible) {
+          setIframeKey((prev) => prev + 1);
+        }
+        wasVisible = isVisible;
+      },
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const handleRefresh = useCallback(async () => {
     if (refreshing) return;
     setRefreshing(true);
     try {
-      const res = await fetch(`/api/fs/document?path=${docsPath}/${filePath}`);
+      const res = await authFetch(`/api/fs/document?path=${docsPath}/${filePath}`);
       if (!res.ok) throw new Error("fetch failed");
       const data = await res.json();
       const fresh = data.content ?? "";
@@ -113,9 +138,9 @@ export default function HtmlEditor({
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-900">
+    <div ref={containerRef} className="flex-1 flex flex-col min-h-0" style={{ background: 'var(--main-bg)' }}>
       {/* Toolbar */}
-      <div className="flex items-center h-[41px] px-3 border-b border-gray-200 dark:border-zinc-700 gap-3 shrink-0">
+      <div className="flex items-center h-[38px] px-3 border-b border-gray-200 dark:border-zinc-700 gap-3 shrink-0 bg-transparent">
         <div className="flex items-center gap-1.5 min-w-0">
           <svg
             className="w-3.5 h-3.5 shrink-0 text-orange-500"
@@ -142,7 +167,7 @@ export default function HtmlEditor({
           )}
         </div>
 
-        <div className="flex items-center bg-white dark:bg-zinc-700 border border-gray-200 dark:border-zinc-600 rounded-md overflow-hidden">
+        <div className="flex items-center border border-gray-200 dark:border-zinc-600 rounded-md overflow-hidden">
           <button
             type="button"
             onClick={() => setMode("edit")}
@@ -233,7 +258,19 @@ export default function HtmlEditor({
             defaultLanguage="html"
             value={content}
             onChange={handleChange}
-            theme={resolvedTheme === "dark" ? "vs-dark" : "vs"}
+            theme={resolvedTheme === "dark" ? "custom-dark" : "custom-light"}
+            beforeMount={(monaco) => {
+              const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--main-bg').trim();
+              const isDark = resolvedTheme === "dark";
+              monaco.editor.defineTheme(isDark ? "custom-dark" : "custom-light", {
+                base: isDark ? "vs-dark" : "vs",
+                inherit: true,
+                rules: [],
+                colors: {
+                  "editor.background": bgColor || (isDark ? "#0a0a0a" : "#ffffff"),
+                },
+              });
+            }}
             options={{
               minimap: { enabled: false },
               fontSize: 13,
@@ -252,10 +289,11 @@ export default function HtmlEditor({
           />
         ) : (
           <iframe
+            key={iframeKey}
             title="HTML preview"
             srcDoc={content}
-            sandbox=""
-            className="w-full h-full border-0 bg-white dark:bg-zinc-900"
+            sandbox="allow-same-origin"
+            className="w-full h-full border-0"
           />
         )}
       </div>

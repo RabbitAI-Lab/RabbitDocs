@@ -26,6 +26,7 @@ interface SystemSettings {
   openRegistration: boolean;
   requireInviteCode: boolean;
   requireEmailVerification: boolean;
+  notifyAdminOnRegistration: boolean;
   passkeyEnabled: boolean;
   passkeyRpId: string;
   passkeyRpName: string;
@@ -70,6 +71,7 @@ export default function SettingsPageClient() {
       settings.openRegistration !== draft.openRegistration ||
       settings.requireInviteCode !== draft.requireInviteCode ||
       settings.requireEmailVerification !== draft.requireEmailVerification ||
+      settings.notifyAdminOnRegistration !== draft.notifyAdminOnRegistration ||
       settings.passkeyEnabled !== draft.passkeyEnabled ||
       settings.passkeyRpId !== draft.passkeyRpId ||
       settings.passkeyRpName !== draft.passkeyRpName ||
@@ -88,6 +90,7 @@ export default function SettingsPageClient() {
         openRegistration: draft.openRegistration,
         requireInviteCode: draft.requireInviteCode,
         requireEmailVerification: draft.requireEmailVerification,
+        notifyAdminOnRegistration: draft.notifyAdminOnRegistration,
         passkeyEnabled: draft.passkeyEnabled,
         passkeyRpId: draft.passkeyRpId,
         passkeyRpName: draft.passkeyRpName,
@@ -186,6 +189,14 @@ export default function SettingsPageClient() {
             value={draft.requireEmailVerification}
             onChange={(v) => update("requireEmailVerification", v)}
             current={settings.requireEmailVerification}
+          />
+          <Divider className="my-4" />
+          <SettingRow
+            title={t('notifyAdminOnRegTitle')}
+            description={t('notifyAdminOnRegDesc')}
+            value={draft.notifyAdminOnRegistration}
+            onChange={(v) => update("notifyAdminOnRegistration", v)}
+            current={settings.notifyAdminOnRegistration}
           />
         </Card>
 

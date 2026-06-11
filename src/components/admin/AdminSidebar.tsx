@@ -303,6 +303,26 @@ export default function AdminSidebar() {
         ),
       },
       {
+        href: "/admin/user-usage",
+        label: t('sidebar.menuUserUsage'),
+        icon: (
+          <svg
+            className="w-4 h-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M22 11h-4a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h4" />
+            <path d="M18 14v2" />
+          </svg>
+        ),
+      },
+      {
         href: "/admin/orders",
         label: t('sidebar.menuOrders'),
         icon: (

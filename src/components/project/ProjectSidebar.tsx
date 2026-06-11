@@ -71,7 +71,7 @@ export default function ProjectSidebar({
 
   return (
     <div className="w-[240px] h-full flex flex-col border-r border-gray-200 dark:border-zinc-700 bg-white dark:bg-[var(--sidebar-bg)] shrink-0">
-      <div className="px-3 h-[41px] flex items-center justify-between border-b border-gray-200 dark:border-zinc-700">
+      <div className="px-3 h-[41px] shrink-0 flex items-center justify-between border-b border-gray-200 dark:border-zinc-700">
         <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{t('documents', { name: projectName })}</h3>
         {onRefresh && (
           <button
@@ -87,7 +87,7 @@ export default function ProjectSidebar({
         )}
       </div>
 
-      <div className="px-2 py-1.5 border-b border-gray-100 dark:border-zinc-700 dark:border-zinc-700 flex gap-0.5">
+      <div className="px-2 h-[38px] shrink-0 border-b border-gray-100 dark:border-zinc-700 flex items-center gap-0.5">
         <button
           onClick={() => onCreateFile("")}
           disabled={isRenaming}
