@@ -56,7 +56,7 @@
     "chats": "Chats",
     "templates": "Templates",
     "todo": "To-Do",
-    "projectSandbox": "Project Sandbox",
+    "projectSandbox": "Project Sandbox (Beta)",
     "systemAdmin": "System Admin",
     "myAccount": "My Account",
     "profile": "Profile",
@@ -197,7 +197,8 @@
       "menuUserUsage": "User Plans & Usage",
       "menuPaymentConfig": "Payment",
       "menuAppearance": "Appearance",
-      "menuFeedback": "Feedback"
+      "menuFeedback": "Feedback",
+            "menuSandboxApplications": "Sandbox Applications"
     },
     "ordersPage": {
       "title": "Order Management",
@@ -997,8 +998,8 @@
       "gitnexusDescription": "Index the workspace root directory as a local code knowledge graph",
       "repositoryLabel": "Repository",
       "repositoryDescription": "Bind a Git repository to share across all projects in this workspace",
-      "sandboxLabel": "Sandbox Request",
-      "sandboxDescription": "Request a secure sandbox environment shared across workspace projects"
+      "sandboxLabel": "Sandbox",
+      "sandboxDescription": "Bind a secure sandbox environment shared across workspace projects"
     },
     "log": {
       "all": "All",
@@ -1136,17 +1137,19 @@
       "syncing": "Syncing"
     },
     "sandbox": {
-      "description": "The sandbox is shared across all projects in this workspace. It provides a secure execution environment to run and analyze code snippets.",
-      "requested": "Sandbox Requested",
-      "notRequested": "Sandbox Not Requested",
-      "requestedAt": "Requested at: {time}",
-      "releasedAt": "Released at: {time}",
-      "requestSandbox": "Request Sandbox",
-      "releaseSandbox": "Release Sandbox",
-      "confirmRelease": "Confirm Release Sandbox",
-      "confirmReleaseContent": "After release, code analysis will be unavailable. Are you sure you want to release the sandbox?",
-      "confirmBtn": "Confirm Release",
-      "cancel": "Cancel"
+      "description": "The sandbox is shared across all projects in this workspace. Bind an approved sandbox to use it.",
+      "boundSandbox": "Bound Sandbox",
+      "openSandbox": "Open Sandbox",
+      "applyTrial": "Apply for Trial",
+      "bindSandbox": "Bind Sandbox",
+      "selectSandbox": "Select Sandbox",
+      "noAvailableSandbox": "No available sandboxes to bind. Please apply first.",
+      "unbind": "Unbind",
+      "unbindConfirm": "Confirm Unbind",
+      "unbindConfirmContent": "After unbinding, this workspace will not be able to use the sandbox environment. Are you sure?",
+      "confirmBtn": "Confirm",
+      "cancel": "Cancel",
+      "operationFailed": "Operation failed"
     },
     "skills": {
       "description": "Workspace-level AI capability extensions. When enabled, AI conversations in all projects within this workspace will gain the corresponding enhanced capabilities.",
@@ -1227,8 +1230,8 @@
       "gitnexusDescription": "Index the project directory as a local code knowledge graph",
       "repositoryLabel": "Repository",
       "repositoryDescription": "Bind a Git repository for document sync",
-      "sandboxLabel": "Sandbox Request",
-      "sandboxDescription": "Request a secure sandbox environment"
+      "sandboxLabel": "Sandbox",
+      "sandboxDescription": "Bind a secure sandbox execution environment"
     },
     "log": {
       "all": "All",
@@ -1294,7 +1297,9 @@
       "mcpAdded": "MCP added",
       "mcpAlreadyExists": "MCP \"{name}\" already exists",
       "saveFailed": "Save failed: {error}",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "boundSandbox": "Bound Sandbox",
+      "openSandbox": "Open Sandbox"
     },
     "members": {
       "memberCount": "{count} members",
@@ -1353,17 +1358,19 @@
       "syncing": "Syncing"
     },
     "sandbox": {
-      "description": "The sandbox provides a secure execution environment to run and analyze code snippets.",
-      "requested": "Sandbox Requested",
-      "notRequested": "Sandbox Not Requested",
-      "requestedAt": "Requested at: {time}",
-      "releasedAt": "Released at: {time}",
-      "requestSandbox": "Request Sandbox",
-      "releaseSandbox": "Release Sandbox",
-      "confirmRelease": "Confirm Release Sandbox",
-      "confirmReleaseContent": "After release, code analysis will be unavailable. Are you sure you want to release the sandbox?",
-      "confirmBtn": "Confirm Release",
-      "cancel": "Cancel"
+      "description": "The sandbox provides a secure execution environment. Bind an approved sandbox to use it.",
+      "boundSandbox": "Bound Sandbox",
+      "openSandbox": "Open Sandbox",
+      "applyTrial": "Apply for Trial",
+      "bindSandbox": "Bind Sandbox",
+      "selectSandbox": "Select Sandbox",
+      "noAvailableSandbox": "No available sandboxes to bind. Please apply first.",
+      "unbind": "Unbind",
+      "unbindConfirm": "Confirm Unbind",
+      "unbindConfirmContent": "After unbinding, this project will not be able to use the sandbox environment. Are you sure?",
+      "confirmBtn": "Confirm",
+      "cancel": "Cancel",
+      "operationFailed": "Operation failed"
     },
     "skills": {
       "description": "Project-level AI capability extensions. When enabled, AI conversations will gain the corresponding enhanced capabilities.",
@@ -1748,8 +1755,38 @@
     "noUsageData": "No usage data yet"
   },
   "sandboxPage": {
-    "title": "Project Sandbox",
-    "createSandbox": "+ Create Sandbox",
+    "title": "Project Sandbox (Beta)",
+    "applyButton": "Apply for Trial",
+    "applying": "Applying...",
+    "applyTitle": "Apply for Sandbox Trial",
+    "applyDescription": "After applying, an admin will assign a sandbox environment for running and analyzing code",
+    "statusPending": "Waiting for Sandbox Assignment",
+    "statusApproved": "Approved",
+    "statusRejected": "Rejected",
+    "pendingDescription": "Your application has been submitted. Please wait for admin approval and sandbox assignment",
+    "sandboxUrlLabel": "Sandbox URL",
+    "sandboxUrlPlaceholder": "Enter sandbox URL",
+    "openSandbox": "Open Sandbox",
+    "reasonLabel": "Reason",
+    "reasonPlaceholder": "Briefly describe your reason (optional)",
+    "applySuccess": "Application submitted, please wait for approval",
+    "applyFailed": "Failed to submit application",
+    "alreadyApplied": "You have already applied, please wait for approval",
+    "rejectedMessage": "Your application was rejected, you may reapply",
+    "reviewNote": "Rejection reason: {note}",
+    "retryButton": "Reapply",
+    "loginRequired": "Please log in to apply for sandbox",
+    "appliedAt": "Applied at: {date}",
+    "sandboxListTitle": "My Sandboxes",
+    "remarkPlaceholder": "Click to add a remark",
+    "btnBind": "Bind to project/workspace",
+    "btnUnbind": "Unbind",
+    "btnCancel": "Cancel",
+    "bindSelectPlaceholder": "Select project or workspace",
+    "bindSuccess": "Bind successful",
+    "noEntities": "No projects or workspaces available",
+    "labelProject": "Project",
+    "labelWorkspace": "Workspace",
     "comingSoon": "Coming Soon",
     "underDevelopment": "Project Sandbox feature is under development"
   },
@@ -1894,7 +1931,13 @@
     "sandbox": {
       "sandboxApply": "Sandbox environment requested",
       "sandboxRelease": "Sandbox environment released",
-      "sandboxUrlCannotBeEmpty": "sandboxUrl cannot be empty"
+      "sandboxUrlCannotBeEmpty": "sandboxUrl cannot be empty",
+      "alreadyApplied": "You have already applied, please wait for approval",
+      "alreadyApproved": "Your sandbox application has been approved",
+      "invalidStatus": "Invalid review status",
+      "sandboxUrlRequired": "Sandbox URL is required when approving",
+      "applicationNotFound": "Application not found",
+      "alreadyReviewed": "This application has already been reviewed"
     },
     "models": {
       "requiredFields": "provider, name, baseUrl, apiKey, modelName are required",
@@ -2667,5 +2710,35 @@
     "msgFailedToLoad": "Failed to load feedback list",
     "msgFailedToUpdate": "Failed to update status",
     "msgStatusUpdated": "Status updated"
+  },
+  "sandboxApplicationsPage": {
+    "pageTitle": "Sandbox Application Management",
+    "colUser": "Applicant",
+    "colStatus": "Status",
+    "colReason": "Reason",
+    "colSandboxUrl": "Sandbox URL",
+    "colReviewedBy": "Reviewed By",
+    "colReviewedAt": "Reviewed At",
+    "colCreatedAt": "Applied At",
+    "colActions": "Actions",
+    "statusPending": "Pending",
+    "statusApproved": "Approved",
+    "statusRejected": "Rejected",
+    "filterStatus": "Filter Status",
+    "btnRefresh": "Refresh",
+    "btnReview": "Review",
+    "btnApprove": "Approve",
+    "btnReject": "Reject",
+    "modalTitle": "Review Sandbox Application",
+    "labelSandboxUrl": "Sandbox URL",
+    "placeholderSandboxUrl": "Enter the assigned sandbox URL when approving",
+    "labelReviewNote": "Note",
+    "placeholderReviewNote": "Optional, review note or rejection reason",
+    "sandboxUrlRequired": "Sandbox URL is required when approving",
+    "msgApproved": "Application approved",
+    "msgRejected": "Application rejected",
+    "msgFailedToReview": "Failed to review application",
+    "msgFailedToLoad": "Failed to load applications",
+    "paginationTotal": "{total} total"
   }
 }

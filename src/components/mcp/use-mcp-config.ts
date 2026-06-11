@@ -317,10 +317,8 @@ export function useMcpConfig({
   );
 
   const openAdd = useCallback(() => {
-    addForm.resetFields();
-    addForm.setFieldsValue({ type: "stdio", args: "" });
     setAddOpen(true);
-  }, [addForm]);
+  }, []);
 
   const handleAdd = useCallback(async () => {
     try {

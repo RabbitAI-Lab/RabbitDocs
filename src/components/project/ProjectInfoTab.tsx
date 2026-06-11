@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/useAuth";
 import type {
   Repository,
-  SandboxStatus,
   ProjectMember,
   GitNexusStatus,
 } from "@/lib/fs";
@@ -88,9 +87,6 @@ export default function ProjectInfoTab({
   const { authFetch } = useAuth();
   const [repositories, setRepositories] = useState<Repository[]>(
     projectMeta?.repositories || []
-  );
-  const [sandbox, setSandbox] = useState<SandboxStatus>(
-    projectMeta?.sandbox || { enabled: false }
   );
   const [hasUnsynced, setHasUnsynced] = useState(false);
   const [members, setMembers] = useState<ProjectMember[]>(
@@ -262,10 +258,8 @@ export default function ProjectInfoTab({
           <IntegrationPanel
             projectPath={projectPath}
             repositories={repositories}
-            sandbox={sandbox}
             gitnexusStatus={gitnexusStatus}
             onRepositoriesChange={setRepositories}
-            onSandboxChange={setSandbox}
             onGitNexusStatusChange={setGitnexusStatus}
           />
         )}

@@ -74,10 +74,10 @@ export default function ActivityPanel({
 }: ActivityPanelProps) {
   const t = useTranslations('project');
   return (
-    <div className="space-y-6">
-      {/* Section 1: Recent Chats */}
-      <div className="space-y-3">
-        <p className="text-sm text-gray-500 dark:text-gray-300">
+    <div className="grid grid-cols-2 gap-6">
+      {/* Left Column: Recent Chats */}
+      <div className="space-y-3 min-w-0">
+        <p className="text-sm font-medium text-gray-500 dark:text-gray-300">
           {t('activity.recentChats')}
         </p>
 
@@ -118,11 +118,9 @@ export default function ActivityPanel({
         )}
       </div>
 
-      <hr className="border-gray-100 dark:border-zinc-700" />
-
-      {/* Section 2: Recent Document Activities */}
-      <div className="space-y-3">
-        <p className="text-sm text-gray-500 dark:text-gray-300">
+      {/* Right Column: Recent Document Activities */}
+      <div className="space-y-3 min-w-0">
+        <p className="text-sm font-medium text-gray-500 dark:text-gray-300">
           {t('activity.recentDocuments')}
         </p>
 

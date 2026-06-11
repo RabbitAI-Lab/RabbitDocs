@@ -456,6 +456,10 @@ export const notificationJobs = pgTable("notification_jobs", {
       "refund_completed",
       "refund_rejected",
       "token_top_up",
+      "sandbox_applied_admin",
+      "sandbox_approved",
+      "sandbox_rejected",
+      "plan_changed",
     ],
   }).notNull(),
   orderId: text("order_id"),
@@ -507,4 +511,20 @@ export const tokenTopUps = pgTable("token_top_ups", {
   expiresAt: text("expires_at").notNull(),
   createdBy: text("created_by").notNull(),
   createdAt: text("created_at").notNull(),
+});
+
+// sandbox_applications: 沙箱申请
+export const sandboxApplications = pgTable("sandbox_applications", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  status: text("status", { enum: ["pending", "approved", "rejected"] }).notNull().default("pending"),
+  sandboxUrl: text("sandbox_url"),
+  reason: text("reason"),
+  reviewedBy: text("reviewed_by").references(() => users.id),
+  reviewedAt: text("reviewed_at"),
+  reviewNote: text("review_note"),
+  remark: text("remark"),
+  bindEntityId: text("bind_entity_id"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
 });

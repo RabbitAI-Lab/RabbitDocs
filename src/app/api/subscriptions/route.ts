@@ -7,6 +7,7 @@ import { z } from "zod";
 import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
 import { getApiT } from "@/lib/i18n-api";
+import { createPlanChangedNotification } from "@/lib/payment/notification";
 
 export const dynamic = "force-dynamic";
 
@@ -161,6 +162,18 @@ export async function POST(req: NextRequest) {
     createdAt: now.toISOString(),
     updatedAt: now.toISOString(),
   });
+
+  // 套餐变更通知（仅升级/降级，首次订阅不触发）
+  if (current) {
+    const [oldPlan] = await db.select({ title: plans.title }).from(plans).where(eq(plans.id, current.planId)).limit(1);
+    createPlanChangedNotification(auth.id, {
+      oldPlanTitle: oldPlan?.title || "Unknown",
+      newPlanTitle: plan.title,
+      newBillingCycle: billingCycle,
+      newExpiresAt: expiresAt.toISOString(),
+      changedBy: "user",
+    }).catch(err => console.error("[plan-changed-notification]", err));
+  }
 
   return NextResponse.json(
     { subscription: { id, planId, billingCycle, status: "active", startedAt: now.toISOString(), expiresAt: expiresAt.toISOString() } },

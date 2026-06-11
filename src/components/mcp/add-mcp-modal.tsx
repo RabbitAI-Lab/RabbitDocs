@@ -15,6 +15,23 @@ export interface AddMcpModalProps {
   onCancel: () => void;
 }
 
+const MODAL_STYLES = {
+  mask: {
+    background: "rgba(0, 0, 0, 0.15)",
+    backdropFilter: "blur(6px) saturate(1.4)",
+    WebkitBackdropFilter: "blur(6px) saturate(1.4)",
+  },
+  container: {
+    background: 'var(--main-bg)',
+    border: '1px solid var(--popup-border)',
+    boxShadow:
+      "0 8px 32px -4px rgba(0, 0, 0, 0.08), 0 2px 8px -2px rgba(0, 0, 0, 0.04)",
+  },
+  header: {
+    borderBottom: "none",
+  },
+};
+
 /**
  * Modal with a Form to add a new MCP server. Supports stdio, http, and sse.
  * Stdio: command + args + env (one KEY=VALUE per line).
@@ -32,15 +49,21 @@ export default function AddMcpModal({
     <Modal
       title={t('mcp.addServer')}
       open={open}
-      onOk={onOk}
       onCancel={onCancel}
-      okText={t('mcp.add')}
-      cancelText={t('mcp.cancel')}
-      confirmLoading={saving}
-      width={560}
       destroyOnHidden
+      centered
+      mask={{ closable: false }}
+      styles={MODAL_STYLES}
+      footer={null}
+      width={560}
+      afterOpenChange={(open) => {
+        if (open) {
+          form.resetFields();
+          form.setFieldsValue({ type: "stdio", args: "" });
+        }
+      }}
     >
-      <Form form={form} layout="vertical" className="mt-2">
+      <Form form={form} layout="vertical" className="mt-4">
         <Form.Item
           name="name"
           label={t('mcp.formName')}
@@ -52,7 +75,7 @@ export default function AddMcpModal({
             },
           ]}
         >
-          <Input placeholder={t('mcp.formNamePlaceholder')} />
+          <Input placeholder={t('mcp.formNamePlaceholder')} style={{ background: 'transparent' }} />
         </Form.Item>
 
         <Form.Item
@@ -94,10 +117,10 @@ export default function AddMcpModal({
                       { required: true, message: t('mcp.formCommandRequired') },
                     ]}
                   >
-                    <Input placeholder={t('mcp.formCommandPlaceholder')} />
+                    <Input placeholder={t('mcp.formCommandPlaceholder')} style={{ background: 'transparent' }} />
                   </Form.Item>
                   <Form.Item name="args" label={t('mcp.formArgs')}>
-                    <Input placeholder={t('mcp.formArgsPlaceholder')} />
+                    <Input placeholder={t('mcp.formArgsPlaceholder')} style={{ background: 'transparent' }} />
                   </Form.Item>
                   <Form.Item
                     name="env"
@@ -107,6 +130,7 @@ export default function AddMcpModal({
                       rows={3}
                       placeholder={"API_KEY=xxx\nDEBUG=1"}
                       className="font-mono text-sm"
+                      style={{ background: 'transparent' }}
                     />
                   </Form.Item>
                 </>
@@ -122,7 +146,7 @@ export default function AddMcpModal({
                     { type: "url", message: t('mcp.formUrlInvalid') },
                   ]}
                 >
-                  <Input placeholder={t('mcp.formUrlPlaceholder')} />
+                  <Input placeholder={t('mcp.formUrlPlaceholder')} style={{ background: 'transparent' }} />
                 </Form.Item>
                 <Form.Item
                   name="headers"
@@ -132,6 +156,7 @@ export default function AddMcpModal({
                     rows={3}
                     placeholder={"Authorization: Bearer xxx"}
                     className="font-mono text-sm"
+                    style={{ background: 'transparent' }}
                   />
                 </Form.Item>
               </>
@@ -139,6 +164,21 @@ export default function AddMcpModal({
           }}
         </Form.Item>
       </Form>
+      <div className="flex justify-end gap-2 pt-2">
+        <button
+          onClick={onCancel}
+          className="px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+        >
+          {t('mcp.cancel')}
+        </button>
+        <button
+          onClick={onOk}
+          disabled={saving}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors disabled:opacity-50"
+        >
+          {t('mcp.add')}
+        </button>
+      </div>
     </Modal>
   );
 }

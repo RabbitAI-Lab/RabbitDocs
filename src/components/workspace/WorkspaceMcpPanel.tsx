@@ -16,7 +16,6 @@ import {
 import {
   EditOutlined,
   KeyOutlined,
-  PlusOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
 
@@ -240,8 +239,6 @@ export default function WorkspaceMcpPanel({
   };
 
   const openAdd = () => {
-    addForm.resetFields();
-    addForm.setFieldsValue({ type: "stdio", args: "" });
     setAddOpen(true);
   };
 
@@ -351,9 +348,12 @@ export default function WorkspaceMcpPanel({
         </span>
         <button
           onClick={openAdd}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-400 dark:hover:bg-blue-950 rounded-md transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
         >
-          <PlusOutlined />
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
           {t('mcp.addMcp')}
         </button>
       </div>

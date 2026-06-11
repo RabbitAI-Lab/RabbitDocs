@@ -320,3 +320,83 @@ export async function createTokenTopUpNotification(
     scheduledAt: new Date().toISOString(),
   });
 }
+
+// ── 沙箱申请通知管理员 ──
+
+export async function createSandboxAppliedAdminNotification(
+  userId: string,
+  data: { userName: string; userEmail: string; reason: string }
+) {
+  const adminEmails = await getRefundAdminEmails();
+  const brandName = await getBrandName();
+  const appUrl = await getAppUrl();
+  const now = new Date().toISOString();
+
+  for (const email of adminEmails) {
+    await createNotificationJob({
+      type: "sandbox_applied_admin",
+      userId,
+      email,
+      data: {
+        ...data,
+        brandName,
+        reviewUrl: `${appUrl}/admin/sandbox-applications`,
+      },
+      scheduledAt: now,
+    });
+  }
+}
+
+// ── 沙箱审批状态通知用户 ──
+
+export async function createSandboxStatusNotification(
+  userId: string,
+  type: "sandbox_approved" | "sandbox_rejected",
+  data: { sandboxUrl: string; reviewNote: string }
+) {
+  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  if (!user) return;
+
+  await createNotificationJob({
+    type,
+    userId,
+    email: user.email,
+    data: { ...data, brandName: await getBrandName() },
+    scheduledAt: new Date().toISOString(),
+  });
+}
+
+// ── 套餐变更通知 ──
+
+export async function createPlanChangedNotification(
+  userId: string,
+  data: {
+    oldPlanTitle: string;
+    newPlanTitle: string;
+    newBillingCycle: string;
+    newExpiresAt: string;
+    changedBy: "user" | "admin";
+  }
+) {
+  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  if (!user) return;
+
+  const newExpiresAtFormatted = new Date(data.newExpiresAt).toISOString().split("T")[0];
+  const billingCycleLabel =
+    data.newBillingCycle === "monthly" ? "Monthly" : "Yearly";
+
+  await createNotificationJob({
+    type: "plan_changed",
+    userId,
+    email: user.email,
+    data: {
+      oldPlanTitle: data.oldPlanTitle,
+      newPlanTitle: data.newPlanTitle,
+      billingCycle: billingCycleLabel,
+      expiresAt: newExpiresAtFormatted,
+      changedBy: data.changedBy,
+      brandName: await getBrandName(),
+    },
+    scheduledAt: new Date().toISOString(),
+  });
+}

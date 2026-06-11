@@ -5,6 +5,7 @@ import { users, userSubscriptions, plans } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import crypto from "crypto";
+import { createPlanChangedNotification } from "@/lib/payment/notification";
 
 export const dynamic = "force-dynamic";
 
@@ -98,6 +99,18 @@ export async function POST(
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
     });
+
+  // 套餐变更通知（仅变更，首次开通不触发）
+  if (current) {
+    const [oldPlan] = await db.select({ title: plans.title }).from(plans).where(eq(plans.id, current.planId)).limit(1);
+    createPlanChangedNotification(userId, {
+      oldPlanTitle: oldPlan?.title || "Unknown",
+      newPlanTitle: plan.title,
+      newBillingCycle: billingCycle,
+      newExpiresAt: expiresAt.toISOString(),
+      changedBy: "admin",
+    }).catch(err => console.error("[plan-changed-notification]", err));
+  }
 
   return NextResponse.json(
     {

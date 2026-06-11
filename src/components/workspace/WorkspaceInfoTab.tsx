@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/useAuth";
-import type { Repository, SandboxStatus, ProjectMember, GitNexusStatus } from "@/lib/fs";
+import type { Repository, ProjectMember, GitNexusStatus } from "@/lib/fs";
 import type { DocumentActivity, RecentChat } from "@/lib/types";
 import WorkspaceActivityPanel from "./WorkspaceActivityPanel";
 import WorkspaceProjectsPanel from "./WorkspaceProjectsPanel";
@@ -23,7 +23,6 @@ interface WorkspaceMeta {
   accountType: string;
   sortOrder: number;
   repositories?: Repository[];
-  sandbox?: SandboxStatus;
   gitnexusStatus?: GitNexusStatus;
   members?: ProjectMember[];
 }
@@ -99,9 +98,6 @@ export default function WorkspaceInfoTab({
   const { authFetch } = useAuth();
   const [repositories, setRepositories] = useState<Repository[]>(
     workspaceMeta?.repositories || []
-  );
-  const [sandbox, setSandbox] = useState<SandboxStatus>(
-    workspaceMeta?.sandbox || { enabled: false }
   );
   const [gitnexusStatus, setGitnexusStatus] = useState<GitNexusStatus | null>(
     workspaceMeta?.gitnexusStatus || null
@@ -228,10 +224,8 @@ export default function WorkspaceInfoTab({
           <WorkspaceIntegrationPanel
             workspacePath={workspacePath}
             repositories={repositories}
-            sandbox={sandbox}
             gitnexusStatus={gitnexusStatus}
             onRepositoriesChange={setRepositories}
-            onSandboxChange={setSandbox}
             onGitNexusStatusChange={setGitnexusStatus}
           />
         )}

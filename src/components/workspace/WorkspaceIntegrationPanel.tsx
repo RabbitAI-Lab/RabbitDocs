@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import type { Repository, SandboxStatus, GitNexusStatus } from "@/lib/fs";
+import type { Repository, GitNexusStatus } from "@/lib/fs";
 import WorkspaceGitNexusManager from "./WorkspaceGitNexusManager";
 import WorkspaceRepositoryManager from "./WorkspaceRepositoryManager";
 import WorkspaceSandboxManager from "./WorkspaceSandboxManager";
@@ -10,20 +10,16 @@ import WorkspaceSandboxManager from "./WorkspaceSandboxManager";
 interface WorkspaceIntegrationPanelProps {
   workspacePath: string;
   repositories: Repository[];
-  sandbox?: SandboxStatus;
   gitnexusStatus: GitNexusStatus | null;
   onRepositoriesChange: (repos: Repository[]) => void;
-  onSandboxChange: (sandbox: SandboxStatus) => void;
   onGitNexusStatusChange: (s: GitNexusStatus | null) => void;
 }
 
 export default function WorkspaceIntegrationPanel({
   workspacePath,
   repositories,
-  sandbox,
   gitnexusStatus,
   onRepositoriesChange,
-  onSandboxChange,
   onGitNexusStatusChange,
 }: WorkspaceIntegrationPanelProps) {
   const t = useTranslations('workspace');
@@ -117,8 +113,6 @@ export default function WorkspaceIntegrationPanel({
                   {groupKey === "sandbox" && (
                     <WorkspaceSandboxManager
                       workspacePath={workspacePath}
-                      sandbox={sandbox}
-                      onSandboxChange={onSandboxChange}
                     />
                   )}
                 </div>

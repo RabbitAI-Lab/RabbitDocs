@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import type { Repository, SandboxStatus, GitNexusStatus } from "@/lib/fs";
+import type { Repository, GitNexusStatus } from "@/lib/fs";
 import RepositoryManager from "./RepositoryManager";
 import SandboxManager from "./SandboxManager";
 import GitNexusManager from "./GitNexusManager";
@@ -10,20 +10,16 @@ import GitNexusManager from "./GitNexusManager";
 interface IntegrationPanelProps {
   projectPath: string;
   repositories: Repository[];
-  sandbox?: SandboxStatus;
   gitnexusStatus: GitNexusStatus | null;
   onRepositoriesChange: (repos: Repository[]) => void;
-  onSandboxChange: (sandbox: SandboxStatus) => void;
   onGitNexusStatusChange: (s: GitNexusStatus | null) => void;
 }
 
 export default function IntegrationPanel({
   projectPath,
   repositories,
-  sandbox,
   gitnexusStatus,
   onRepositoriesChange,
-  onSandboxChange,
   onGitNexusStatusChange,
 }: IntegrationPanelProps) {
   const t = useTranslations('project');
@@ -125,8 +121,6 @@ export default function IntegrationPanel({
                   {groupKey === "sandbox" && (
                     <SandboxManager
                       projectPath={projectPath}
-                      sandbox={sandbox}
-                      onSandboxChange={onSandboxChange}
                     />
                   )}
                 </div>

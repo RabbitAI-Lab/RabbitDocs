@@ -276,6 +276,7 @@ const RESTORE_INSERT_ORDER: string[] = [
 
   // Level 2: FK references to Level 1
   "refunds",                  // → orders, users
+  "sandbox_applications",     // → users
 ];
 
 /**

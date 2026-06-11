@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { Modal, Checkbox, App, Empty } from "antd";
+import { useTheme } from "next-themes";
 import { useAuth } from "@/components/auth/useAuth";
 import type { McpServerEntry } from "./types";
 
@@ -33,6 +34,33 @@ export default function ImportFromAccountModal({
   const wt = useTranslations("workspace");
   const { authFetch } = useAuth();
   const { message } = App.useApp();
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  const modalStyles = useMemo(() => ({
+    mask: {
+      background: isDark ? "rgba(0, 0, 0, 0.5)" : "rgba(0, 0, 0, 0.15)",
+      backdropFilter: "blur(6px) saturate(1.4)",
+      WebkitBackdropFilter: "blur(6px) saturate(1.4)",
+    },
+    container: {
+      background: 'var(--main-bg)',
+      border: '1px solid var(--popup-border)',
+      boxShadow: isDark
+        ? "0 8px 32px -4px rgba(0, 0, 0, 0.4), 0 2px 8px -2px rgba(0, 0, 0, 0.3)"
+        : "0 8px 32px -4px rgba(0, 0, 0, 0.08), 0 2px 8px -2px rgba(0, 0, 0, 0.04)",
+    },
+    header: {
+      borderBottom: "none",
+    },
+    footer: {
+      borderTop: "none",
+      paddingTop: 8,
+      paddingBottom: 4,
+    },
+  }), [isDark]);
+
+  const modalRootClass = "import-account-modal";
   const [items, setItems] = useState<ImportItem[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -85,13 +113,14 @@ export default function ImportFromAccountModal({
     <Modal
       title={t("importTitle")}
       open={open}
-      onOk={handleOk}
       onCancel={onCancel}
-      okText={t("importBtn")}
-      cancelText={wt("mcp.cancel")}
       centered
       width={480}
       destroyOnHidden
+      mask={{ closable: false }}
+      styles={modalStyles}
+      rootClassName={modalRootClass}
+      footer={null}
     >
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
         {t("importDesc")}
@@ -155,6 +184,20 @@ export default function ImportFromAccountModal({
           })}
         </div>
       )}
+      <div className="flex justify-end gap-2 pt-2">
+        <button
+          onClick={onCancel}
+          className="px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+        >
+          {wt("mcp.cancel")}
+        </button>
+        <button
+          onClick={handleOk}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+        >
+          {t("importBtn")}
+        </button>
+      </div>
     </Modal>
   );
 }

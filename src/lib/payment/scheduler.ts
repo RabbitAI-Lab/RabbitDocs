@@ -173,6 +173,62 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
       <p style="color:#bbb;font-size:11px;text-align:center">{{brandName}}</p>
     </div>`,
   },
+  plan_changed: {
+    subject: "{{brandName}} - Your Plan Has Been Updated",
+    html: `<div style="max-width:600px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+      <h2 style="color:#333">Plan Updated</h2>
+      <p style="color:#555;line-height:1.6">Your subscription plan has been updated.</p>
+      <div style="background:#e3f2fd;padding:16px;border-radius:8px;margin:16px 0">
+        <p style="margin:0;color:#666"><strong>Previous Plan:</strong> {{oldPlanTitle}}</p>
+        <p style="margin:4px 0 0"><strong>New Plan:</strong> {{newPlanTitle}}</p>
+        <p style="margin:4px 0 0;color:#666">Billing Cycle: {{billingCycle}}</p>
+        <p style="margin:4px 0 0;color:#666">Valid Until: {{expiresAt}}</p>
+      </div>
+      <hr style="margin:24px 0;border:none;border-top:1px solid #eee">
+      <p style="color:#bbb;font-size:11px;text-align:center">{{brandName}}</p>
+    </div>`,
+  },
+  sandbox_applied_admin: {
+    subject: "{{brandName}} - New Sandbox Application",
+    html: `<div style="max-width:600px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+      <h2 style="color:#e67e22">New Sandbox Application</h2>
+      <div style="background:#f5f5f5;padding:16px;border-radius:8px;margin:16px 0">
+        <p style="margin:0"><strong>User:</strong> {{userName}} ({{userEmail}})</p>
+        <p style="margin:4px 0 0"><strong>Reason:</strong> {{reason}}</p>
+      </div>
+      <div style="text-align:center;margin:24px 0">
+        <a href="{{reviewUrl}}" style="display:inline-block;padding:12px 32px;background:#1677ff;color:white;text-decoration:none;border-radius:6px;font-weight:500">Review Application</a>
+      </div>
+      <hr style="margin:24px 0;border:none;border-top:1px solid #eee">
+      <p style="color:#bbb;font-size:11px;text-align:center">{{brandName}}</p>
+    </div>`,
+  },
+  sandbox_approved: {
+    subject: "{{brandName}} - Sandbox Application Approved",
+    html: `<div style="max-width:600px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+      <h2 style="color:#333">Sandbox Application Approved</h2>
+      <p style="color:#555;line-height:1.6">Your sandbox application has been approved.</p>
+      <div style="background:#e8f5e9;padding:16px;border-radius:8px;margin:16px 0">
+        <p style="margin:0"><strong>Sandbox URL:</strong> <a href="{{sandboxUrl}}">{{sandboxUrl}}</a></p>
+      </div>
+      <p style="color:#555">You can now access your sandbox environment through the Project Sandbox page.</p>
+      <hr style="margin:24px 0;border:none;border-top:1px solid #eee">
+      <p style="color:#bbb;font-size:11px;text-align:center">{{brandName}}</p>
+    </div>`,
+  },
+  sandbox_rejected: {
+    subject: "{{brandName}} - Sandbox Application Rejected",
+    html: `<div style="max-width:600px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+      <h2 style="color:#e74c3c">Sandbox Application Rejected</h2>
+      <p style="color:#555;line-height:1.6">Your sandbox application has been rejected.</p>
+      <div style="background:#fde8e8;padding:16px;border-radius:8px;margin:16px 0">
+        <p style="margin:0"><strong>Reason:</strong> {{reviewNote}}</p>
+      </div>
+      <p style="color:#555">If you have questions, please contact support.</p>
+      <hr style="margin:24px 0;border:none;border-top:1px solid #eee">
+      <p style="color:#bbb;font-size:11px;text-align:center">{{brandName}}</p>
+    </div>`,
+  },
 };
 
 // ── 发送单条通知 ──

@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { App, Button, Tag, Popconfirm, Switch } from "antd";
-import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { App, Tag, Popconfirm, Switch } from "antd";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { useAuth } from "@/components/auth/useAuth";
 import AddMcpModal from "./add-mcp-modal";
 import EditMcpModal from "./edit-mcp-modal";
@@ -184,18 +184,18 @@ export default function UserMcpSection() {
         <span className="text-xs text-gray-500 dark:text-gray-400">
           {t("thirdPartyMcpDesc")}
         </span>
-        <Button
-          type="primary"
-          size="small"
-          icon={<PlusOutlined />}
+        <button
           onClick={() => {
-            addForm.resetFields();
-            addForm.setFieldsValue({ type: "stdio", args: "" });
             setAddOpen(true);
           }}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
         >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
           {t("addMcp")}
-        </Button>
+        </button>
       </div>
 
       {items.length === 0 ? (

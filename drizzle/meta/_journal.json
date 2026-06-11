@@ -43,6 +43,34 @@
       "when": 1781203704079,
       "tag": "0005_lyrical_thena",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781300000000,
+      "tag": "0045_add_sandbox_applications",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781400000000,
+      "tag": "0046_drop_sandbox_applications_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1781500000000,
+      "tag": "0047_add_remark_to_sandbox_applications",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1781600000000,
+      "tag": "0048_add_bind_entity_to_sandbox_applications",
+      "breakpoints": true
     }
   ]
 }
